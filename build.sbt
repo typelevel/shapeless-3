@@ -17,7 +17,7 @@ ThisBuild / githubWorkflowBuild := Seq(
 
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches :=
-  Seq(RefPredicate.Equals(Ref.Branch("shapeless-3")), RefPredicate.StartsWith(Ref.Tag("v")))
+  Seq(RefPredicate.Equals(Ref.Branch("main")), RefPredicate.StartsWith(Ref.Tag("v")))
 
 ThisBuild / githubWorkflowPublishPreamble +=
   WorkflowStep.Use(UseRef.Public("olafurpg", "setup-gpg", "v3"))
