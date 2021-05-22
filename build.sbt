@@ -1,5 +1,3 @@
-import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
-
 val dottyVersion = "3.0.0"
 
 ThisBuild / organization := "org.typelevel"

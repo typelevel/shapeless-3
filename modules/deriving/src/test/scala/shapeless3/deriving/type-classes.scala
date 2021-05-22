@@ -263,7 +263,7 @@ object Foldable {
     def foldRight[A, B](fa: F[A])(lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
       inst.foldRight[A, Eval[B]](fa)(lb)(
         [t[_]] => (fd: Foldable[t], t0: t[A], acc: Eval[B]) =>
-          Continue(acc.flatMap(acc0 => fd.foldRight(t0)(Eval.now(acc0))(f)))
+          Continue(Eval.defer(fd.foldRight(t0)(acc)(f)))
       )
 
   given foldableCoproduct[F[_]](using inst: => K1.CoproductInstances[Foldable, F]): Foldable[F] with
@@ -274,7 +274,7 @@ object Foldable {
 
     def foldRight[A, B](fa: F[A])(lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
       inst.fold[A, Eval[B]](fa)(
-        [t[_]] => (fd: Foldable[t], t0: t[A]) => lb.flatMap(lb0 => fd.foldRight(t0)(Eval.now(lb0))(f))
+        [t[_]] => (fd: Foldable[t], t0: t[A]) => Eval.defer(fd.foldRight(t0)(lb)(f))
       )
 
   inline def derived[F[_]](using gen: K1.Generic[F]): Foldable[F] =
