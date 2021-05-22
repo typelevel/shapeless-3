@@ -21,10 +21,12 @@ jobs:
   build:
     name: Build and Test
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         scala: [3.0.0]
         java: [adopt@1.8]
+        platform: [jvm, js]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
@@ -53,7 +55,12 @@ jobs:
         run: sbt ++${{ matrix.scala }} githubWorkflowCheck
 
       - name: Validate JVM
+        if: matrix.platform == 'jvm'
         run: sbt ++${{ matrix.scala }} validateJVM
+
+      - name: Validate JS
+        if: matrix.platform == 'js'
+        run: sbt ++${{ matrix.scala }} validateJS
 
   publish:
     name: Publish Artifacts

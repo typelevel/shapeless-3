@@ -18,7 +18,10 @@ package shapeless3.deriving
 
 import org.junit.Test
 
+import scala.annotation.tailrec
 import scala.compiletime.constValueTuple
+
+import cats.Eval
 
 import adts._
 import OptE.{SmE, NnE}
@@ -162,55 +165,50 @@ class DerivationTests {
     assert(v8.map(NnE)(identity) == NnE)
   }
 
-  //Sanity check our Eval implementation for making Foldable#foldRight lazy
-  @Test
-  def eval: Unit = {
-    assert(Eval.now("foo").force == "foo")
-    assert(Eval.later("foo").force == "foo")
-    assert(Eval.later("foo").map(_ ++ "!").force == "foo!")
-    assert(Eval.later("foo").flatMap(s => Eval.now(s ++ "!")).force == "foo!")
-
-    def loop(n: Int): Eval[Int] = if (n == 1) Eval.now(1) else loop(n - 1).flatMap(n => Eval.now(n + 1))
-
-    //Stacksafe construction and evaluation
-    assert(loop(20000).force == 20000)
+  def mkCList(n: Int) = {
+    @tailrec
+    def loop(n: Int, acc: CList[Int]): CList[Int] =
+      if(n == 0) acc
+      else loop(n-1, CCons(1, acc))
+    loop(n, CNil)
   }
 
   @Test
   def foldable: Unit = {
     val v0 = Foldable[Box]
     assert(v0.foldLeft(Box(1))(0)((acc: Int, x: Int) => acc + x) == 1)
-    assert(v0.foldRight(Box(1))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 1)
+    assert(v0.foldRight(Box(1))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 1)
 
     val v1 = Foldable[Sm]
     assert(v1.foldLeft(Sm(1))(0)((acc: Int, x: Int) => acc + x) == 1)
-    assert(v1.foldRight(Sm(1))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 1)
+    assert(v1.foldRight(Sm(1))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 1)
     val v2 = Foldable[Const[Nn.type]]
     assert(v2.foldLeft(Nn)(0)((acc: Int, x: Int) => acc + x) == 0)
-    assert(v2.foldRight(Nn)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 0)
+    assert(v2.foldRight(Nn)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 0)
     val v3 = Foldable[Opt]
     assert(v3.foldLeft(Sm(1))(0)((acc: Int, x: Int) => acc + x) == 1)
-    assert(v3.foldRight(Sm(1))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 1)
+    assert(v3.foldRight(Sm(1))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 1)
     assert(v3.foldLeft(Nn)(0)((acc: Int, x: Int) => acc + x) == 0)
-    assert(v3.foldRight(Nn)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 0)
+    assert(v3.foldRight(Nn)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 0)
 
     val v4 = Foldable[Const[CNil.type]]
     assert(v4.foldLeft(CNil)(0)((acc: Int, x: Int) => acc + x) == 0)
-    assert(v4.foldRight(CNil)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 0)
+    assert(v4.foldRight(CNil)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 0)
     val v5 = Foldable[CCons]
     assert(v5.foldLeft(CCons(1, CCons(2, CNil)))(0)((acc: Int, x: Int) => acc + x) == 3)
-    assert(v5.foldRight(CCons(1, CCons(2, CNil)))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 3)
+    assert(v5.foldRight(CCons(1, CCons(2, CNil)))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 3)
     val v6 = Foldable[CList]
     assert(v6.foldLeft(CNil)(0)((acc: Int, x: Int) => acc + x) == 0)
-    assert(v6.foldRight(CNil)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 0)
+    assert(v6.foldRight(CNil)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 0)
     assert(v6.foldLeft(CCons(1, CCons(2, CNil)))(0)((acc: Int, x: Int) => acc + x) == 3)
-    assert(v6.foldRight(CCons(1, CCons(2, CNil)))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 3)
+    assert(v6.foldRight(CCons(1, CCons(2, CNil)))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 3)
+    assert(v6.foldRight(mkCList(20000))(Eval.later(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 20000)
 
     val v7 = Foldable[OptE]
     assert(v7.foldLeft(SmE(1))(0)((acc: Int, x: Int) => acc + x) == 1)
-    assert(v7.foldRight(SmE(1))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 1)
+    assert(v7.foldRight(SmE(1))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 1)
     assert(v7.foldLeft(NnE)(0)((acc: Int, x: Int) => acc + x) == 0)
-    assert(v7.foldRight(NnE)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).force == 0)
+    assert(v7.foldRight(NnE)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 0)
   }
 
   @Test

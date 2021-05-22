@@ -1,3 +1,5 @@
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+
 val dottyVersion = "3.0.0"
 
 ThisBuild / organization := "org.typelevel"
@@ -11,13 +13,22 @@ ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8")
 
 ThisBuild / githubWorkflowArtifactUpload := false
 
+ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
+
+val JvmCond = s"matrix.platform == 'jvm'"
+val JsCond = s"matrix.platform == 'js'"
+
 ThisBuild / githubWorkflowBuild := Seq(
-  WorkflowStep.Sbt(List("validateJVM"), name = Some("Validate JVM"))
+  WorkflowStep.Sbt(List("validateJVM"), name = Some("Validate JVM"), cond = Some(JvmCond)),
+  WorkflowStep.Sbt(List("validateJS"), name = Some("Validate JS"), cond = Some(JsCond))
 )
 
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches :=
   Seq(RefPredicate.Equals(Ref.Branch("main")), RefPredicate.StartsWith(Ref.Tag("v")))
+
+ThisBuild / githubWorkflowBuildMatrixAdditions +=
+  "platform" -> List("jvm", "js")
 
 ThisBuild / githubWorkflowPublishPreamble +=
   WorkflowStep.Use(UseRef.Public("olafurpg", "setup-gpg", "v3"))
@@ -34,15 +45,17 @@ ThisBuild / githubWorkflowPublish := Seq(
   )
 )
 
-addCommandAlias("validateJVM", ";clean;compile;test")
-
-lazy val modules: List[ProjectReference] = List(
-  deriving,
-  test,
-  typeable
-)
+addCommandAlias("validate", ";clean;validateJVM;validateJS")
+addCommandAlias("validateJVM", ";buildJVM;testJVM")
+addCommandAlias("validateJS", ";buildJS;testJS")
+addCommandAlias("buildJVM", ";derivingJVM/compile;testJVM/compile;typeableJVM/compile")
+addCommandAlias("buildJS", ";derivingJS/compile;testJS/compile;typeableJS/compile")
+addCommandAlias("testJVM", ";derivingJVM/test;testJVM/test;typeableJVM/test")
+addCommandAlias("testJS", ";derivingJS/test;testJS/test;typeableJS/test")
 
 lazy val commonSettings = Seq(
+  crossScalaVersions := (ThisBuild / crossScalaVersions).value,
+
   scalacOptions ++= Seq(
     "-Xfatal-warnings",
     "-Yexplicit-nulls"
@@ -52,38 +65,64 @@ lazy val commonSettings = Seq(
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
 )
 
-lazy val root = project.in(file("."))
-  .aggregate(modules:_*)
-  .settings(commonSettings:_*)
+lazy val root = project
+  .in(file("."))
+  .settings(commonSettings)
+  .settings(crossScalaVersions := Seq())
   .settings(noPublishSettings)
+  .aggregate(
+    derivingJVM,
+    derivingJS,
+    testJVM,
+    testJS,
+    typeableJVM,
+    typeableJS
+  )
 
-lazy val deriving = project
+lazy val deriving = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
   .in(file("modules/deriving"))
   .dependsOn(test % "test")
   .settings(
-    moduleName := "shapeless3-deriving"
+    moduleName := "shapeless3-deriving",
+    libraryDependencies += "org.typelevel" %%% "cats-core" % "2.6.1" % "test"
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
   .settings(publishSettings)
+  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
-lazy val test = project
+lazy val derivingJVM = deriving.jvm
+lazy val derivingJS = deriving.js
+
+lazy val test = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
   .in(file("modules/test"))
   .settings(
     moduleName := "shapeless3-test"
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
   .settings(publishSettings)
+  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
-lazy val typeable = project
+lazy val testJVM = test.jvm
+lazy val testJS = test.js
+
+lazy val typeable = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
   .in(file("modules/typeable"))
   .dependsOn(test % "test")
   .settings(
     moduleName := "shapeless3-typeable"
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
   .settings(publishSettings)
+  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
-lazy val local = project
+lazy val typeableJVM = typeable.jvm
+lazy val typeableJS = typeable.js
+
+lazy val local = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
   .in(file("local"))
   .dependsOn(deriving, test, typeable)
   .settings(
@@ -93,10 +132,11 @@ lazy val local = project
     Compile / console / scalacOptions -= "-Xprint:postInlining",
     console / initialCommands := """import shapeless3.deriving.* ; import scala.deriving.*"""
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
   .settings(noPublishSettings)
+  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
-lazy val publishSettings = Seq(
+lazy val publishSettings: Seq[Setting[_]] = Seq(
   Test / publishArtifact := false,
   pomIncludeRepository := (_ => false),
   homepage := Some(url("https://github.com/milessabin/shapeless")),
