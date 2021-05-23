@@ -33,7 +33,7 @@ trait Typeable[T] extends Serializable {
 
 object syntax {
   object typeable {
-    implicit class Ops[T](t: T) {
+    extension [T](t: T) {
       /**
        * Cast the receiver to a value of type `U` if possible. This operation
        * will be as precise wrt erasure as possible given the in-scope
@@ -64,7 +64,7 @@ object syntax {
 object Typeable extends Typeable0 {
   import java.{ lang => jl }
   import scala.reflect.ClassTag
-  import syntax.typeable.given
+  import syntax.typeable.*
 
   inline def apply[T](using tt: Typeable[T]): Typeable[T] = tt
 
@@ -91,8 +91,32 @@ object Typeable extends Typeable0 {
   /** Typeable instance for `Unit`. */
   given unitTypeable: Typeable[Unit] = ValueTypeable[Unit, scala.runtime.BoxedUnit](classOf[scala.runtime.BoxedUnit], "Unit")
 
+  /** Typeable instance for `java.lang.Byte`. */
+  given jlByteTypeable: Typeable[jl.Byte] = ValueTypeable[jl.Byte, jl.Byte](classOf[jl.Byte], "java.lang.Byte")
+  /** Typeable instance for `java.lang.Short`. */
+  given jlShortTypeable: Typeable[jl.Short] = ValueTypeable[jl.Short, jl.Short](classOf[jl.Short], "java.lang.Short")
+  /** Typeable instance for `java.lang.Character`. */
+  given jlCharacterTypeable: Typeable[jl.Character] = ValueTypeable[jl.Character, jl.Character](classOf[jl.Character], "java.lang.Character")
+  /** Typeable instance for `java.lang.Integer`. */
+  given jlIntegerTypeable: Typeable[jl.Integer] = ValueTypeable[jl.Integer, jl.Integer](classOf[jl.Integer], "java.lang.Integer")
+  /** Typeable instance for `java.lang.Long`. */
+  given jlLongTypeable: Typeable[jl.Long] = ValueTypeable[jl.Long, jl.Long](classOf[jl.Long], "java.lang.Long")
+  /** Typeable instance for `java.lang.Float`. */
+  given jlFloatTypeable: Typeable[jl.Float] = ValueTypeable[jl.Float, jl.Float](classOf[jl.Float], "java.lang.Float")
+  /** Typeable instance for `java.lang.Double`. */
+  given jlDoubleTypeable: Typeable[jl.Double] = ValueTypeable[jl.Double, jl.Double](classOf[jl.Double], "java.lang.Double")
+  /** Typeable instance for `java.lang.Boolean`. */
+  given jlBooleanTypeable: Typeable[jl.Boolean] = ValueTypeable[jl.Boolean, jl.Boolean](classOf[jl.Boolean], "java.lang.Boolean")
+  /** Typeable instance for `scala.runtime.BoxedUnit`. */
+  given srBoxedUnitTypeable: Typeable[scala.runtime.BoxedUnit] = ValueTypeable[scala.runtime.BoxedUnit, scala.runtime.BoxedUnit](classOf[scala.runtime.BoxedUnit], "scala.runtime.BoxedUnit")
+
   def isAnyValClass[T](clazz: Class[T]) =
-    (classOf[jl.Number] isAssignableFrom clazz) ||
+    clazz == classOf[jl.Byte] ||
+    clazz == classOf[jl.Short] ||
+    clazz == classOf[jl.Integer] ||
+    clazz == classOf[jl.Long] ||
+    clazz == classOf[jl.Float] ||
+    clazz == classOf[jl.Double] ||
     clazz == classOf[jl.Boolean] ||
     clazz == classOf[jl.Character] ||
     clazz == classOf[scala.runtime.BoxedUnit]
@@ -412,7 +436,7 @@ trait TypeCase[T] extends Serializable {
 }
 
 object TypeCase {
-  import syntax.typeable.given
+  import syntax.typeable.*
   def apply[T](using tt: Typeable[T]): TypeCase[T] =
     new TypeCase[T] {
       def unapply(t: Any): Option[T] = t.cast[T]

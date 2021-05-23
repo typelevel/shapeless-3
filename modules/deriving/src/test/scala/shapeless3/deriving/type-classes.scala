@@ -19,6 +19,8 @@ package shapeless3.deriving
 import scala.annotation.tailrec
 import scala.compiletime._
 
+import cats.Eval
+
 // Type classes
 
 trait Monoid[A] {
@@ -232,53 +234,6 @@ object Traverse {
    inline def derived[F[_]](using gen: K1.Generic[F]): Traverse[F] = traverseGen
 }
 
-//Encodes lazy evaluation for the sake of Foldable#foldRight
-sealed trait Eval[A] {
-
-  def map[B](f: A => B): Eval[B] = flatMap(f.andThen(Eval.now(_)))
-
-  def flatMap[B](f: A => Eval[B]): Eval[B] = Bind(this, f)
-
-  //Simplistic, no error handling, etc, etc
-  def force: A = {
-    var stack: List[Any => Eval[Any]] = Nil
-
-    @tailrec
-    def go(e: Eval[Any]): Any =
-      e match {
-        case Now(a) => stack match {
-          case Nil => a
-          case k :: ks => {
-            stack = ks
-            go(k(a))
-          }
-        }
-        case Later(thunk) => stack match {
-          case Nil => thunk()
-          case k :: ks => {
-            stack = ks
-            go(k(thunk()))
-          }
-        }
-        case Bind(e, f) => {
-          stack = f.asInstanceOf :: stack
-          go(e.asInstanceOf)
-        }
-      }
-
-    go(this.asInstanceOf[Eval[Any]]).asInstanceOf[A]
-  }
-}
-case class Now[A](a: A) extends Eval[A]
-case class Later[A](thunk: () => A) extends Eval[A]
-case class Bind[X, A](ev: Eval[X], f: X => Eval[A]) extends Eval[A]
-
-object Eval {
-  def now[A](value: A): Eval[A] = Now(value)
-
-  def later[A](thunk: => A): Eval[A] = Later(() => thunk)
-}
-
 trait Foldable[F[_]] {
   def foldLeft[A, B](fa: F[A])(b: B)(f: (B, A) => B): B
 
@@ -307,7 +262,8 @@ object Foldable {
 
     def foldRight[A, B](fa: F[A])(lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
       inst.foldRight[A, Eval[B]](fa)(lb)(
-        [t[_]] => (fd: Foldable[t], t0: t[A], acc: Eval[B]) => Continue(fd.foldRight(t0)(acc)(f))
+        [t[_]] => (fd: Foldable[t], t0: t[A], acc: Eval[B]) =>
+          Continue(Eval.defer(fd.foldRight(t0)(acc)(f)))
       )
 
   given foldableCoproduct[F[_]](using inst: => K1.CoproductInstances[Foldable, F]): Foldable[F] with
@@ -318,7 +274,7 @@ object Foldable {
 
     def foldRight[A, B](fa: F[A])(lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
       inst.fold[A, Eval[B]](fa)(
-        [t[_]] => (fd: Foldable[t], t0: t[A]) => fd.foldRight(t0)(lb)(f)
+        [t[_]] => (fd: Foldable[t], t0: t[A]) => Eval.defer(fd.foldRight(t0)(lb)(f))
       )
 
   inline def derived[F[_]](using gen: K1.Generic[F]): Foldable[F] =
