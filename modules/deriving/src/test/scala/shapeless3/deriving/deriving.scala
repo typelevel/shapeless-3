@@ -376,4 +376,17 @@ class DerivationTests {
     val v3a: (String, Int) = v3
     assert(v3 == ("Epoisse", 10))
   }
+
+  @Test
+  def instances: Unit = {
+    // we just want to see that these typecheck and don't throw a ClassCastException
+    val instIsb: (Monoid[Int], Monoid[String], Monoid[Boolean]) = K0.Instances[Monoid, ISB].instances
+    val instOptionInt: (Monoid[NoneInt.type], Monoid[SomeInt]) = K0.Instances[Monoid, OptionInt].instances
+
+    val instBox: Functor[[x] =>> x] *: EmptyTuple = K1.Instances[Functor, Box].instances
+    val instOpt: (Functor[Const[Nn.type]], Functor[Sm]) = K1.Instances[Functor, Opt].instances
+
+    val instOrder: (FunctorK[[F[_]] =>> F[String]], FunctorK[[F[_]] =>> F[Int]]) = 
+      K11.Instances[FunctorK, Order].instances
+  }
 }
