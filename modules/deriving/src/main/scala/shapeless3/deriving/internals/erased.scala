@@ -26,6 +26,8 @@ private[shapeless3] abstract class ErasedInstances[K, FT] {
   def erasedMap(x: Any)(f: (Any, Any) => Any): Any
 
   def erasedTraverse(x0: Any)(map: (Any, Any) => Any)(pure: Any => Any)(ap: (Any, Any) => Any)(f: (Any, Any) => Any): Any
+
+  def erasedInstances: Tuple
 }
 
 private[shapeless3] abstract class ErasedProductInstances[K, FT] extends ErasedInstances[K, FT] {
@@ -89,6 +91,8 @@ private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirro
       case acc => acc
     }
   }
+
+  final def erasedInstances: Tuple = i *: EmptyTuple
 }
 
 private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirror.Product, is: Array[Any]) extends ErasedProductInstances[K, FT] {
@@ -257,6 +261,7 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
     }
   }
 
+  final def erasedInstances: Tuple = Tuple.fromArray(is)
 }
 
 private[shapeless3] object ErasedProductInstances {
@@ -317,6 +322,8 @@ private[shapeless3] final class ErasedCoproductInstances[K, FT](mirror: Mirror.S
     if(i == j) f(is(i), x, y)
     else g(i, j)
   }
+
+  final def erasedInstances: Tuple = Tuple.fromArray(is)
 }
 
 private[shapeless3] object ErasedCoproductInstances {

@@ -86,6 +86,7 @@ object K0 {
 
   extension [F[_], T](inst: Instances[F, T])
     inline def map(x: T)(f: [t] => (F[t], t) => t): T = inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
+    inline def instances(using gen: Generic[T]): LiftP[F, gen.MirroredElemTypes] = inst.erasedInstances.asInstanceOf
 
     //A spectacularly convoluted `pure`, included for consistency
     inline def traverse[G[_]](x: T)(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t] => (F[t], t) => G[t]): G[T] =
@@ -184,6 +185,8 @@ object K1 {
     inline def map[A, R](x: T[A])(f: [t[_]] => (F[t], t[A]) => t[R]): T[R] =
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
 
+    inline def instances(using gen: Generic[T]): LiftP[F, gen.MirroredElemTypes] = inst.erasedInstances.asInstanceOf
+
     //We could derive `map` from `ap` and `pure` but it can generally be implemented more efficiently directly
     inline def traverse[A, G[_], R](x: T[A])(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t[_]] => (F[t], t[A]) => G[t[R]]): G[T[R]] =
       inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
@@ -279,6 +282,8 @@ object K11 {
   extension [F[_[_[_]]], T[_[_]]](inst: Instances[F, T])
     inline def map[A[_], R[_]](x: T[A])(f: [t[_[_]]] => (F[t], t[A]) => t[R]): T[R] =
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
+
+    inline def instances(using gen: Generic[T]): LiftP[F, gen.MirroredElemTypes] = inst.erasedInstances.asInstanceOf
 
     inline def traverse[A[_], G[_], R[_]](x: T[A])(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t[_[_]]] => (F[t], t[A]) => G[t[R]]): G[T[R]] =
       inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
