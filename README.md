@@ -7,7 +7,9 @@
 **shapeless** is a type class and dependent type based generic programming
 library for Scala.
 
-**This branch contains shapeless 3 for Scala 3**
+**This repository contains shapeless 3 for Scala 3. For shapeless 2 see its own [repository](https://github.com/milessabin/shapeless).**
+
+Please open issues and PRs for shapeless 2 in the old repository.
 
 shapeless 3 was developed as part of a collaboration with Martin Odersky's
 group at EPFL LAMP to develop [language-level support][mirror] for generic
