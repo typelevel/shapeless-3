@@ -3,14 +3,15 @@ val dottyVersion = "3.0.0"
 ThisBuild / organization := "org.typelevel"
 ThisBuild / scalaVersion := dottyVersion
 ThisBuild / crossScalaVersions := Seq(dottyVersion)
+ThisBuild / mimaFailOnNoPrevious := false
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
+
+val previousVersion = "3.0.0"
 
 // GHA configuration
 
 ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8")
-
 ThisBuild / githubWorkflowArtifactUpload := false
-
 ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 
 val JvmCond = s"matrix.platform == 'jvm'"
@@ -43,25 +44,19 @@ ThisBuild / githubWorkflowPublish := Seq(
   )
 )
 
+// Aliases
+
 addCommandAlias("validate", ";clean;validateJVM;validateJS")
-addCommandAlias("validateJVM", ";buildJVM;testJVM")
-addCommandAlias("validateJS", ";buildJS;testJS")
+addCommandAlias("validateJVM", ";buildJVM;mimaJVM;testJVM")
+addCommandAlias("validateJS", ";buildJS;mimaJS;testJS")
 addCommandAlias("buildJVM", ";derivingJVM/compile;testJVM/compile;typeableJVM/compile")
 addCommandAlias("buildJS", ";derivingJS/compile;testJS/compile;typeableJS/compile")
+addCommandAlias("mimaJVM", ";derivingJVM/mimaReportBinaryIssues;testJVM/mimaReportBinaryIssues;typeableJVM/mimaReportBinaryIssues")
+addCommandAlias("mimaJS", ";derivingJS/mimaReportBinaryIssues;testJS/mimaReportBinaryIssues;typeableJS/mimaReportBinaryIssues")
 addCommandAlias("testJVM", ";derivingJVM/test;testJVM/test;typeableJVM/test")
 addCommandAlias("testJS", ";derivingJS/test;testJS/test;typeableJS/test")
 
-lazy val commonSettings = Seq(
-  crossScalaVersions := (ThisBuild / crossScalaVersions).value,
-
-  scalacOptions ++= Seq(
-    "-Xfatal-warnings",
-    "-Yexplicit-nulls"
-  ),
-  Compile / doc / sources := Nil,
-
-  libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
-)
+// Projects
 
 lazy val root = project
   .in(file("."))
@@ -86,6 +81,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies += "org.typelevel" %%% "cats-core" % "2.6.1" % "test"
   )
   .settings(commonSettings)
+  .settings(mimaSettings)
   .settings(publishSettings)
   .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
@@ -99,6 +95,7 @@ lazy val test = crossProject(JSPlatform, JVMPlatform)
     moduleName := "shapeless3-test"
   )
   .settings(commonSettings)
+  .settings(mimaSettings)
   .settings(publishSettings)
   .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
@@ -113,6 +110,7 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform)
     moduleName := "shapeless3-typeable"
   )
   .settings(commonSettings)
+  //.settings(mimaSettings) // Not yet
   .settings(publishSettings)
   .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
@@ -133,6 +131,25 @@ lazy val local = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings)
   .settings(noPublishSettings)
   .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
+
+// Settings
+
+lazy val commonSettings = Seq(
+  crossScalaVersions := (ThisBuild / crossScalaVersions).value,
+
+  scalacOptions ++= Seq(
+    "-Xfatal-warnings",
+    "-Yexplicit-nulls"
+  ),
+  Compile / doc / sources := Nil,
+
+  libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
+)
+
+lazy val mimaSettings = Seq(
+  mimaPreviousArtifacts := Set("org.typelevel" %% moduleName.value % previousVersion),
+  mimaBinaryIssueFilters := Seq()
+)
 
 lazy val publishSettings: Seq[Setting[_]] = Seq(
   Test / publishArtifact := false,
