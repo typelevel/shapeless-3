@@ -526,15 +526,12 @@ object Show {
   given Show[Boolean] = (_: Boolean).toString
 
   given showGen[T](using inst: K0.ProductInstances[Show, T], labelling: Labelling[T]): Show[T] with {
-    def show(t: T): String = {
+    def show(t: T): String =
       if(labelling.elemLabels.isEmpty) labelling.label
-      else {
-        val elems: List[String] = inst.foldLeft(t)(List.empty[String])(
-          [t] => (acc: List[String], st: Show[t], t: t) => Continue(st.show(t) :: acc)
-        )
-        labelling.elemLabels.zip(elems.reverse).map((k, v) => s"$k: $v").mkString(s"${labelling.label}(", ", ", ")")
-      }
-    }
+      else
+        labelling.elemLabels.zipWithIndex.map(
+          (label, i) => s"$label: ${inst.project(t)(i)([t] => (st: Show[t], pt: t) => st.show(pt))}"
+        ).mkString(s"${labelling.label}(", ", ", ")")
   }
 
   given showGenC[T](using inst: => K0.CoproductInstances[Show, T]): Show[T] with {

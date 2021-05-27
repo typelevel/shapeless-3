@@ -106,6 +106,8 @@ object K0 {
       inst.erasedFoldRight(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldRight2[Acc](x: T, y: T)(i: Acc)(f: [t] => (F[t], t, t, Acc) => CompleteOr[Acc]): Acc =
       inst.erasedFoldRight2(x, y)(i)(f.asInstanceOf).asInstanceOf
+    inline def project[R](t: T)(p: Int)(f: [t] => (F[t], t) => R): R =
+      inst.erasedProject(t)(p)(f.asInstanceOf).asInstanceOf
 
   extension [F[_], T](inst: CoproductInstances[F, T])
     inline def project[Acc](p: Int)(i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
@@ -201,6 +203,8 @@ object K1 {
       inst.erasedFoldRight(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldRight2[A, B, Acc](x: T[A], y: T[B])(i: Acc)(f: [t[_]] => (F[t], t[A], t[B], Acc) => CompleteOr[Acc]): Acc =
       inst.erasedFoldRight2(x, y)(i)(f.asInstanceOf).asInstanceOf
+    inline def project[A, R](t: T[A])(p: Int)(f: [t[_]] => (F[t], t[A]) => R): R =
+      inst.erasedProject(t)(p)(f.asInstanceOf).asInstanceOf
 
   extension [F[_[_]], T[_]](inst: CoproductInstances[F, T])
     inline def fold[A, R](x: T[A])(f: [t[_]] => (F[t], t[A]) => R): R =
@@ -296,6 +300,8 @@ object K11 {
       inst.erasedFoldRight(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldRight2[A[_], B[_], Acc](x: T[A], y: T[B])(i: Acc)(f: [t[_[_]]] => (F[t], t[A], t[B], Acc) => CompleteOr[Acc]): Acc =
       inst.erasedFoldRight2(x, y)(i)(f.asInstanceOf).asInstanceOf
+    inline def project[A[_], R](t: T[A])(p: Int)(f: [t[_[_]]] => (F[t], t[A]) => R): R =
+      inst.erasedProject(t)(p)(f.asInstanceOf).asInstanceOf
 
   extension [F[_[_[_]]], T[_[_]]](inst: CoproductInstances[F, T])
     inline def fold[A[_], R](x: T[A])(f: [t[_[_]]] => (F[t], t[A]) => R): R =
@@ -390,6 +396,8 @@ object K2 {
       inst.erasedFoldRight(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldRight2[A, B, C, D, Acc](x: T[A, B], y: T[C, D])(i: Acc)(f: [t[_, _]] => (F[t], t[A, B], t[C, D], Acc) => CompleteOr[Acc]): Acc =
       inst.erasedFoldRight2(x, y)(i)(f.asInstanceOf).asInstanceOf
+    inline def project[A, B, R](t: T[A, B])(p: Int)(f: [t[_, _]] => (F[t], t[A, B]) => R): R =
+      inst.erasedProject(t)(p)(f.asInstanceOf).asInstanceOf
 
   extension [F[_[_, _]], T[_, _]](inst: CoproductInstances[F, T])
     inline def fold[A, B, R](x: T[A, B])(f: [t[_, _]] => (F[t], t[A, B]) => R): R =
