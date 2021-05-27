@@ -3,11 +3,13 @@
 [![Discord](https://img.shields.io/discord/632277896739946517.svg?label=&logo=discord&logoColor=ffffff&color=404244&labelColor=6A7EC2)](https://discord.gg/bSQBZA3Ced)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/milessabin/shapeless)
 [![Maven Central](https://img.shields.io/maven-central/v/org.typelevel/shapeless3-deriving_3.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/shapeless3-deriving_3)
+[![Scala.js](https://www.scala-js.org/assets/badges/scalajs-1.5.0.svg)](https://www.scala-js.org)
 
 **shapeless** is a type class and dependent type based generic programming
 library for Scala.
 
-**This repository contains shapeless 3 for Scala 3. For shapeless 2 see its own [repository](https://github.com/milessabin/shapeless).**
+**This repository contains shapeless 3 for Scala 3. For shapeless 2 see its own
+[repository](https://github.com/milessabin/shapeless).**
 
 Please open issues and PRs for shapeless 2 in the old repository.
 
@@ -117,11 +119,11 @@ val completeOrder = FunctorK[OrderF].mapK(incompleteOrder)(OptionD.fold)
 ```
 ## Getting started
 
-shapeless 3 is available for Scala 3.0.0. To include the deriving module in
-your project add the following to your build,
+shapeless 3 is available for Scala 3.0.0 for the JVM and for Scala.js 1.5.0+.
+To include the deriving module in your project add the following to your build,
 
 ```
-libraryDependencies ++= Seq("org.typelevel" %% "shapeless3-deriving" % "3.0.0")
+libraryDependencies ++= Seq("org.typelevel" %% "shapeless3-deriving" % "3.0.1")
 ```
 
 ## Finding out more about the project
