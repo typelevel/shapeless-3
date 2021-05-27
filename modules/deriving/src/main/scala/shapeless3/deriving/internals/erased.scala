@@ -300,6 +300,9 @@ private[shapeless3] final class ErasedCoproductInstances[K, FT](mirror: Mirror.S
   final def erasedProject(p: Int)(i: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) =
     f(i, is(p))
 
+  final def erasedInject(p: Int)(f: Any => Any): Any =
+    f(is(p))
+
   final def erasedFold(x: Any)(f: (Any, Any) => Any): Any = {
     val i = ordinal(x)
     f(i, x)

@@ -622,16 +622,9 @@ object Read {
       labelling.elemLabels.zipWithIndex.iterator.map((p: (String, Int)) => {
         val (label, i) = p
         if(s.trim.nn.startsWith(label)) {
-          inst.project[String](i)(s)(
-            [t] => (s: String, rt: Read[t]) =>
-              rt.read(s) match {
-                case Some((t, tl)) => (tl, Some(t))
-                case None => (s, None)
-              }
-          ) match {
-            case (s, None) => None
-            case (tl, Some(t)) => Some((t, tl))
-          }
+          inst.inject[Option[(T, String)]](i)(
+            [t <: T] => (rt: Read[t]) => rt.read(s)
+          )
         }
         else None
       }).find(_.isDefined).flatten
