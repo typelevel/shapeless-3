@@ -37,6 +37,7 @@ private[shapeless3] abstract class ErasedProductInstances[K, FT] extends ErasedI
   def erasedFoldLeft2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any
   def erasedFoldRight(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any
   def erasedFoldRight2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any
+  def erasedProject(x0: Any)(p: Int)(f: (Any, Any) => Any): Any
 }
 
 private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirror.Product, i: Any) extends ErasedProductInstances[K, FT] {
@@ -89,6 +90,9 @@ private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirro
       case acc => acc
     }
   }
+
+  final def erasedProject(x0: Any)(p: Int)(f: (Any, Any) => Any): Any =
+    f(i, toProduct(x0).productElement(0))
 }
 
 private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirror.Product, is: Array[Any]) extends ErasedProductInstances[K, FT] {
@@ -257,6 +261,8 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
     }
   }
 
+  final def erasedProject(x0: Any)(p: Int)(f: (Any, Any) => Any): Any =
+    f(is(p), toProduct(x0).productElement(p))
 }
 
 private[shapeless3] object ErasedProductInstances {

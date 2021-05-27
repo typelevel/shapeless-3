@@ -1,3 +1,5 @@
+import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProblem}
+
 val dottyVersion = "3.0.0"
 
 ThisBuild / organization := "org.typelevel"
@@ -82,6 +84,11 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(commonSettings)
   .settings(mimaSettings)
+  .settings(
+     mimaBinaryIssueFilters ++= Seq(
+       ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedProject")
+     )
+   )
   .settings(publishSettings)
   .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
