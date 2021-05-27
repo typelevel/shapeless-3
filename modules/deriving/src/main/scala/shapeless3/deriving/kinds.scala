@@ -110,6 +110,9 @@ object K0 {
       inst.erasedProject(t)(p)(f.asInstanceOf).asInstanceOf
 
   extension [F[_], T](inst: CoproductInstances[F, T])
+    inline def inject[R](p: Int)(f: [t <: T] => F[t] => R): R =
+      inst.erasedInject(p)(f.asInstanceOf).asInstanceOf
+    @deprecated("use inject", "3.0.2")
     inline def project[Acc](p: Int)(i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
       inst.erasedProject(p)(i)(f.asInstanceOf).asInstanceOf
     inline def fold[R](x: T)(f: [t] => (F[t], t) => R): R =
