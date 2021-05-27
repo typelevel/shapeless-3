@@ -623,7 +623,7 @@ object Read {
         val (label, i) = p
         if(s.trim.nn.startsWith(label)) {
           inst.inject[Option[(T, String)]](i)(
-            [t <: T] => (rt: Read[t]) => rt.read(s): Option[(T, String)]
+            [t <: T] => (rt: Read[t]) => rt.read(s)
           )
         }
         else None
