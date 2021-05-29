@@ -102,7 +102,7 @@ object K0 {
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft2[Acc](x: T, y: T)(i: Acc)(f: [t] => (Acc, F[t], t, t) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft2(x, y)(i)(f.asInstanceOf).asInstanceOf
-    inline def foldRight[Acc](x: T)(i: Acc)(f: [t] => (Acc, F[t], t) => CompleteOr[Acc]): Acc =
+    inline def foldRight[Acc](x: T)(i: Acc)(f: [t] => (F[t], t, Acc) => CompleteOr[Acc]): Acc =
       inst.erasedFoldRight(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldRight2[Acc](x: T, y: T)(i: Acc)(f: [t] => (F[t], t, t, Acc) => CompleteOr[Acc]): Acc =
       inst.erasedFoldRight2(x, y)(i)(f.asInstanceOf).asInstanceOf
