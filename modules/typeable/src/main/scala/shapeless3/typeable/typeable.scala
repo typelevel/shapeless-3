@@ -70,6 +70,12 @@ object Typeable extends Typeable0 {
 
   case class ValueTypeable[T, B](cB: Class[B], describe: String) extends Typeable[T] {
     def castable(t: Any): Boolean = t != null && cB.isInstance(t)
+
+    // Avoid referencing `Constable` (the LUB of `Class` and `String` on JDK 12+) which is not supported by Scala.js
+    override def productElement(n: Int): Any = n match
+      case 0 => cB: Any
+      case 1 => describe: Any
+      case _ => throw new IndexOutOfBoundsException(n.toString)
   }
 
   /** Typeable instance for `Byte`. */
