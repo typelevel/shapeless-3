@@ -23,12 +23,13 @@ import scala.deriving.*
 import shapeless3.deriving.*
 
 private[shapeless3] abstract class ErasedInstances[K, FT] {
+  def erasedMapK(f: Any => Any): ErasedInstances[K, ?]
   def erasedMap(x: Any)(f: (Any, Any) => Any): Any
-
   def erasedTraverse(x0: Any)(map: (Any, Any) => Any)(pure: Any => Any)(ap: (Any, Any) => Any)(f: (Any, Any) => Any): Any
 }
 
 private[shapeless3] abstract class ErasedProductInstances[K, FT] extends ErasedInstances[K, FT] {
+  def erasedMapK(f: Any => Any): ErasedProductInstances[K, _]
   def erasedConstruct(f: Any => Any): Any
   def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any])
   def erasedMap(x0: Any)(f: (Any, Any) => Any): Any
@@ -42,6 +43,9 @@ private[shapeless3] abstract class ErasedProductInstances[K, FT] extends ErasedI
 
 private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirror.Product, i: Any) extends ErasedProductInstances[K, FT] {
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
+  
+  final def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
+    new ErasedProductInstances1(mirror, f(i))
 
   final def erasedConstruct(f: Any => Any): Any =
     mirror.fromProduct(Tuple1(f(i)))
@@ -99,6 +103,9 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
   import ErasedProductInstances.ArrayProduct
 
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
+
+  final def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
+    new ErasedProductInstancesN(mirror, is.map(f))
 
   final def erasedConstruct(f: Any => Any): Any = {
     val n = is.length
@@ -289,6 +296,9 @@ private[shapeless3] object ErasedProductInstances {
 
 private[shapeless3] final class ErasedCoproductInstances[K, FT](mirror: Mirror.Sum, is0: => Array[Any]) extends ErasedInstances[K, FT] {
   lazy val is = is0
+
+  final def erasedMapK(f: Any => Any): ErasedCoproductInstances[K, ?] =
+    new ErasedCoproductInstances(mirror, is.map(f))
 
   final def ordinal(x: Any): Any = is(mirror.ordinal(x.asInstanceOf))
 
