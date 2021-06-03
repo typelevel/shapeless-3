@@ -90,7 +90,6 @@ object K0 {
     inline def map(x: T)(f: [t] => (F[t], t) => t): T = 
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t] >: F[t]]: Instances[G, T] = inst.asInstanceOf
-    //A spectacularly convoluted `pure`, included for consistency
     inline def traverse[G[_]](x: T)(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t] => (F[t], t) => G[t]): G[T] =
       inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
 
@@ -132,7 +131,6 @@ object K0 {
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t] >: F[t]]: CoproductInstances[G, T] = 
       inst.asInstanceOf
-      
 
   inline given mkInstances[F[_], T](using gen: Generic[T]): Instances[F, T] =
     inline gen match {
@@ -204,7 +202,6 @@ object K1 {
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_]] >: F[t]]: Instances[G, T] = 
       inst.asInstanceOf
-    //We could derive `map` from `ap` and `pure` but it can generally be implemented more efficiently directly
     inline def traverse[A, G[_], R](x: T[A])(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t[_]] => (F[t], t[A]) => G[t[R]]): G[T[R]] =
       inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
 
@@ -442,7 +439,6 @@ object K2 {
       inst.erasedProject(t)(p)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_, _]] >: F[t]]: ProductInstances[G, T] =
       inst.asInstanceOf
-
 
   extension [F[_[_, _]], T[_, _]](inst: CoproductInstances[F, T])
     inline def mapK[G[_[_, _]]](f: [t[_, _]] => F[t] => G[t]): CoproductInstances[G, T] =
