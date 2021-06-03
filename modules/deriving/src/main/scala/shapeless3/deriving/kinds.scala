@@ -85,15 +85,18 @@ object K0 {
       }
 
   extension [F[_], T](inst: Instances[F, T])
-    inline def map(x: T)(f: [t] => (F[t], t) => t): T = inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
-
+    inline def mapK[G[_]](f: [t] => F[t] => G[t]): Instances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
+    inline def map(x: T)(f: [t] => (F[t], t) => t): T = 
+      inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t] >: F[t]]: Instances[G, T] = inst.asInstanceOf
-
     //A spectacularly convoluted `pure`, included for consistency
     inline def traverse[G[_]](x: T)(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t] => (F[t], t) => G[t]): G[T] =
       inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
 
   extension [F[_], T](inst: ProductInstances[F, T])
+    inline def mapK[G[_]](f: [t] => F[t] => G[t]): ProductInstances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def construct(f: [t] => F[t] => t): T =
       inst.erasedConstruct(f.asInstanceOf).asInstanceOf
     inline def map2(x: T, y: T)(f: [t] => (F[t], t, t) => t): T =
@@ -114,6 +117,8 @@ object K0 {
       inst.asInstanceOf
 
   extension [F[_], T](inst: CoproductInstances[F, T])
+    inline def mapK[G[_]](f: [t] => F[t] => G[t]): CoproductInstances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def inject[R](p: Int)(f: [t <: T] => F[t] => R): R =
       inst.erasedInject(p)(f.asInstanceOf).asInstanceOf
     @deprecated("use inject", "3.0.2")
@@ -193,17 +198,19 @@ object K1 {
     }
 
   extension [F[_[_]], T[_]](inst: Instances[F, T])
+    inline def mapK[G[_[_]]](f: [t[_]] => F[t] => G[t]): Instances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def map[A, R](x: T[A])(f: [t[_]] => (F[t], t[A]) => t[R]): T[R] =
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
-
     inline def widen[G[t[_]] >: F[t]]: Instances[G, T] = 
       inst.asInstanceOf
-
     //We could derive `map` from `ap` and `pure` but it can generally be implemented more efficiently directly
     inline def traverse[A, G[_], R](x: T[A])(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t[_]] => (F[t], t[A]) => G[t[R]]): G[T[R]] =
       inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
 
   extension [F[_[_]], T[_]](inst: ProductInstances[F, T])
+    inline def mapK[G[_[_]]](f: [t[_]] => F[t] => G[t]): ProductInstances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def construct[R](f: [t[_]] => F[t] => t[R]): T[R] =
       inst.erasedConstruct(f.asInstanceOf).asInstanceOf
     inline def map2[A, B, R](x: T[A], y: T[B])(f: [t[_]] => (F[t], t[A], t[B]) => t[R]): T[R] =
@@ -222,6 +229,8 @@ object K1 {
       inst.asInstanceOf
 
   extension [F[_[_]], T[_]](inst: CoproductInstances[F, T])
+    inline def mapK[G[_[_]]](f: [t[_]] => F[t] => G[t]): CoproductInstances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def fold[A, R](x: T[A])(f: [t[_]] => (F[t], t[A]) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
     inline def fold2[A, B, R](x: T[A], y: T[B])(a: => R)(f: [t[_]] => (F[t], t[A], t[B]) => R): R =
@@ -298,16 +307,18 @@ object K11 {
     }
 
   extension [F[_[_[_]]], T[_[_]]](inst: Instances[F, T])
+    inline def mapK[G[_[_[_]]]](f: [t[_[_]]] => F[t] => G[t]): Instances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def map[A[_], R[_]](x: T[A])(f: [t[_[_]]] => (F[t], t[A]) => t[R]): T[R] =
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
-
     inline def widen[G[t[_[_]]] >: F[t]]: Instances[G, T] = 
       inst.asInstanceOf
-
     inline def traverse[A[_], G[_], R[_]](x: T[A])(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t[_[_]]] => (F[t], t[A]) => G[t[R]]): G[T[R]] =
       inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
 
   extension [F[_[_[_]]], T[_[_]]](inst: ProductInstances[F, T])
+    inline def mapK[G[_[_[_]]]](f: [t[_[_]]] => F[t] => G[t]): ProductInstances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def construct[R[_]](f: [t[_[_]]] => F[t] => t[R]): T[R] =
       inst.erasedConstruct(f.asInstanceOf).asInstanceOf
     inline def map2[A[_], B[_], R[_]](x: T[A], y: T[B])(f: [t[_[_]]] => (F[t], t[A], t[B]) => t[R]): T[R] =
@@ -326,6 +337,8 @@ object K11 {
       inst.asInstanceOf
 
   extension [F[_[_[_]]], T[_[_]]](inst: CoproductInstances[F, T])
+    inline def mapK[G[_[_[_]]]](f: [t[_[_]]] => F[t] => G[t]): CoproductInstances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def fold[A[_], R](x: T[A])(f: [t[_[_]]] => (F[t], t[A]) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
     inline def fold2[A[_], B[_], R](x: T[A], y: T[B])(a: => R)(f: [t[_[_]]] => (F[t], t[A], t[B]) => R): R =
@@ -401,16 +414,18 @@ object K2 {
     }
 
   extension [F[_[_, _]], T[_, _]](inst: Instances[F, T])
+    inline def mapK[G[_[_, _]]](f: [t[_, _]] => F[t] => G[t]): Instances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def map[A, B, R, S](x: T[A, B])(f: [t[_, _]] => (F[t], t[A, B]) => t[R, S]): T[R, S] =
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
-
     inline def widen[G[t[_, _]] >: F[t]]: Instances[G, T] =
       inst.asInstanceOf
-      
     inline def traverse[A, B, G[_], R, S](x: T[A, B])(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t[_, _]] => (F[t], t[A, B]) => G[t[R, S]]): G[T[R, S]] =
       inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
 
   extension [F[_[_, _]], T[_, _]](inst: ProductInstances[F, T])
+    inline def mapK[G[_[_, _]]](f: [t[_, _]] => F[t] => G[t]): ProductInstances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def construct[R, S](f: [t[_, _]] => F[t] => t[R, S]): T[R, S] =
       inst.erasedConstruct(f.asInstanceOf).asInstanceOf
     inline def map2[A, B, C, D, R, S](x: T[A, B], y: T[C, D])(f: [t[_, _]] => (F[t], t[A, B], t[C, D]) => t[R, S]): T[R, S] =
@@ -430,6 +445,8 @@ object K2 {
 
 
   extension [F[_[_, _]], T[_, _]](inst: CoproductInstances[F, T])
+    inline def mapK[G[_[_, _]]](f: [t[_, _]] => F[t] => G[t]): CoproductInstances[G, T] =
+      inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def fold[A, B, R](x: T[A, B])(f: [t[_, _]] => (F[t], t[A, B]) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
     inline def fold2[A, B, C, D, R](x: T[A, B], y: T[C, D])(a: => R)(f: [t[_, _]] => (F[t], t[A, B], t[C, D]) => R): R =

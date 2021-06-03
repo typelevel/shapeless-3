@@ -18,12 +18,26 @@ package shapeless3.deriving
 
 import org.junit.Test
 
-trait TypeClass[A] { def method(a: A): Int }
-object TypeClass {
-  given TypeClass[Int] = (a: Int) => a
+trait TypeClass[A] { 
+  def method(a: A): Int
+  def another: AnotherTypeClass[A] = method(_).toString
 }
 
-case class Pair[A](a1: A, a2: A)
+trait AnotherTypeClass[A] {
+  def method(a: A): String
+}
+
+object TypeClass {
+  given TypeClass[Int] = identity(_)
+  given [A](using tc: TypeClass[A]): TypeClass[Single[A]] =
+    s => tc.method(s.a) * 2
+  given [A](using tc: TypeClass[A]): TypeClass[Pair[A]] =
+    p => tc.method(p.a1) + tc.method(p.a2)
+}
+
+sealed trait Few[A]
+case class Single[A](a: A) extends Few[A]
+case class Pair[A](a1: A, a2: A) extends Few[A]
 
 class InstancesTests {
   @Test
@@ -32,9 +46,11 @@ class InstancesTests {
     val p = Pair(1, 2)
 
     val expected = "a 1 2"
-    val res = inst.foldLeft [String](p)("a")([t] => (acc: String, f: TypeClass[t], t: t) => acc + " " + f.method(t))
+    val actual = inst.foldLeft[String](p)("a") {
+      [t] => (acc: String, f: TypeClass[t], t: t) => acc + " " + f.method(t)
+    }
 
-    assert(res == expected)
+    assert(actual == expected)
   }
 
   @Test
@@ -43,8 +59,52 @@ class InstancesTests {
     val p = Pair(1, 2)
 
     val expected = "a 2 1"
-    val res = inst.foldRight[String](p)("a")([t] => (f: TypeClass[t], t: t, acc: String) => acc + " " + f.method(t))
+    val actual = inst.foldRight[String](p)("a") {
+      [t] => (f: TypeClass[t], t: t, acc: String) => acc + " " + f.method(t)
+    }
 
-    assert(res == expected)
+    assert(actual == expected)
+  }
+
+  @Test
+  def mapKforSingle: Unit = {
+    val inst = summon[K0.Instances[TypeClass, Single[Int]]]
+    val otherInst = inst.mapK([t] => (tc: TypeClass[t]) => tc.another)
+    val s = Single(42)
+
+    val expected = "s 4242"
+    val actual = otherInst.foldLeft[String](s)("s") {
+      [t] => (acc: String, f: AnotherTypeClass[t], t: t) => acc + " " + f.method(t) * 2
+    }
+
+    assert(actual == expected)
+  }
+
+  @Test
+  def mapKforPair: Unit = {
+    val inst = summon[K0.ProductInstances[TypeClass, Pair[Int]]]
+    val otherInst = inst.mapK([t] => (tc: TypeClass[t]) => tc.another)
+    val p = Pair(5, 6)
+
+    val expected = "p 66 55"
+    val actual = otherInst.foldRight[String](p)("p") {
+      [t] => (f: AnotherTypeClass[t], t: t, acc: String) => acc + " " + f.method(t) * 2
+    }
+
+    assert(actual == expected)
+  }
+
+  @Test
+  def mapKforFew: Unit = {
+    val inst = summon[K0.CoproductInstances[TypeClass, Few[Int]]]
+    val otherInst = inst.mapK([t] => (tc: TypeClass[t]) => tc.another)
+    val f = Pair(13, 313)
+
+    val expected = "f 326"
+    val actual = otherInst.fold[String](f) {
+      [t] => (f: AnotherTypeClass[t], t: t) => "f " + f.method(t)
+    }
+
+    assert(actual == expected)
   }
 }
