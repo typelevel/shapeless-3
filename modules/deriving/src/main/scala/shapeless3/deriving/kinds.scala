@@ -404,6 +404,9 @@ object K2 {
     inline def map[A, B, R, S](x: T[A, B])(f: [t[_, _]] => (F[t], t[A, B]) => t[R, S]): T[R, S] =
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
 
+    inline def widen[G[t[_, _]] >: F[t]]: Instances[G, T] =
+      inst.asInstanceOf
+      
     inline def traverse[A, B, G[_], R, S](x: T[A, B])(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t[_, _]] => (F[t], t[A, B]) => G[t[R, S]]): G[T[R, S]] =
       inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
 
@@ -422,6 +425,9 @@ object K2 {
       inst.erasedFoldRight2(x, y)(i)(f.asInstanceOf).asInstanceOf
     inline def project[A, B, R](t: T[A, B])(p: Int)(f: [t[_, _]] => (F[t], t[A, B]) => R): R =
       inst.erasedProject(t)(p)(f.asInstanceOf).asInstanceOf
+    inline def widen[G[t[_, _]] >: F[t]]: ProductInstances[G, T] =
+      inst.asInstanceOf
+
 
   extension [F[_[_, _]], T[_, _]](inst: CoproductInstances[F, T])
     inline def fold[A, B, R](x: T[A, B])(f: [t[_, _]] => (F[t], t[A, B]) => R): R =
@@ -430,6 +436,8 @@ object K2 {
       inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
     inline def fold2[A, B, C, D, R](x: T[A, B], y: T[C, D])(g: (Int, Int) => R)(f: [t[_, _]] => (F[t], t[A, B], t[C, D]) => R): R =
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
+    inline def widen[G[t[_, _]] >: F[t]]: CoproductInstances[G, T] =
+      inst.asInstanceOf
 
   inline given mkInstances[F[_[_, _]], T[_, _]](using gen: Generic[T]): Instances[F, T] =
     inline gen match {
