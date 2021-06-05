@@ -60,6 +60,7 @@ object K0 {
       case _ => EmptyTuple
     }
 
+  @deprecated("unsound - use .withFirst on CoproductGeneric or `summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]`", "3.0.2")
   inline def summonFirst[F[_], T, U]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
 
   transparent inline def summonFirst0[T]: Any = inline erasedValue[T] match {
@@ -76,6 +77,7 @@ object K0 {
   extension [T](gen: CoproductGeneric[T])
     inline def toRepr(o: T): Union[gen.MirroredElemTypes] = o.asInstanceOf
     inline def fromRepr(r: Union[gen.MirroredElemTypes]): T = r.asInstanceOf
+    inline def withFirst[F[_], R](f: [t <: T] => F[t] => R): R = (f.asInstanceOf[Any => R])(summonFirst0[LiftP[F, gen.MirroredElemTypes]])
 
   extension [F[_], T](gen: Generic[T])
     inline def derive(f: => (ProductGeneric[T] & gen.type) ?=> F[T], g: => (CoproductGeneric[T] & gen.type) ?=> F[T]): F[T] =
@@ -172,6 +174,7 @@ object K1 {
       case _ => EmptyTuple
     }
 
+  @deprecated("unsound - use .withFirst on CoproductGeneric or `summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]`", "3.0.2")
   inline def summonFirst[F[_[_]], T[_], U[_]]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
 
   transparent inline def summonFirst0[T]: Any = inline erasedValue[T] match {
@@ -188,6 +191,7 @@ object K1 {
   extension [T[_], A](gen: CoproductGeneric[T])
     inline def toRepr(o: T[A]): Union[gen.MirroredElemTypes[A]] = o.asInstanceOf
     inline def fromRepr(r: Union[gen.MirroredElemTypes[A]]): T[A] = r.asInstanceOf
+    inline def withFirst[F[_[_]], R](f: [t[x] <: T[x]] => F[t] => R): R = (f.asInstanceOf[Any => R])(summonFirst0[LiftP[F, gen.MirroredElemTypes]])
 
   extension [F[_[_]], T[_]](gen: Generic[T]) inline def derive(f: => (ProductGeneric[T] & gen.type) ?=> F[T], g: => (CoproductGeneric[T] & gen.type) ?=> F[T]): F[T] =
     inline gen match {

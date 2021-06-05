@@ -426,7 +426,7 @@ object Empty {
     mkEmpty(inst.construct([a] => (ma: Empty[a]) => ma.empty))
 
   inline given emptyGenC[A](using gen: K0.CoproductGeneric[A]): Empty[A] =
-    mkEmpty(K0.summonFirst[Empty, gen.MirroredElemTypes, A].empty)
+    mkEmpty(gen.withFirst[Empty, A]([a <: A] => (_: Empty[a]).empty))
 
   inline def derived[A](using gen: K0.Generic[A]): Empty[A] =
     gen.derive(emptyGen, emptyGenC)
@@ -452,7 +452,7 @@ object EmptyK {
     mkEmptyK([t] => () => inst.construct([f[_]] => (ef: EmptyK[f]) => ef.empty[t]))
 
   inline given emptyKGenC[A[_]](using gen: K1.CoproductGeneric[A]): EmptyK[A] =
-    mkEmptyK[A]([t] => () => K1.summonFirst[EmptyK, gen.MirroredElemTypes, A].empty[t])
+    mkEmptyK[A]([t] => () => gen.withFirst[EmptyK, A[t]]([a[x] <: A[x]] => (_: EmptyK[a]).empty[t]))
 
   inline def derived[A[_]](using gen: K1.Generic[A]): EmptyK[A] =
     inline gen match {
@@ -500,7 +500,7 @@ object Pure {
     mkPure[A]([t] => (a: t) => inst.construct([f[_]] => (af: Alt1.Of[Pure, EmptyK][f]) => af.fold[f[t]](_.pure(a))(_.empty[t])))
 
   inline given pureGenC[A[_]](using gen: K1.CoproductGeneric[A]): Pure[A] =
-    mkPure[A]([t] => (a: t) => K1.summonFirst[Pure, gen.MirroredElemTypes, A].pure(a))
+    mkPure[A]([t] => (a: t) => gen.withFirst[Pure, A[t]]([f[x] <: A[x]] => (_: Pure[f]).pure(a)))
 
   inline def derived[A[_]](using gen: K1.Generic[A]): Pure[A] =
     inline gen match {
