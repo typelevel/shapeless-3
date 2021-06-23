@@ -22,7 +22,7 @@ import scala.deriving.*
 
 import shapeless3.deriving.*
 
-private[shapeless3] abstract class ErasedInstances[K, FT] {
+private[shapeless3] abstract class ErasedInstances[K, FT] extends Serializable {
   def erasedMapK(f: Any => Any): ErasedInstances[K, ?]
   def erasedMap(x: Any)(f: (Any, Any) => Any): Any
   def erasedTraverse(x0: Any)(map: (Any, Any) => Any)(pure: Any => Any)(ap: (Any, Any) => Any)(f: (Any, Any) => Any): Any
