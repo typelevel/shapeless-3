@@ -1,6 +1,6 @@
 import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProblem}
 
-val dottyVersion = "3.0.0"
+val dottyVersion = "3.0.1"
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / scalaVersion := dottyVersion
