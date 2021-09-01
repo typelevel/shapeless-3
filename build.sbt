@@ -1,10 +1,10 @@
 import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProblem}
 
-val dottyVersion = "3.0.1"
+val scala3Version = "3.0.2"
 
 ThisBuild / organization := "org.typelevel"
-ThisBuild / scalaVersion := dottyVersion
-ThisBuild / crossScalaVersions := Seq(dottyVersion)
+ThisBuild / scalaVersion := scala3Version
+ThisBuild / crossScalaVersions := Seq(scala3Version)
 ThisBuild / mimaFailOnNoPrevious := false
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 
