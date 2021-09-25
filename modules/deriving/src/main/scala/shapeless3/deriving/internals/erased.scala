@@ -167,7 +167,8 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
       var acc = pure(())
       var i = 0
       while(i < n) {
-        acc = ap(map(acc, (_: Unit) => arr.update(i, _)), f(is(i), x.productElement(i)))
+        val j = i // avoid capturing `i` when the applicative is lazy
+        acc = ap(map(acc, (_: Unit) => arr.update(j, _)), f(is(j), x.productElement(j)))
         i = i+1
       }
       map(acc, (_: Unit) => mirror.fromProduct(new ArrayProduct(arr)))

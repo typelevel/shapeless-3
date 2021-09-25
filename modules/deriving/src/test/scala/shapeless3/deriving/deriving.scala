@@ -231,6 +231,7 @@ class DerivationTests {
     val v6 = Traverse[CList]
     assert(v6.traverse(CCons("foo", CCons("bar", CNil)))(Option(_)) == Some(CCons("foo", CCons("bar", CNil))))
     assert(v6.traverse(CNil)(Option(_)) == Some(CNil))
+    assert(v6.traverse(CCons("foo", CCons("bar", CNil)))(() => _).apply() == CCons("foo", CCons("bar", CNil)))
 
     val v7 = Traverse[OptE]
     assert(v7.traverse(SmE(1))((x: Int) => List(x + 1)) == List(SmE(2)))
