@@ -66,14 +66,15 @@ object K0 {
       case _ => EmptyTuple
     }
 
-  inline def summonFirst[F[_], T, U]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonFirst[F[_], T, U]: F[U] =
+    summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
 
-  transparent inline def summonFirst0[T]: Any = inline erasedValue[T] match {
-    case _: (a *: b) => summonFrom {
-      case aa: `a` => aa
-      case _ => summonFirst0[b]
-    }
-  }
+  transparent inline def summonFirst0[T]: Any =
+    inline erasedValue[T] match
+      case _: (a *: b) => summonFrom {
+        case instance: `a` => instance
+        case _ => summonFirst0[b]
+      }
 
   extension [T](gen: ProductGeneric[T])
     inline def toRepr(o: T): gen.MirroredElemTypes = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes]
@@ -184,14 +185,11 @@ object K1 {
       case _ => EmptyTuple
     }
 
-  inline def summonFirst[F[_[_]], T[_], U[_]]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonFirst[F[_[_]], T[_], U[_]]: F[U] =
+    K0.summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
 
-  transparent inline def summonFirst0[T]: Any = inline erasedValue[T] match {
-    case _: (a *: b) => summonFrom {
-      case aa: `a` => aa
-      case _ => summonFirst0[b]
-    }
-  }
+  transparent inline def summonFirst0[T]: Any =
+    K0.summonFirst0[T]
 
   extension [T[_], A] (gen: ProductGeneric[T])
     inline def toRepr(o: T[A]): gen.MirroredElemTypes[A] = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A]]
@@ -298,14 +296,11 @@ object K11 {
       case _ => EmptyTuple
     }
 
-  inline def summonFirst[F[_[_[_]]], T[_[_]], U[_[_]]]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonFirst[F[_[_[_]]], T[_[_]], U[_[_]]]: F[U] =
+    K0.summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
 
-  transparent inline def summonFirst0[T]: Any = inline erasedValue[T] match {
-    case _: (a *: b) => summonFrom {
-      case aa: `a` => aa
-      case _ => summonFirst0[b]
-    }
-  }
+  transparent inline def summonFirst0[T]: Any =
+    K0.summonFirst0[T]
 
   extension [T[_[_]], A[_]](gen: ProductGeneric[T])
     inline def toRepr(o: T[A]): gen.MirroredElemTypes[A] = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A]]
@@ -413,14 +408,11 @@ object K2 {
       case _ => EmptyTuple
     }
 
-  inline def summonFirst[F[_[_, _]], T[_, _], U[_, _]]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonFirst[F[_[_, _]], T[_, _], U[_, _]]: F[U] =
+    K0.summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
 
-  transparent inline def summonFirst0[T]: Any = inline erasedValue[T] match {
-    case _: (a *: b) => summonFrom {
-      case aa: `a` => aa
-      case _ => summonFirst0[b]
-    }
-  }
+  transparent inline def summonFirst0[T]: Any =
+    K0.summonFirst0[T]
 
   extension [T[_, _], A, B](gen: ProductGeneric[T]) inline def toRepr(o: T[A, B]): gen.MirroredElemTypes[A, B] = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A, B]]
   extension [T[_, _], A, B](gen: ProductGeneric[T]) inline def fromRepr(r: gen.MirroredElemTypes[A, B]): T[A, B] = gen.fromProduct(r.asInstanceOf).asInstanceOf[T[A, B]]
