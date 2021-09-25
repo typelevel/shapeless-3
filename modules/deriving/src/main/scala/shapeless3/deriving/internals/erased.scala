@@ -160,18 +160,25 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
 
   final def erasedTraverse(x0: Any)(map: (Any, Any) => Any)(pure: Any => Any)(ap: (Any, Any) => Any)(f: (Any, Any) => Any) = {
     val n = is.length
+
+    def prepend(xs: List[Any])(x: Any) = x :: xs
+    def fromList(xs: List[Any]) =
+      val arr = new Array[Any](n)
+      @tailrec def toProduct(xs: List[Any], i: Int): Product = xs match
+        case x :: xs => arr(i) = x; toProduct(xs, i - 1)
+        case Nil => new ArrayProduct(arr)
+      mirror.fromProduct(toProduct(xs, n - 1))
+
     if (n == 0) pure(x0)
     else {
       val x = toProduct(x0)
-      val arr = new Array[Any](n)
-      var acc = pure(())
+      var acc = pure(Nil)
       var i = 0
       while(i < n) {
-        val j = i // avoid capturing `i` when the applicative is lazy
-        acc = ap(map(acc, (_: Unit) => arr.update(j, _)), f(is(j), x.productElement(j)))
+        acc = ap(map(acc, prepend), f(is(i), x.productElement(i)))
         i = i+1
       }
-      map(acc, (_: Unit) => mirror.fromProduct(new ArrayProduct(arr)))
+      map(acc, fromList)
     }
   }
 

@@ -38,6 +38,10 @@ object adts {
   sealed trait CList[+A] derives Eq, Show, Read, Functor, EmptyK, Traverse, Foldable
   case class CCons[+A](hd: A, tl: CList[A]) extends CList[A]
   case object CNil extends CList[Nothing]
+  object CList {
+    def apply[A](x: A, xs: A*): CCons[A] =
+      CCons(x, xs.foldRight[CList[A]](CNil)(CCons.apply))
+  }
 
   case class Order[F[_]](
     item: F[String],
