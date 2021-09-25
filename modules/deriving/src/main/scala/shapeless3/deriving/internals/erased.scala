@@ -160,7 +160,7 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
 
   final def erasedTraverse(x0: Any)(map: (Any, Any) => Any)(pure: Any => Any)(ap: (Any, Any) => Any)(f: (Any, Any) => Any) = {
     val n = is.length
-    if (n == 0) x0
+    if (n == 0) pure(x0)
     else {
       val x = toProduct(x0)
       val arr = new Array[Any](n)

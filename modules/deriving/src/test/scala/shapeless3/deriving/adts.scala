@@ -65,4 +65,6 @@ object adts {
   case object NilF extends ListF[Nothing, Nothing]
 
   case class BI(b: Boolean, i: Int)
+  
+  case class Phantom[A]()
 }

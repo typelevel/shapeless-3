@@ -235,6 +235,9 @@ class DerivationTests {
     val v7 = Traverse[OptE]
     assert(v7.traverse(SmE(1))((x: Int) => List(x + 1)) == List(SmE(2)))
     assert(v7.traverse(NnE)((x: Int) => List(x + 1)) == List(NnE))
+
+    val v8 = Traverse[Phantom]
+    assert(v8.traverse(Phantom())(Option(_)) == Some(Phantom()))
   }
 
 
