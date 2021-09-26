@@ -163,9 +163,9 @@ lazy val mimaSettings = Seq(
 lazy val publishSettings: Seq[Setting[_]] = Seq(
   Test / publishArtifact := false,
   pomIncludeRepository := (_ => false),
-  homepage := Some(url("https://github.com/milessabin/shapeless")),
+  homepage := Some(url("https://github.com/typelevel/shapeless-3")),
   licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
-  scmInfo := Some(ScmInfo(url("https://github.com/milessabin/shapeless"), "scm:git:git@github.com:milessabin/shapeless.git")),
+  scmInfo := Some(ScmInfo(url("https://github.com/typelevel/shapeless-3"), "scm:git:git@github.com:typelevel/shapeless-3.git")),
   developers := List(
     Developer("milessabin", "Miles Sabin", "miles@milessabin.com", url("http://milessabin.com/blog")),
     Developer("joroKr21", "Georgi Krastev", "joro.kr.21@gmail.com", url("https://twitter.com/Joro_Kr"))
