@@ -201,6 +201,11 @@ object Applicative {
         f <- ff
         a <- fa
       } yield f(a)
+
+  given Applicative[[A] =>> () => A] with
+    def map[A, B](fa: () => A)(f: A => B): () => B = () => f(fa())
+    def pure[A](a: A): () => A = () => a
+    def ap[A, B](ff: () => A => B)(fa: () => A): () => B = () => ff()(fa())
 }
 
 trait Traverse[F[_]] extends Functor[F] {

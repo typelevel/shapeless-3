@@ -225,16 +225,21 @@ class DerivationTests {
     assert(v3.traverse(Nn)((x: Int) => List(x + 1)) == List(Nn))
 
     val v4 = Traverse[Const[CNil.type]]
-    assert(v4.traverse(CNil)(Option(_)) == Some(CNil))
+    assert(v4.traverse(CNil)(Option.apply) == Some(CNil))
     val v5 = Traverse[CCons]
-    assert(v5.traverse(CCons("foo", CCons("bar", CNil)))(Option(_)) == Some(CCons("foo", CCons("bar", CNil))))
+    assert(v5.traverse(CList("foo", "bar"))(Option.apply) == Some(CList("foo", "bar")))
     val v6 = Traverse[CList]
-    assert(v6.traverse(CCons("foo", CCons("bar", CNil)))(Option(_)) == Some(CCons("foo", CCons("bar", CNil))))
-    assert(v6.traverse(CNil)(Option(_)) == Some(CNil))
+    assert(v6.traverse(CList("foo", "bar"))(Option.apply) == Some(CList("foo", "bar")))
+    assert(v6.traverse(CNil)(Option.apply) == Some(CNil))
+    assert(v6.traverse(CList("foo", "bar"))(() => _).apply() == CList("foo", "bar"))
+    assert(v6.traverse(CList(1, 2))(x => List(x, x + 1)) == List(CList(1, 2), CList(1, 3), CList(2, 2), CList(2, 3)))
 
     val v7 = Traverse[OptE]
     assert(v7.traverse(SmE(1))((x: Int) => List(x + 1)) == List(SmE(2)))
     assert(v7.traverse(NnE)((x: Int) => List(x + 1)) == List(NnE))
+
+    val v8 = Traverse[Phantom]
+    assert(v8.traverse(Phantom())(Option.apply) == Some(Phantom()))
   }
 
 
