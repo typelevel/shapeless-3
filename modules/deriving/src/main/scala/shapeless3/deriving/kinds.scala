@@ -123,18 +123,18 @@ object K0 {
       inst.asInstanceOf
 
   extension [F[_], T](inst: CoproductInstances[F, T])
-    inline def mapK[G[_]](f: [t] => F[t] => G[t]): CoproductInstances[G, T] =
+    inline def mapK[G[_]](f: [t <: T] => F[t] => G[t]): CoproductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def inject[R](p: Int)(f: [t <: T] => F[t] => R): R =
       inst.erasedInject(p)(f.asInstanceOf).asInstanceOf
     @deprecated("use inject", "3.0.2")
     inline def project[Acc](p: Int)(i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
       inst.erasedProject(p)(i)(f.asInstanceOf).asInstanceOf
-    inline def fold[R](x: T)(f: [t] => (F[t], t) => R): R =
+    inline def fold[R](x: T)(f: [t <: T] => (F[t], t) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
-    inline def fold2[R](x: T, y: T)(a: => R)(f: [t] => (F[t], t, t) => R): R =
+    inline def fold2[R](x: T, y: T)(a: => R)(f: [t <: T] => (F[t], t, t) => R): R =
       inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
-    inline def fold2[R](x: T, y: T)(g: (Int, Int) => R)(f: [t] => (F[t], t, t) => R): R =
+    inline def fold2[R](x: T, y: T)(g: (Int, Int) => R)(f: [t <: T] => (F[t], t, t) => R): R =
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t] >: F[t]]: CoproductInstances[G, T] = 
       inst.asInstanceOf
@@ -236,13 +236,13 @@ object K1 {
       inst.asInstanceOf
 
   extension [F[_[_]], T[_]](inst: CoproductInstances[F, T])
-    inline def mapK[G[_[_]]](f: [t[_]] => F[t] => G[t]): CoproductInstances[G, T] =
+    inline def mapK[G[_[_]]](f: [t[x] <: T[x]] => F[t] => G[t]): CoproductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
-    inline def fold[A, R](x: T[A])(f: [t[_]] => (F[t], t[A]) => R): R =
+    inline def fold[A, R](x: T[A])(f: [t[x] <: T[x]] => (F[t], t[A]) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A, B, R](x: T[A], y: T[B])(a: => R)(f: [t[_]] => (F[t], t[A], t[B]) => R): R =
+    inline def fold2[A, B, R](x: T[A], y: T[B])(a: => R)(f: [t[x] <: T[x]] => (F[t], t[A], t[B]) => R): R =
       inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A, B, R](x: T[A], y: T[B])(g: (Int, Int) => R)(f: [t[_]] => (F[t], t[A], t[B]) => R): R =
+    inline def fold2[A, B, R](x: T[A], y: T[B])(g: (Int, Int) => R)(f: [t[x] <: T[x]] => (F[t], t[A], t[B]) => R): R =
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_]] >: F[t]]: CoproductInstances[G, T] = 
       inst.asInstanceOf
@@ -347,13 +347,13 @@ object K11 {
       inst.asInstanceOf
 
   extension [F[_[_[_]]], T[_[_]]](inst: CoproductInstances[F, T])
-    inline def mapK[G[_[_[_]]]](f: [t[_[_]]] => F[t] => G[t]): CoproductInstances[G, T] =
+    inline def mapK[G[_[_[_]]]](f: [t[x[_]] <: T[x]] => F[t] => G[t]): CoproductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
-    inline def fold[A[_], R](x: T[A])(f: [t[_[_]]] => (F[t], t[A]) => R): R =
+    inline def fold[A[_], R](x: T[A])(f: [t[x[_]] <: T[x]] => (F[t], t[A]) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A[_], B[_], R](x: T[A], y: T[B])(a: => R)(f: [t[_[_]]] => (F[t], t[A], t[B]) => R): R =
+    inline def fold2[A[_], B[_], R](x: T[A], y: T[B])(a: => R)(f: [t[x[_]] <: T[x]] => (F[t], t[A], t[B]) => R): R =
       inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A[_], B[_], R](x: T[A], y: T[B])(g: (Int, Int) => R)(f: [t[_[_]]] => (F[t], t[A], t[B]) => R): R =
+    inline def fold2[A[_], B[_], R](x: T[A], y: T[B])(g: (Int, Int) => R)(f: [t[x[_]] <: T[x]] => (F[t], t[A], t[B]) => R): R =
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_[_]]] >: F[t]]: CoproductInstances[G, T] = 
       inst.asInstanceOf
@@ -457,13 +457,13 @@ object K2 {
       inst.asInstanceOf
 
   extension [F[_[_, _]], T[_, _]](inst: CoproductInstances[F, T])
-    inline def mapK[G[_[_, _]]](f: [t[_, _]] => F[t] => G[t]): CoproductInstances[G, T] =
+    inline def mapK[G[_[_, _]]](f: [t[x, y] <: T[x, y]] => F[t] => G[t]): CoproductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
-    inline def fold[A, B, R](x: T[A, B])(f: [t[_, _]] => (F[t], t[A, B]) => R): R =
+    inline def fold[A, B, R](x: T[A, B])(f: [t[x, y] <: T[x, y]] => (F[t], t[A, B]) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A, B, C, D, R](x: T[A, B], y: T[C, D])(a: => R)(f: [t[_, _]] => (F[t], t[A, B], t[C, D]) => R): R =
+    inline def fold2[A, B, C, D, R](x: T[A, B], y: T[C, D])(a: => R)(f: [t[x, y] <: T[x, y]] => (F[t], t[A, B], t[C, D]) => R): R =
       inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A, B, C, D, R](x: T[A, B], y: T[C, D])(g: (Int, Int) => R)(f: [t[_, _]] => (F[t], t[A, B], t[C, D]) => R): R =
+    inline def fold2[A, B, C, D, R](x: T[A, B], y: T[C, D])(g: (Int, Int) => R)(f: [t[x, y] <: T[x, y]] => (F[t], t[A, B], t[C, D]) => R): R =
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_, _]] >: F[t]]: CoproductInstances[G, T] =
       inst.asInstanceOf

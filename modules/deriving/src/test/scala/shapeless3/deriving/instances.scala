@@ -102,7 +102,7 @@ class InstancesTests {
 
     val expected = "f 326"
     val actual = otherInst.fold[String](f) {
-      [t] => (f: AnotherTypeClass[t], t: t) => "f " + f.method(t)
+      [t <: Few[Int]] => (f: AnotherTypeClass[t], t: t) => "f " + f.method(t)
     }
 
     assert(actual == expected)
