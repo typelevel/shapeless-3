@@ -163,6 +163,9 @@ class DerivationTests {
     val v8 = Functor[OptE]
     assert(v8.map(SmE("foo"))(_.length) == SmE(3))
     assert(v8.map(NnE)(identity) == NnE)
+
+    val v9 = Functor[[X] =>> (X, Boolean)]
+    assert(v9.map((123, true))(_.toString) == ("123", true))
   }
 
   def mkCList(n: Int) = {
