@@ -1,4 +1,4 @@
-import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProblem}
+import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProblem, IncompatibleMethTypeProblem}
 
 val scala3Version = "3.1.0"
 
@@ -8,7 +8,7 @@ ThisBuild / crossScalaVersions := Seq(scala3Version)
 ThisBuild / mimaFailOnNoPrevious := false
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 
-val previousVersion = "4.0.0"
+val previousVersion = "3.0.0"
 
 // GHA configuration
 
@@ -88,7 +88,9 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform)
      mimaBinaryIssueFilters ++= Seq(
        ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedInstances.erasedMapK"),
        ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedProject"),
-       ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK")
+       ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK"),
+       ProblemFilters.exclude[IncompatibleMethTypeProblem]("shapeless3.deriving.internals.ErasedProductInstances1.this"),
+       ProblemFilters.exclude[IncompatibleMethTypeProblem]("shapeless3.deriving.internals.ErasedProductInstancesN.this")
      )
    )
   .settings(publishSettings)
