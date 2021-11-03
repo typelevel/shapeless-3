@@ -47,6 +47,15 @@ object Monoid {
     def empty: String = ""
     def combine(x: String, y: String): String = x+y
 
+  given [A](using M: Monoid[A]): Monoid[Option[A]] with
+    def empty: Option[A] = None
+
+    def combine(x: Option[A], y: Option[A]): Option[A] = (x, y) match {
+      case x -> None => x
+      case None -> y => y
+      case Some(x) -> Some(y) => Some(M.combine(x, y))
+    }
+
   given monoidGen[A](using inst: K0.ProductInstances[Monoid, A]): Monoid[A] with
     def empty: A = inst.construct([t] => (ma: Monoid[t]) => ma.empty)
     def combine(x: A, y: A): A = inst.map2(x, y)([t] => (mt: Monoid[t], t0: t, t1: t) => mt.combine(t0, t1))

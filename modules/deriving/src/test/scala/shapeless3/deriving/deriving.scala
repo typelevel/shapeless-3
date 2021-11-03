@@ -50,6 +50,10 @@ class DerivationTests {
     val v1 = Monoid[Box[Int]]
     assert(v1.empty == Box(0))
     assert(v1.combine(Box(1), Box(2)) == Box(3))
+
+    val v2 = Monoid[Recursive]
+    assert(v2.empty == Recursive(0, None))
+    assert(v2.combine(Recursive(1, Some(Recursive(2, None))), Recursive(1, Some(Recursive(3, None)))) == Recursive(2, Some(Recursive(5, None))))
   }
 
   @Test

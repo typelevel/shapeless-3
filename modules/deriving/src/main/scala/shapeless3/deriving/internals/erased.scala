@@ -41,7 +41,7 @@ private[shapeless3] abstract class ErasedProductInstances[K, FT] extends ErasedI
   def erasedProject(x0: Any)(p: Int)(f: (Any, Any) => Any): Any
 }
 
-private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirror.Product, i: Any) extends ErasedProductInstances[K, FT] {
+private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirror.Product, i: => Any) extends ErasedProductInstances[K, FT] {
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
   
   final def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
@@ -99,7 +99,7 @@ private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirro
     f(i, toProduct(x0).productElement(0))
 }
 
-private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirror.Product, is: Array[Any]) extends ErasedProductInstances[K, FT] {
+private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirror.Product, is: => Array[Any]) extends ErasedProductInstances[K, FT] {
   import ErasedProductInstances.ArrayProduct
 
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
