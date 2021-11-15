@@ -41,14 +41,12 @@ private[shapeless3] abstract class ErasedProductInstances[K, FT] extends ErasedI
   def erasedProject(x0: Any)(p: Int)(f: (Any, Any) => Any): Any
 }
 
-private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirror.Product, _i: () => Any) extends ErasedProductInstances[K, FT] {
+private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirror.Product, i0: () => Any) extends ErasedProductInstances[K, FT] {
 
-  //Preserved for bincompat reasons. DO NOT USE as it will lead to stack overflows when deriving
-  //instances for recursive types
-  @deprecated
-  def this(mirror: Mirror.Product, _i: Any) = this(mirror, () => _i)
+  @deprecated("Preserved for bincompat reasons. DO NOT USE as it will lead to stack overflows when deriving instances for recursive types")
+  def this(mirror: Mirror.Product, i0: Any) = this(mirror, () => i0)
 
-  lazy val i = _i()
+  lazy val i = i0()
 
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
   
@@ -112,14 +110,12 @@ object ErasedProductInstances1 {
     new ErasedProductInstances1(mirror, () => i)
 }
 
-private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirror.Product, _is: () => Array[Any]) extends ErasedProductInstances[K, FT] {
+private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirror.Product, is0: () => Array[Any]) extends ErasedProductInstances[K, FT] {
 
-  //Preserved for bincompat reasons. DO NOT USE as it will lead to stack overflows when deriving
-  //instances for recursive types
-  @deprecated
-  def this(mirror: Mirror.Product, _is: Array[Any]) = this(mirror, () => _is)
+  @deprecated("Preserved for bincompat reasons. DO NOT USE as it will lead to stack overflows when deriving instances for recursive types")
+  def this(mirror: Mirror.Product, is0: Array[Any]) = this(mirror, () => is0)
 
-  lazy val is: Array[Any] = _is()
+  lazy val is: Array[Any] = is0()
 
   import ErasedProductInstances.ArrayProduct
 
