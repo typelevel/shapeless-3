@@ -23,6 +23,8 @@ object adts {
 
   case class Box[A](x: A) derives Monoid, Eq, Show, Read, Functor, Pure, Ord, Traverse, Foldable
 
+  case class Recursive(h: Int, t: Option[Recursive]) derives Monoid
+
   sealed trait OptionInt derives Eq, Empty, Show, Read, Ord
   case object NoneInt extends OptionInt
   case class SomeInt(value: Int) extends OptionInt

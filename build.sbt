@@ -168,7 +168,8 @@ lazy val publishSettings: Seq[Setting[_]] = Seq(
   scmInfo := Some(ScmInfo(url("https://github.com/typelevel/shapeless-3"), "scm:git:git@github.com:typelevel/shapeless-3.git")),
   developers := List(
     Developer("milessabin", "Miles Sabin", "miles@milessabin.com", url("http://milessabin.com/blog")),
-    Developer("joroKr21", "Georgi Krastev", "joro.kr.21@gmail.com", url("https://twitter.com/Joro_Kr"))
+    Developer("joroKr21", "Georgi Krastev", "joro.kr.21@gmail.com", url("https://twitter.com/Joro_Kr")),
+    Developer("TimWSpence", "Tim Spence", "timothywspence@gmail.com", url("https://twitter.com/timwspence"))
   )
 )
 
