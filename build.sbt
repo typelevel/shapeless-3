@@ -88,9 +88,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform)
      mimaBinaryIssueFilters ++= Seq(
        ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedInstances.erasedMapK"),
        ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedProject"),
-       ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK"),
-       ProblemFilters.exclude[IncompatibleMethTypeProblem]("shapeless3.deriving.internals.ErasedProductInstances1.this"),
-       ProblemFilters.exclude[IncompatibleMethTypeProblem]("shapeless3.deriving.internals.ErasedProductInstancesN.this")
+       ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK")
      )
    )
   .settings(publishSettings)
