@@ -46,7 +46,7 @@ private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirro
   //Preserved for bincompat reasons. DO NOT USE as it will lead to stack overflows when deriving
   //instances for recursive types
   @deprecated
-  def this(mirror: Mirror.Product, i: Any) = this(mirror, () => i)
+  def this(mirror: Mirror.Product, _i: Any) = this(mirror, () => _i)
 
   lazy val i = _i()
 
@@ -117,7 +117,7 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
   //Preserved for bincompat reasons. DO NOT USE as it will lead to stack overflows when deriving
   //instances for recursive types
   @deprecated
-  def this(mirror: Mirror.Product, is: Array[Any]) = this(mirror, () => is)
+  def this(mirror: Mirror.Product, _is: Array[Any]) = this(mirror, () => _is)
 
   lazy val is: Array[Any] = _is()
 
@@ -126,7 +126,7 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
 
   final def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
-    new ErasedProductInstancesN(mirror, () => is.map(f))
+    new ErasedProductInstancesN(mirror, is.map(f))
 
   final def erasedConstruct(f: Any => Any): Any = {
     val n = is.length
