@@ -80,7 +80,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(test % "test")
   .settings(
     moduleName := "shapeless3-deriving",
-    libraryDependencies += "org.typelevel" %%% "cats-core" % "2.6.1" % "test"
+    libraryDependencies += "org.typelevel" %%% "cats-core" % "2.7.0" % "test"
   )
   .settings(commonSettings)
   .settings(mimaSettings)
