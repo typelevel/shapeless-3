@@ -12,7 +12,7 @@ val previousVersion = "3.0.0"
 
 // GHA configuration
 
-ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8")
+ThisBuild / githubWorkflowJavaVersions := List(JavaSpec.temurin("8"))
 ThisBuild / githubWorkflowArtifactUpload := false
 ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 
