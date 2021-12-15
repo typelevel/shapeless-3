@@ -21,6 +21,9 @@ local.sbt
 *.iml
 *.iws
 
+# Ignore project files for VSCode
+.vscode
+
 # Ignore OS X metadata
 .DS_Store
 
