@@ -215,7 +215,7 @@ class AnnotationTests {
     val first: T1First = Tuple1(First())
 
     val st: (T1First, (Second, Third)) = AllTypeAnnotations[Base2].apply() // sealed trait
-    assert(cc == (first, (Second(3, "e"), Third('c'))))
+    assert(st == (first, (Second(3, "e"), Third('c'))))
 
     val cc: (T1First, EmptyTuple.type, (Second, Third)) = AllTypeAnnotations[CC4].apply() // case class
     assert(cc == (first, EmptyTuple, (Second(2, "b"), Third('c'))))

@@ -122,7 +122,7 @@ object Annotations {
     }
 
   transparent inline implicit def mkAnnotations[A, T]: Annotations[A, T] =
-    ${ AnnotationMacros.mkVariableAnnotations[A, T] }
+    ${ AnnotationMacros.mkAnnotations[A, T] }
 }
 
 /**
@@ -234,7 +234,7 @@ object AllAnnotations {
     }
 
   transparent inline implicit def mkAnnotations[T]: AllAnnotations[T] =
-    ${ AnnotationMacros.mkAllVariableAnnotations[T] }
+    ${ AnnotationMacros.mkAllAnnotations[T] }
 }
 
 /**
@@ -315,11 +315,11 @@ object AnnotationMacros {
     }
   }
 
-  def mkVariableAnnotations[A: Type, T: Type](using Quotes) = mkAnnotations[A, T, Annotations](ofExprVariableAnnotations[A, T](_))
+  def mkAnnotations[A: Type, T: Type](using Quotes): Expr[Annotations[A, T]] = mkAnnotationsImpl[A, T, Annotations](ofExprVariableAnnotations[A, T](_))
 
-  def mkTypeAnnotations[A: Type, T: Type](using Quotes) = mkAnnotations[A, T, TypeAnnotations](ofExprTypeAnnotations[A, T](_))
+  def mkTypeAnnotations[A: Type, T: Type](using Quotes): Expr[TypeAnnotations[A, T]] = mkAnnotationsImpl[A, T, TypeAnnotations](ofExprTypeAnnotations[A, T](_))
 
-  def mkAnnotations[A: Type, T: Type, AS[A, T]: Type](mk: Seq[Expr[Any]] => Expr[AS[A, T]])(using q: Quotes): Expr[AS[A, T]] =
+  private def mkAnnotationsImpl[A: Type, T: Type, AS[A, T]: Type](mk: Seq[Expr[Any]] => Expr[AS[A, T]])(using q: Quotes): Expr[AS[A, T]] =
     import q.reflect._
 
     val tpe = TypeRepr.of[AS[A, T]] <:< TypeRepr.of[TypeAnnotations[A, T]]
@@ -342,11 +342,11 @@ object AnnotationMacros {
       mk(exprs)
     }
   
-  def mkAllVariableAnnotations[T: Type](using Quotes) = mkAllAnnotations[T, AllAnnotations](ofExprAllVariableAnnotations)
+  def mkAllAnnotations[T: Type](using Quotes): Expr[AllAnnotations[T]] = mkAllAnnotationsImpl[T, AllAnnotations](ofExprAllVariableAnnotations)
 
-  def mkAllTypeAnnotations[T: Type](using Quotes) = mkAllAnnotations[T, AllTypeAnnotations](ofExprAllTypeAnnotations)
+  def mkAllTypeAnnotations[T: Type](using Quotes): Expr[AllTypeAnnotations[T]] = mkAllAnnotationsImpl[T, AllTypeAnnotations](ofExprAllTypeAnnotations)
 
-  def mkAllAnnotations[T: Type, AS[T]: Type](mk: Seq[Expr[Any]] => Expr[AS[T]])(using q: Quotes): Expr[AS[T]] =
+  private def mkAllAnnotationsImpl[T: Type, AS[T]: Type](mk: Seq[Expr[Any]] => Expr[AS[T]])(using q: Quotes): Expr[AS[T]] =
     import q.reflect._
 
     val tpe = TypeRepr.of[AS[T]] <:< TypeRepr.of[AllTypeAnnotations[T]]
