@@ -152,7 +152,7 @@ lazy val commonSettings = Seq(
   ),
   Compile / doc / sources := Nil,
 
-  libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.2" % "test",
+  libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % "test",
 )
 
 lazy val mimaSettings = Seq(
