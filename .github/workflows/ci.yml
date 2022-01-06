@@ -24,9 +24,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        scala: [3.0.2]
+        scala: [3.1.0]
         java: [adopt@1.8]
-        platform: [jvm, js]
+        platform: [jvm, js, native]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
@@ -62,6 +62,10 @@ jobs:
         if: matrix.platform == 'js'
         run: sbt ++${{ matrix.scala }} validateJS
 
+      - name: Validate Native
+        if: matrix.platform == 'native'
+        run: sbt ++${{ matrix.scala }} validateNative
+
   publish:
     name: Publish Artifacts
     needs: [build]
@@ -69,7 +73,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.0.2]
+        scala: [3.1.0]
         java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:
