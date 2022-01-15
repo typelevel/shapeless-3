@@ -62,13 +62,13 @@ addCommandAlias("validateJS", ";buildJS;mimaJS;testJS")
 addCommandAlias("validateNative", ";buildNative;mimaNative;testNative")
 addCommandAlias("buildJVM", ";derivingJVM/compile;testJVM/compile;typeableJVM/compile")
 addCommandAlias("buildJS", ";derivingJS/compile;testJS/compile;typeableJS/compile")
-addCommandAlias("buildNative", ";derivingNative/compile;testNative/compile")
+addCommandAlias("buildNative", ";derivingNative/compile;testNative/compile;typeableNative/compile")
 addCommandAlias("mimaJVM", ";derivingJVM/mimaReportBinaryIssues;testJVM/mimaReportBinaryIssues;typeableJVM/mimaReportBinaryIssues")
 addCommandAlias("mimaJS", ";derivingJS/mimaReportBinaryIssues;testJS/mimaReportBinaryIssues;typeableJS/mimaReportBinaryIssues")
-addCommandAlias("mimaNative", ";derivingNative/mimaReportBinaryIssues;testNative/mimaReportBinaryIssues")
+addCommandAlias("mimaNative", ";derivingNative/mimaReportBinaryIssues;testNative/mimaReportBinaryIssues;typeableNative/mimaReportBinaryIssues")
 addCommandAlias("testJVM", ";derivingJVM/test;testJVM/test;typeableJVM/test")
 addCommandAlias("testJS", ";derivingJS/test;testJS/test;typeableJS/test")
-addCommandAlias("testNative", ";derivingNative/test;testNative/test")
+addCommandAlias("testNative", ";derivingNative/test;testNative/test;typeableNative/test")
 
 // Projects
 
@@ -145,7 +145,7 @@ lazy val testJVM = test.jvm
 lazy val testJS = test.js
 lazy val testNative = test.native
 
-lazy val typeable = crossProject(JSPlatform, JVMPlatform)
+lazy val typeable = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("modules/typeable"))
   .dependsOn(test % "test")
@@ -155,12 +155,14 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings)
   //.settings(mimaSettings) // Not yet
   .settings(publishSettings)
+  .nativeSettings(nativeSettings)
   .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
 lazy val typeableJVM = typeable.jvm
 lazy val typeableJS = typeable.js
+lazy val typeableNative = typeable.native
 
-lazy val local = crossProject(JSPlatform, JVMPlatform)
+lazy val local = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("local"))
   .dependsOn(deriving, test, typeable)
