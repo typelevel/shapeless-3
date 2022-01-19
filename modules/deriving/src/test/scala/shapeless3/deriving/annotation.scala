@@ -196,14 +196,14 @@ class AnnotationTests {
 
   @Test
   def allAnnotations: Unit = {
-    type T1First = Tuple1[First]
-    val first: T1First = Tuple1(First())
+    type T1First = First *: EmptyTuple.type
+    val first: T1First = First() *: EmptyTuple
 
     val cc: (T1First, EmptyTuple.type, (Second, Third)) = AllAnnotations[CC3].apply()
     assert(cc == (first, EmptyTuple, (Second(2, "b"), Third('c'))))
 
-    type T1Second = Tuple1[Second]
-    val second: T1Second = Tuple1(Second(3, "e"))
+    type T1Second = Second *: EmptyTuple.type
+    val second: T1Second = Second(3, "e") *: EmptyTuple
 
     val st: (T1First, T1Second) = AllAnnotations[Base].apply()
     assert(st == (first, second))
@@ -211,8 +211,8 @@ class AnnotationTests {
 
   @Test
   def allTypeAnnotations: Unit = {
-    type T1First = Tuple1[First]
-    val first: T1First = Tuple1(First())
+    type T1First = First *: EmptyTuple.type
+    val first: T1First = First() *: EmptyTuple
 
     val st: (T1First, (Second, Third)) = AllTypeAnnotations[Base2].apply() // sealed trait
     assert(st == (first, (Second(3, "e"), Third('c'))))
@@ -220,8 +220,8 @@ class AnnotationTests {
     val cc: (T1First, EmptyTuple.type, (Second, Third)) = AllTypeAnnotations[CC4].apply() // case class
     assert(cc == (first, EmptyTuple, (Second(2, "b"), Third('c'))))
 
-    type T1Third = Tuple1[Third]
-    val third: T1Third = Tuple1(Third('c'))
+    type T1Third = Third *: EmptyTuple.type
+    val third: T1Third = Third('c') *: EmptyTuple
 
     val user: (T1First, T1Third) = AllTypeAnnotations[User].apply() // type refs
     assert(user == (first, third))
