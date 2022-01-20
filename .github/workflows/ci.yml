@@ -60,9 +60,6 @@ jobs:
       - name: Check that workflows are up to date
         run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' 'project /' githubWorkflowCheck
 
-      - name: Check headers and formatting
-        run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' headerCheckAll scalafmtCheckAll 'project /' scalafmtSbtCheck
-
       - name: fastOptJS
         if: matrix.project == 'rootJS'
         run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' Test/fastOptJS

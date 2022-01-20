@@ -2,11 +2,14 @@ import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProble
 
 val scala3Version = "3.1.0"
 
+ThisBuild / organization := "org.typelevel"
 ThisBuild / tlBaseVersion := "3.0"
+ThisBuild / scalaVersion := scala3Version
 ThisBuild / crossScalaVersions := Seq(scala3Version)
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 
 // GHA configuration
+ThisBuild / tlCiReleaseBranches := Seq("main")
 ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 
 val nativeSettings = Def.settings(
@@ -127,8 +130,8 @@ lazy val local = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 // Settings
 
 lazy val commonSettings = Seq(
-  tlFatalWarnings := true,
   scalacOptions ++= Seq(
+    "-Xfatal-warnings",
     "-Yexplicit-nulls"
   ),
   Compile / doc / sources := Nil,
@@ -136,6 +139,7 @@ lazy val commonSettings = Seq(
   libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % "test",
 )
 
+ThisBuild / licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 ThisBuild / developers := List(
   Developer("milessabin", "Miles Sabin", "miles@milessabin.com", url("http://milessabin.com/blog")),
   Developer("joroKr21", "Georgi Krastev", "joro.kr.21@gmail.com", url("https://twitter.com/Joro_Kr")),
