@@ -112,7 +112,6 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   )
   .settings(commonSettings)
   .settings(mimaPreviousArtifacts := Set.empty) // Not yet
-  .jsSettings(jsSettings)
   .nativeSettings(nativeSettings)
   .jsEnablePlugins(ScalaJSJUnitPlugin)
 
