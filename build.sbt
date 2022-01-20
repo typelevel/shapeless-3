@@ -12,10 +12,15 @@ ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 ThisBuild / tlCiReleaseBranches := Seq("main")
 ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 
+val jsSettings = Def.settings(
+  tlVersionIntroduced := Map("3" -> "3.0.1")
+)
+
 val nativeSettings = Def.settings(
   libraryDependencies += "org.scala-native" %%% "junit-runtime" % nativeVersion % Test,
   addCompilerPlugin("org.scala-native" % "junit-plugin" % nativeVersion cross CrossVersion.full),
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-s", "-v"),
+  mimaPreviousArtifacts := Set.empty,
 )
 
 // Aliases
@@ -53,6 +58,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .platformsSettings(JVMPlatform, JSPlatform)(
     libraryDependencies += "org.typelevel" %%% "cats-core" % "2.7.0" % "test",
   )
+  .jsSettings(jsSettings)
   .nativeSettings(
     nativeSettings,
     Test / sources := {
@@ -89,6 +95,7 @@ lazy val test = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     moduleName := "shapeless3-test"
   )
   .settings(commonSettings)
+  .jsSettings(jsSettings)
   .nativeSettings(nativeSettings)
   .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
@@ -105,6 +112,7 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   )
   .settings(commonSettings)
   .settings(mimaPreviousArtifacts := Set.empty) // Not yet
+  .jsSettings(jsSettings)
   .nativeSettings(nativeSettings)
   .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
 
