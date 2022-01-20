@@ -82,7 +82,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
        ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK")
      )
    )
-  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
+  .jsEnablePlugins(ScalaJSJUnitPlugin)
 
 lazy val derivingJVM = deriving.jvm
 lazy val derivingJS = deriving.js
@@ -97,7 +97,7 @@ lazy val test = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .jsSettings(jsSettings)
   .nativeSettings(nativeSettings)
-  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
+  .jsEnablePlugins(ScalaJSJUnitPlugin)
 
 lazy val testJVM = test.jvm
 lazy val testJS = test.js
@@ -114,7 +114,7 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(mimaPreviousArtifacts := Set.empty) // Not yet
   .jsSettings(jsSettings)
   .nativeSettings(nativeSettings)
-  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
+  .jsEnablePlugins(ScalaJSJUnitPlugin)
 
 lazy val typeableJVM = typeable.jvm
 lazy val typeableJS = typeable.js
@@ -133,7 +133,7 @@ lazy val local = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   )
   .settings(commonSettings)
   .enablePlugins(NoPublishPlugin)
-  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
+  .jsEnablePlugins(ScalaJSJUnitPlugin)
 
 // Settings
 
