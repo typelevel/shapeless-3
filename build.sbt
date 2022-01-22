@@ -3,14 +3,13 @@ import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProble
 val scala3Version = "3.1.0"
 
 ThisBuild / organization := "org.typelevel"
-ThisBuild / tlBaseVersion := "3.0"
+ThisBuild / tlBaseVersion := "3.1"
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / crossScalaVersions := Seq(scala3Version)
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 
 // GHA configuration
 ThisBuild / tlCiReleaseBranches := Seq("main")
-ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 
 val jsSettings = Def.settings(
   tlVersionIntroduced := Map("3" -> "3.0.1")
