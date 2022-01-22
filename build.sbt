@@ -3,55 +3,23 @@ import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProble
 val scala3Version = "3.1.0"
 
 ThisBuild / organization := "org.typelevel"
+ThisBuild / tlBaseVersion := "3.1"
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / crossScalaVersions := Seq(scala3Version)
-ThisBuild / mimaFailOnNoPrevious := false
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 
-val previousVersion = "3.0.0"
-
 // GHA configuration
+ThisBuild / tlCiReleaseBranches := Seq("main")
 
-ThisBuild / githubWorkflowJavaVersions := List(JavaSpec.temurin("8"))
-ThisBuild / githubWorkflowArtifactUpload := false
-ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
-
-val JvmCond = s"matrix.platform == 'jvm'"
-val JsCond = s"matrix.platform == 'js'"
-val NativeCond = s"matrix.platform == 'native'"
-
-ThisBuild / githubWorkflowBuild := Seq(
-  WorkflowStep.Sbt(List("validateJVM"), name = Some("Validate JVM"), cond = Some(JvmCond)),
-  WorkflowStep.Sbt(List("validateJS"), name = Some("Validate JS"), cond = Some(JsCond)),
-  WorkflowStep.Sbt(List("validateNative"), name = Some("Validate Native"), cond = Some(NativeCond)),
-)
-
-ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
-ThisBuild / githubWorkflowPublishTargetBranches :=
-  Seq(RefPredicate.Equals(Ref.Branch("main")), RefPredicate.StartsWith(Ref.Tag("v")))
-
-ThisBuild / githubWorkflowBuildMatrixAdditions +=
-  "platform" -> List("jvm", "js", "native")
-
-ThisBuild / githubWorkflowPublishPreamble +=
-  WorkflowStep.Use(UseRef.Public("olafurpg", "setup-gpg", "v3"))
-
-ThisBuild / githubWorkflowPublish := Seq(
-  WorkflowStep.Sbt(
-    List("ci-release"),
-    env = Map(
-      "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASSPHRASE }}",
-      "PGP_SECRET" -> "${{ secrets.PGP_SECRET }}",
-      "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
-      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
-    )
-  )
+val jsSettings = Def.settings(
+  tlVersionIntroduced := Map("3" -> "3.0.1")
 )
 
 val nativeSettings = Def.settings(
   libraryDependencies += "org.scala-native" %%% "junit-runtime" % nativeVersion % Test,
   addCompilerPlugin("org.scala-native" % "junit-plugin" % nativeVersion cross CrossVersion.full),
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-s", "-v"),
+  mimaPreviousArtifacts := Set.empty,
 )
 
 // Aliases
@@ -72,20 +40,11 @@ addCommandAlias("testNative", ";derivingNative/test;testNative/test;typeableNati
 
 // Projects
 
-lazy val root = project
-  .in(file("."))
-  .settings(commonSettings)
-  .settings(crossScalaVersions := Seq())
-  .settings(noPublishSettings)
+lazy val root = tlCrossRootProject
   .aggregate(
-    derivingJVM,
-    derivingJS,
-    derivingNative,
-    testJVM,
-    testJS,
-    testNative,
-    typeableJVM,
-    typeableJS
+    deriving,
+    test,
+    typeable
   )
 
 lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
@@ -98,6 +57,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .platformsSettings(JVMPlatform, JSPlatform)(
     libraryDependencies += "org.typelevel" %%% "cats-core" % "2.7.0" % "test",
   )
+  .jsSettings(jsSettings)
   .nativeSettings(
     nativeSettings,
     Test / sources := {
@@ -114,7 +74,6 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     },
   )
   .settings(commonSettings)
-  .settings(mimaSettings)
   .settings(
      mimaBinaryIssueFilters ++= Seq(
        ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedInstances.erasedMapK"),
@@ -122,8 +81,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
        ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK")
      )
    )
-  .settings(publishSettings)
-  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
+  .jsEnablePlugins(ScalaJSJUnitPlugin)
 
 lazy val derivingJVM = deriving.jvm
 lazy val derivingJS = deriving.js
@@ -136,10 +94,9 @@ lazy val test = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     moduleName := "shapeless3-test"
   )
   .settings(commonSettings)
-  .settings(mimaSettings)
-  .settings(publishSettings)
+  .jsSettings(jsSettings)
   .nativeSettings(nativeSettings)
-  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
+  .jsEnablePlugins(ScalaJSJUnitPlugin)
 
 lazy val testJVM = test.jvm
 lazy val testJS = test.js
@@ -153,10 +110,9 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     moduleName := "shapeless3-typeable"
   )
   .settings(commonSettings)
-  //.settings(mimaSettings) // Not yet
-  .settings(publishSettings)
+  .settings(mimaPreviousArtifacts := Set.empty) // Not yet
   .nativeSettings(nativeSettings)
-  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
+  .jsEnablePlugins(ScalaJSJUnitPlugin)
 
 lazy val typeableJVM = typeable.jvm
 lazy val typeableJS = typeable.js
@@ -174,14 +130,12 @@ lazy val local = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     console / initialCommands := """import shapeless3.deriving.* ; import scala.deriving.*"""
   )
   .settings(commonSettings)
-  .settings(noPublishSettings)
-  .jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin))
+  .enablePlugins(NoPublishPlugin)
+  .jsEnablePlugins(ScalaJSJUnitPlugin)
 
 // Settings
 
 lazy val commonSettings = Seq(
-  crossScalaVersions := (ThisBuild / crossScalaVersions).value,
-
   scalacOptions ++= Seq(
     "-Xfatal-warnings",
     "-Yexplicit-nulls"
@@ -191,23 +145,9 @@ lazy val commonSettings = Seq(
   libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % "test",
 )
 
-lazy val mimaSettings = Seq(
-  mimaPreviousArtifacts := Set("org.typelevel" %% moduleName.value % previousVersion),
-  mimaBinaryIssueFilters := Seq()
+ThisBuild / licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+ThisBuild / developers := List(
+  Developer("milessabin", "Miles Sabin", "miles@milessabin.com", url("http://milessabin.com/blog")),
+  Developer("joroKr21", "Georgi Krastev", "joro.kr.21@gmail.com", url("https://twitter.com/Joro_Kr")),
+  Developer("TimWSpence", "Tim Spence", "timothywspence@gmail.com", url("https://twitter.com/timwspence"))
 )
-
-lazy val publishSettings: Seq[Setting[_]] = Seq(
-  Test / publishArtifact := false,
-  pomIncludeRepository := (_ => false),
-  homepage := Some(url("https://github.com/typelevel/shapeless-3")),
-  licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
-  scmInfo := Some(ScmInfo(url("https://github.com/typelevel/shapeless-3"), "scm:git:git@github.com:typelevel/shapeless-3.git")),
-  developers := List(
-    Developer("milessabin", "Miles Sabin", "miles@milessabin.com", url("http://milessabin.com/blog")),
-    Developer("joroKr21", "Georgi Krastev", "joro.kr.21@gmail.com", url("https://twitter.com/Joro_Kr")),
-    Developer("TimWSpence", "Tim Spence", "timothywspence@gmail.com", url("https://twitter.com/timwspence"))
-  )
-)
-
-lazy val noPublishSettings =
-  publish / skip := true
