@@ -18,6 +18,17 @@ val jsSettings = Def.settings(
 val nativeSettings = Def.settings(
   libraryDependencies += "org.scala-native" %%% "junit-runtime" % nativeVersion % Test,
   addCompilerPlugin("org.scala-native" % "junit-plugin" % nativeVersion cross CrossVersion.full),
+  pomPostProcess := { node =>
+    import scala.xml._
+    import scala.xml.transform._
+    new RuleTransformer(new RewriteRule{
+      override def transform(n: Node) =
+        if (n.label == "dependency" && (n \ "artifactId").text.startsWith("junit-runtime_native0.4"))
+          NodeSeq.Empty
+        else
+          n
+    }).transform(node)(0)
+  },
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-s", "-v"),
   mimaPreviousArtifacts := Set.empty,
 )
