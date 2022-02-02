@@ -1,6 +1,6 @@
 import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProblem}
 
-val scala3Version = "3.1.0"
+val scala3Version = "3.1.1"
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / tlBaseVersion := "3.1"
