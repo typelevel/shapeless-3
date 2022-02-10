@@ -23,7 +23,7 @@ val nativeSettings = Def.settings(
     import scala.xml.transform._
     new RuleTransformer(new RewriteRule{
       override def transform(n: Node) =
-        if (n.label == "dependency" && (n \ "artifactId").text.startsWith("junit-runtime_native0.4"))
+        if (n.label == "dependency" && (n \ "artifactId").text.startsWith("junit-runtime_native"))
           NodeSeq.Empty
         else
           n
