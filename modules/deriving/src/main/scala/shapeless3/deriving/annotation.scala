@@ -62,12 +62,12 @@ object Annotation {
 }
 
 /**
- * Provides the annotations of type `A` of the fields or constructors of case class-like or sum type `T`.
+ * Provides the annotations of type `A` of the fields of product type or constructors of sum type `T`.
  *
- * If type `T` is case class-like, this type class inspects the parameters in the first parameter list of the primary constructor
- * and provides their annotations of type `A`. If type `T` is a sum type, its constructor types are inspected for annotations.
+ * If type `T` is a product type, this type class inspects its fields and provides their annotations of type `A`.
+ * If type `T` is a sum type, its constructor types are inspected for annotations.
  *
- * Type `Out` is a tuple having the same number of elements as `T` (number of parameters of `T` if `T` is case class-like,
+ * Type `Out` is a tuple having the same number of elements as `T` (number of parameters of `T` if `T` is a product type,
  * or number of constructors of `T` if it is a sum type). It is made of `None.type` (no annotation on corresponding
  * field or constructor) and `Some[A]` (corresponding field or constructor is annotated).
  *
@@ -100,7 +100,7 @@ object Annotation {
  * }}}
  *
  * @tparam A: annotation type
- * @tparam T: case class-like or sum type, whose constructor parameters or constructors are annotated
+ * @tparam T: product or sum type, whose constructor parameters or constructors are annotated
  *
  * @author Alexandre Archambault
  */
@@ -269,7 +269,7 @@ object AllAnnotations {
  *
  * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
  *
- * @tparam T: case class-like or sum type, whose fields or constructors are annotated
+ * @tparam T: product or sum type, whose fields or constructors are annotated
  *
  * @author Patrick Grandjean
  */
@@ -304,7 +304,8 @@ object AnnotationMacros {
       report.errorAndAbort(s"Bad annotation type ${annotTpe.show} is abstract")
     } else {
       val annoteeTpe = TypeRepr.of[T]
-      annoteeTpe.typeSymbol.getAnnotation(annotTpe.typeSymbol) match {
+      val symbol = if (annoteeTpe.isSingleton) annoteeTpe.termSymbol else annoteeTpe.typeSymbol
+      symbol.getAnnotation(annotTpe.typeSymbol) match {
         case Some(tree) if tree.tpe <:< annotTpe => '{ Annotation.mkAnnotation[A, T](${tree.asExprOf[A]}) }
         case _ => report.errorAndAbort(s"No Annotation of type ${annotTpe.show} for type ${annoteeTpe.show}")
       }
@@ -388,10 +389,8 @@ object AnnotationMacros {
         valueParams.map { vparam => getAnnotations(vparam.tree) }
       case Some(annoteeCls) =>
         Mirror(annoteeTpe) match {
-          case Some(rm) =>
-            rm.MirroredElemTypes.map { child => getAnnotations(child.typeSymbol.tree) }
-          case None =>
-            report.errorAndAbort(s"No Annotations for sum type ${annoteeTpe.show} with no Mirror")
+          case Some(rm) => rm.MirroredElemTypes.map(child => getAnnotations(child.typeSymbol.tree))
+          case None => report.errorAndAbort(s"No Annotations for type ${annoteeTpe.show} without no Mirror")
         }
       case None =>
         report.errorAndAbort(s"No Annotations for non-class ${annoteeTpe.show}")

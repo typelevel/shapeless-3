@@ -73,6 +73,10 @@ object AnnotationTestsDefinitions {
   type PosInt = Int @First
   type Email = String @Third('c')
   case class User(age: PosInt, email: Email)
+
+  @Other @Last(false) enum Control:
+    @First @Third('!') case Automatic
+    @Second(100, "@") case Manual(age: PosInt, email: Email)
 }
 
 class AnnotationTests {
@@ -95,13 +99,28 @@ class AnnotationTests {
       val last: Last = Annotation[Last, Something].apply()
       assert(last == Last(true))
     }
+
+    {
+      val other = Annotation[Other, Control].apply()
+      assert(other == Other())
+
+      val first = Annotation[First, Control.Automatic.type].apply()
+      assert(first == First())
+
+      val second = Annotation[Second, Control.Manual].apply()
+      assert(second == Second(100, "@"))
+
+      val third = Annotation[Third, Control.Automatic.type].apply()
+      assert(third == Third('!'))
+    }
   }
 
   @Test
   def invalidAnnotation: Unit = {
-    illTyped(" Annotation[Other, Abstract1] ", ".*no implicit argument.*")
-    illTyped(" Annotation[Abstract1, CC] ", ".*no implicit argument.*")
-    illTyped(" Annotation[Abstract2, CC] ", ".*no implicit argument.*")
+    illTyped("Annotation[Other, Abstract1]", ".*no implicit argument.*")
+    illTyped("Annotation[Abstract1, CC]", ".*no implicit argument.*")
+    illTyped("Annotation[Abstract2, CC]", ".*no implicit argument.*")
+    illTyped("Annotation[Unused, Control]", ".*no implicit argument.*")
   }
 
   @Test
@@ -143,11 +162,11 @@ class AnnotationTests {
 
   @Test
   def invalidAnnotations: Unit = {
-    illTyped(" Annotations[Abstract1, CC] ", ".*no implicit argument.*")
-    illTyped(" Annotations[Abstract1, Base] ", ".*no implicit argument.*")
-    illTyped(" Annotations[Abstract2, CC] ", ".*no implicit argument.*")
-    illTyped(" Annotations[Abstract2, Base] ", ".*no implicit argument.*")
-    illTyped(" Annotations[Second, Abstract1] ", ".*no implicit argument.*")
+    illTyped("Annotations[Abstract1, CC]", ".*no implicit argument.*")
+    illTyped("Annotations[Abstract1, Base]", ".*no implicit argument.*")
+    illTyped("Annotations[Abstract2, CC]", ".*no implicit argument.*")
+    illTyped("Annotations[Abstract2, Base]", ".*no implicit argument.*")
+    illTyped("Annotations[Second, Abstract1]", ".*no implicit argument.*")
   }
 
   @Test
