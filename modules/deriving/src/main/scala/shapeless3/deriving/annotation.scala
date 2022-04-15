@@ -323,15 +323,12 @@ object AnnotationMacros {
     import q.reflect._
 
     val tpe = TypeRepr.of[AS[A, T]] <:< TypeRepr.of[TypeAnnotations[A, T]]
-    // println(s"tpe = ${tpe}")
-
     val annotTpe = TypeRepr.of[A]
     val annotFlags = annotTpe.typeSymbol.flags
     if (annotFlags.is(Flags.Abstract) || annotFlags.is(Flags.Trait)) {
       report.throwError(s"Bad annotation type ${annotTpe.show} is abstract")
     } else {
       val annotations = extractAnnotations[T](tpe)
-      // println(s"extractAnnotations = \n\t${annotations.mkString("\n\t")}")
       val exprs = annotations.map { child =>
         child.find(_.tpe <:< TypeRepr.of[A]) match {
           case Some(tree) => '{ Some(${tree.asExprOf[A]}) }
@@ -350,10 +347,7 @@ object AnnotationMacros {
     import q.reflect._
 
     val tpe = TypeRepr.of[AS[T]] <:< TypeRepr.of[AllTypeAnnotations[T]]
-    // println(s"tpe = ${tpe}")
-
     val annotations = extractAnnotations[T](tpe)
-    // println(s"annotations = \n\t${annotations.mkString("\n\t")}")
     val exprs = annotations.map { anns =>
       Expr.ofTupleFromSeq(anns.map(_.asExpr))
     }
@@ -367,7 +361,6 @@ object AnnotationMacros {
     import r._
 
     def getAnnotations(tree: Tree, acc: List[Term] = Nil, depth: Int = 0): List[Term] =
-      // println(s"${depth}: ${tree.show(using Printer.TreeStructure)}")
       if (tpe) {
         tree match {
           case classDef: ClassDef => classDef.parents.flatMap(getAnnotations(_, acc, depth + 1))
@@ -383,7 +376,6 @@ object AnnotationMacros {
       
     @tailrec
     def getAnnotationsFromType(typeRepr: TypeRepr, acc: List[Term] = Nil, depth: Int = 0): List[Term] =
-      // println(s"${depth}: typeRepr = ${typeRepr}")
       typeRepr match {
         case annotatedType: AnnotatedType => getAnnotationsFromType(annotatedType.underlying, annotatedType.annotation :: acc, depth + 1)
         case typeRef: TypeRef if typeRef.typeSymbol.isAliasType => getAnnotationsFromType(typeRef.translucentSuperType, acc, depth + 1)
