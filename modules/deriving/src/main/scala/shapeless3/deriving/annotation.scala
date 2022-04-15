@@ -126,19 +126,19 @@ object Annotations {
 }
 
 /**
- * Provides the type annotations of type `A` of the fields or constructors of case class-like or sum type `T`.
+ * Provides the type annotations of type `A` of the fields of a product type or constructors of a sum type `T`.
  *
- * If type `T` is case class-like, this type class inspects its fields and provides their type annotations of type `A`. If
+ * If type `T` is a product type, this type class inspects its fields and provides their type annotations of type `A`. If
  * type `T` is a sum type, its constructor types are looked for type annotations.
  *
- * Type `Out` is an HList having the same number of elements as `T` (number of fields of `T` if `T` is case class-like,
+ * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type,
  * or number of constructors of `T` if it is a sum type). It is made of `None.type` (no annotation on corresponding
  * field or constructor) and `Some[A]` (corresponding field or constructor is annotated).
  *
- * Method `apply` provides an HList of type `Out` made of `None` (corresponding field or constructor not annotated)
+ * Method `apply` provides a tuple of type `Out` made of `None` (corresponding field or constructor not annotated)
  * or `Some(annotation)` (corresponding field or constructor has annotation `annotation`).
  *
- * Note that type annotations must be case class-like for this type class to take them into account.
+ * Note that type annotations must not be abstract for this type class to take them into account.
  *
  * Example:
  * {{{
@@ -156,7 +156,7 @@ object Annotations {
  * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
  *
  * @tparam A: type annotation type
- * @tparam T: case class-like or sum type, whose fields or constructors are annotated
+ * @tparam T: product or sum type, whose fields or constructors are annotated
  *
  * @author Patrick Grandjean
  */
@@ -177,23 +177,23 @@ object TypeAnnotations {
       def apply(): Out = annotations
     }
 
-  transparent inline implicit def mkAnnotations[A, T]: TypeAnnotations[A, T] =
+  transparent inline given mkAnnotations[A, T]: TypeAnnotations[A, T] =
     ${ AnnotationMacros.mkTypeAnnotations[A, T] }
 }
 /**
- * Provides all variable annotations for the fields or constructors of case class-like or sum type `T`.
+ * Provides all variable annotations for the fields of a product type or constructors of a sum type `T`.
  *
- * If type `T` is case class-like, this type class inspects its fields and provides their variable annotations. If
+ * If type `T` is a product type, this type class inspects its fields and provides their variable annotations. If
  * type `T` is a sum type, its constructor types are looked for variable annotations as well.
  *
- * Type `Out` is an HList having the same number of elements as `T` (number of fields of `T` if `T` is case
- * class-like, or number of constructors of `T` if it is a sum type). It is made of `HNil` (no annotations for corresponding
- * field or constructor) or `HLists` (list of annotations for corresponding field or constructor).
+ * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type,
+ * or number of constructors of `T` if it is a sum type). It is made of tuples
+ * containing all annotations for the corresponding field or constructor (`EmptyTuple` if none).
  *
- * Method `apply` provides an HList of type `Out` made of `HNil` (corresponding field or constructor not annotated)
- * or `HList` (corresponding field or constructor has annotations).
+ * Method `apply` provides a tuple of type `Out` made of tuples
+ * containing all annotations of the corresponding field or constructor (`EmptyTuple` if none).
  *
- * Note that variable annotations must be case class-like for this type class to take them into account.
+ * Note that variable annotations must not be abstract for this type class to take them into account.
  *
  * Example:
  * {{{
@@ -204,15 +204,15 @@ object TypeAnnotations {
  *
  *   val ccFirsts = AllAnnotations[CC]
  *
- *   // ccFirsts.Out is  ((), (First, Second))
+ *   // ccFirsts.Out is  (EmptyTuple, (First, Second))
  *   // ccFirsts.apply() is
- *   //   ((), (First("a"), Second(0)))
+ *   //   (EmptyTuple, (First("a"), Second(0)))
  *
  * }}}
  *
  * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
  *
- * @tparam T: case class-like or sum type, whose fields or constructors are annotated
+ * @tparam T: product or sum type, whose fields or constructors are annotated
  *
  * @author Patrick Grandjean
  */
@@ -233,24 +233,24 @@ object AllAnnotations {
       def apply(): Out = annotations
     }
 
-  transparent inline implicit def mkAnnotations[T]: AllAnnotations[T] =
+  transparent inline given mkAnnotations[T]: AllAnnotations[T] =
     ${ AnnotationMacros.mkAllAnnotations[T] }
 }
 
 /**
- * Provides all type annotations for the fields or constructors of case class-like or sum type `T`.
+ * Provides all type annotations for the fields of product type or constructors of sum type `T`.
  *
- * If type `T` is case class-like, this type class inspects its fields and provides their type annotations. If
+ * If type `T` is a product type, this type class inspects its fields and provides their type annotations. If
  * type `T` is a sum type, its constructor types are looked for type annotations as well.
  *
- * Type `Out` is an HList having the same number of elements as `T` (number of fields of `T` if `T` is case
- * class-like, or number of constructors of `T` if it is a sum type). It is made of `HNil` (no annotations for corresponding
- * field or constructor) or `HLists` (list of annotations for corresponding field or constructor).
+ * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type,
+ * or number of constructors of `T` if it is a sum type). It is made of tuples
+ * containing all annotations for the corresponding field or constructor (`EmptyTuple` if none).
  *
- * Method `apply` provides an HList of type `Out` made of `HNil` (corresponding field or constructor not annotated)
- * or `HList` (corresponding field or constructor has annotations).
+ * Method `apply` provides a tuple of type `Out` made of tuples
+ * containing all annotations for the corresponding field or constructor (`EmptyTuple` if none).
  *
- * Note that type annotations must be case class-like for this type class to take them into account.
+ * Note that type annotations must not be abstract for this type class to take them into account.
  *
  * Example:
  * {{{
@@ -261,9 +261,9 @@ object AllAnnotations {
  *
  *   val ccFirsts = AllTypeAnnotations[CC]
  *
- *   // ccFirsts.Out is  HNil :: (First :: Second :: HNil) :: HNil
+ *   // ccFirsts.Out is  (EmptyTuple, (First, Second)
  *   // ccFirsts.apply() is
- *   //   HNil :: (First("a") :: Second(0) :: HNil) :: HNil
+ *   //   (EmptyTuple, (First("a"), Second(0))
  *
  * }}}
  *
@@ -290,7 +290,7 @@ object AllAnnotations {
        def apply(): Out = annotations
      }
 
-   transparent inline implicit def mkAnnotations[T]: AllTypeAnnotations[T] =
+   transparent inline given mkAnnotations[T]: AllTypeAnnotations[T] =
      ${ AnnotationMacros.mkAllTypeAnnotations[T] }
  }
 
@@ -315,9 +315,9 @@ object AnnotationMacros {
     }
   }
 
-  def mkAnnotations[A: Type, T: Type](using Quotes): Expr[Annotations[A, T]] = mkAnnotationsImpl[A, T, Annotations](ofExprVariableAnnotations[A, T](_))
+  def mkAnnotations[A: Type, T: Type](using Quotes): Expr[Annotations[A, T]] = mkAnnotationsImpl[A, T, Annotations](ofExprVariableAnnotations)
 
-  def mkTypeAnnotations[A: Type, T: Type](using Quotes): Expr[TypeAnnotations[A, T]] = mkAnnotationsImpl[A, T, TypeAnnotations](ofExprTypeAnnotations[A, T](_))
+  def mkTypeAnnotations[A: Type, T: Type](using Quotes): Expr[TypeAnnotations[A, T]] = mkAnnotationsImpl[A, T, TypeAnnotations](ofExprTypeAnnotations)
 
   private def mkAnnotationsImpl[A: Type, T: Type, AS[A, T]: Type](mk: Seq[Expr[Any]] => Expr[AS[A, T]])(using q: Quotes): Expr[AS[A, T]] =
     import q.reflect._

@@ -189,20 +189,20 @@ class AnnotationTests {
 
   @Test
   def invalidTypeAnnotations: Unit = {
-    illTyped(" TypeAnnotations[Dummy, CC2] ", "could not find implicit value for parameter annotations: .*")
-    illTyped(" TypeAnnotations[Dummy, Base] ", "could not find implicit value for parameter annotations: .*")
-    illTyped(" TypeAnnotations[Second, Dummy] ", "could not find implicit value for parameter annotations: .*")
+    illTyped("TypeAnnotations[Dummy, CC2]", "could not find implicit value for parameter annotations: .*")
+    illTyped("TypeAnnotations[Dummy, Base]", "could not find implicit value for parameter annotations: .*")
+    illTyped("TypeAnnotations[Second, Dummy]", "could not find implicit value for parameter annotations: .*")
   }
 
   @Test
   def allAnnotations: Unit = {
-    type T1First = First *: EmptyTuple.type
+    type T1First = First *: EmptyTuple
     val first: T1First = First() *: EmptyTuple
 
-    val cc: (T1First, EmptyTuple.type, (Second, Third)) = AllAnnotations[CC3].apply()
+    val cc: (T1First, EmptyTuple, (Second, Third)) = AllAnnotations[CC3].apply()
     assert(cc == (first, EmptyTuple, (Second(2, "b"), Third('c'))))
 
-    type T1Second = Second *: EmptyTuple.type
+    type T1Second = Second *: EmptyTuple
     val second: T1Second = Second(3, "e") *: EmptyTuple
 
     val st: (T1First, T1Second) = AllAnnotations[Base].apply()
@@ -211,16 +211,16 @@ class AnnotationTests {
 
   @Test
   def allTypeAnnotations: Unit = {
-    type T1First = First *: EmptyTuple.type
+    type T1First = First *: EmptyTuple
     val first: T1First = First() *: EmptyTuple
 
     val st: (T1First, (Second, Third)) = AllTypeAnnotations[Base2].apply() // sealed trait
     assert(st == (first, (Second(3, "e"), Third('c'))))
 
-    val cc: (T1First, EmptyTuple.type, (Second, Third)) = AllTypeAnnotations[CC4].apply() // case class
+    val cc: (T1First, EmptyTuple, (Second, Third)) = AllTypeAnnotations[CC4].apply() // case class
     assert(cc == (first, EmptyTuple, (Second(2, "b"), Third('c'))))
 
-    type T1Third = Third *: EmptyTuple.type
+    type T1Third = Third *: EmptyTuple
     val third: T1Third = Third('c') *: EmptyTuple
 
     val user: (T1First, T1Third) = AllTypeAnnotations[User].apply() // type refs
