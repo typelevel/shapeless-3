@@ -319,8 +319,8 @@ object AnnotationMacros {
 
   def mkTypeAnnotations[A: Type, T: Type](using Quotes): Expr[TypeAnnotations[A, T]] = mkAnnotationsImpl[A, T, TypeAnnotations](ofExprTypeAnnotations)
 
-  private def mkAnnotationsImpl[A: Type, T: Type, AS[A, T]: Type](mk: Seq[Expr[Any]] => Expr[AS[A, T]])(using q: Quotes): Expr[AS[A, T]] =
-    import q.reflect._
+  private def mkAnnotationsImpl[A: Type, T: Type, AS[A, T]: Type](mk: Seq[Expr[Any]] => Expr[AS[A, T]])(using Quotes): Expr[AS[A, T]] =
+    import quotes.reflect._
 
     val tpe = TypeRepr.of[AS[A, T]] <:< TypeRepr.of[TypeAnnotations[A, T]]
     val annotTpe = TypeRepr.of[A]
@@ -343,8 +343,8 @@ object AnnotationMacros {
 
   def mkAllTypeAnnotations[T: Type](using Quotes): Expr[AllTypeAnnotations[T]] = mkAllAnnotationsImpl[T, AllTypeAnnotations](ofExprAllTypeAnnotations)
 
-  private def mkAllAnnotationsImpl[T: Type, AS[T]: Type](mk: Seq[Expr[Any]] => Expr[AS[T]])(using q: Quotes): Expr[AS[T]] =
-    import q.reflect._
+  private def mkAllAnnotationsImpl[T: Type, AS[T]: Type](mk: Seq[Expr[Any]] => Expr[AS[T]])(using Quotes): Expr[AS[T]] =
+    import quotes.reflect._
 
     val tpe = TypeRepr.of[AS[T]] <:< TypeRepr.of[AllTypeAnnotations[T]]
     val annotations = extractAnnotations[T](tpe)
@@ -355,7 +355,7 @@ object AnnotationMacros {
     mk(exprs)
   
   def extractAnnotations[T: Type](tpe: Boolean)(using q: Quotes): Seq[List[q.reflect.Term]] =
-    import q.reflect._
+    import quotes.reflect._
 
     val r = new ReflectionUtils(q)
     import r._
@@ -401,22 +401,22 @@ object AnnotationMacros {
         report.throwError(s"No Annotations for non-class ${annoteeTpe.show}")
     }
 
-  def ofExprVariableAnnotations[A: Type, T: Type](annotTrees: Seq[Expr[Any]])(using q: Quotes): Expr[Annotations[A, T]] =
+  def ofExprVariableAnnotations[A: Type, T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[Annotations[A, T]] =
     Expr.ofTupleFromSeq(annotTrees) match {
       case '{ $t: tup } => '{ Annotations.mkAnnotations[A, T, tup & Tuple]($t) }
     }
 
-  def ofExprTypeAnnotations[A: Type, T: Type](annotTrees: Seq[Expr[Any]])(using q: Quotes): Expr[TypeAnnotations[A, T]] =
+  def ofExprTypeAnnotations[A: Type, T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[TypeAnnotations[A, T]] =
     Expr.ofTupleFromSeq(annotTrees) match {
       case '{ $t: tup } => '{ TypeAnnotations.mkAnnotations[A, T, tup & Tuple]($t) }
     }
 
-  def ofExprAllVariableAnnotations[T: Type](annotTrees: Seq[Expr[Any]])(using q: Quotes): Expr[AllAnnotations[T]] =
+  def ofExprAllVariableAnnotations[T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[AllAnnotations[T]] =
     Expr.ofTupleFromSeq(annotTrees) match {
       case '{ $t: tup } => '{ AllAnnotations.mkAnnotations[T, tup & Tuple]($t) }
     }
 
-  def ofExprAllTypeAnnotations[T: Type](annotTrees: Seq[Expr[Any]])(using q: Quotes): Expr[AllTypeAnnotations[T]] =
+  def ofExprAllTypeAnnotations[T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[AllTypeAnnotations[T]] =
     Expr.ofTupleFromSeq(annotTrees) match {
       case '{ $t: tup } => '{ AllTypeAnnotations.mkAnnotations[T, tup & Tuple]($t) }
     }
