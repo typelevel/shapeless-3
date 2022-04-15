@@ -18,8 +18,9 @@ package shapeless3.deriving
 
 import scala.deriving.*
 import scala.quoted.*
-
 import shapeless3.deriving.internals.*
+
+import scala.annotation.tailrec
 
 /**
  * Evidence that type `T` has annotation `A`, and provides an instance of the annotation.
@@ -61,12 +62,12 @@ object Annotation {
 }
 
 /**
- * Provides the annotations of type `A` of the fields or constructors of case class-like or sum type `T`.
+ * Provides the annotations of type `A` of the fields of product type or constructors of sum type `T`.
  *
- * If type `T` is case class-like, this type class inspects the parameters in the first parameter list of the primary constructor
- * and provides their annotations of type `A`. If type `T` is a sum type, its constructor types are inspected for annotations.
+ * If type `T` is a product type, this type class inspects its fields and provides their annotations of type `A`.
+ * If type `T` is a sum type, its constructor types are inspected for annotations.
  *
- * Type `Out` is a tuple having the same number of elements as `T` (number of parameters of `T` if `T` is case class-like,
+ * Type `Out` is a tuple having the same number of elements as `T` (number of parameters of `T` if `T` is a product type,
  * or number of constructors of `T` if it is a sum type). It is made of `None.type` (no annotation on corresponding
  * field or constructor) and `Some[A]` (corresponding field or constructor is annotated).
  *
@@ -99,7 +100,7 @@ object Annotation {
  * }}}
  *
  * @tparam A: annotation type
- * @tparam T: case class-like or sum type, whose constructor parameters or constructors are annotated
+ * @tparam T: product or sum type, whose constructor parameters or constructors are annotated
  *
  * @author Alexandre Archambault
  */
@@ -124,6 +125,175 @@ object Annotations {
     ${ AnnotationMacros.mkAnnotations[A, T] }
 }
 
+/**
+ * Provides the type annotations of type `A` of the fields of a product type or constructors of a sum type `T`.
+ *
+ * If type `T` is a product type, this type class inspects its fields and provides their type annotations of type `A`. If
+ * type `T` is a sum type, its constructor types are looked for type annotations.
+ *
+ * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type,
+ * or number of constructors of `T` if it is a sum type). It is made of `None.type` (no annotation on corresponding
+ * field or constructor) and `Some[A]` (corresponding field or constructor is annotated).
+ *
+ * Method `apply` provides a tuple of type `Out` made of `None` (corresponding field or constructor not annotated)
+ * or `Some(annotation)` (corresponding field or constructor has annotation `annotation`).
+ *
+ * Note that type annotations must not be abstract for this type class to take them into account.
+ *
+ * Example:
+ * {{{
+ *   case class First(s: String)
+ *
+ *   case class CC(i: Int, s: String @First("a"))
+ *
+ *   val ccFirsts = TypeAnnotations[First, CC]
+ *
+ *   // ccFirsts.Out is  (None.type, Some[First])
+ *   // ccFirsts.apply() is (None, Some(First("a")))
+ *
+ * }}}
+ *
+ * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
+ *
+ * @tparam A: type annotation type
+ * @tparam T: product or sum type, whose fields or constructors are annotated
+ *
+ * @author Patrick Grandjean
+ */
+trait TypeAnnotations[A, T] extends Serializable {
+  type Out <: Tuple
+
+  def apply(): Out
+}
+
+object TypeAnnotations {
+  def apply[A, T](implicit annotations: TypeAnnotations[A, T]): Aux[A, T, annotations.Out] = annotations
+
+  type Aux[A, T, Out0 <: Tuple] = TypeAnnotations[A, T] { type Out = Out0 }
+
+  def mkAnnotations[A, T, Out0 <: Tuple](annotations: Out0): Aux[A, T, Out0] =
+    new TypeAnnotations[A, T] {
+      type Out = Out0
+      def apply(): Out = annotations
+    }
+
+  transparent inline given mkAnnotations[A, T]: TypeAnnotations[A, T] =
+    ${ AnnotationMacros.mkTypeAnnotations[A, T] }
+}
+/**
+ * Provides all variable annotations for the fields of a product type or constructors of a sum type `T`.
+ *
+ * If type `T` is a product type, this type class inspects its fields and provides their variable annotations. If
+ * type `T` is a sum type, its constructor types are looked for variable annotations as well.
+ *
+ * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type,
+ * or number of constructors of `T` if it is a sum type). It is made of tuples
+ * containing all annotations for the corresponding field or constructor (`EmptyTuple` if none).
+ *
+ * Method `apply` provides a tuple of type `Out` made of tuples
+ * containing all annotations of the corresponding field or constructor (`EmptyTuple` if none).
+ *
+ * Note that variable annotations must not be abstract for this type class to take them into account.
+ *
+ * Example:
+ * {{{
+ *   case class First(s: String)
+ *   case class Second(i: Int)
+ *
+ *   case class CC(i: Int, @First("a") @Second(0) s: String)
+ *
+ *   val ccFirsts = AllAnnotations[CC]
+ *
+ *   // ccFirsts.Out is  (EmptyTuple, (First, Second))
+ *   // ccFirsts.apply() is
+ *   //   (EmptyTuple, (First("a"), Second(0)))
+ *
+ * }}}
+ *
+ * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
+ *
+ * @tparam T: product or sum type, whose fields or constructors are annotated
+ *
+ * @author Patrick Grandjean
+ */
+trait AllAnnotations[T] extends Serializable {
+  type Out <: Tuple
+
+  def apply(): Out
+}
+
+object AllAnnotations {
+  def apply[T](implicit annotations: AllAnnotations[T]): Aux[T, annotations.Out] = annotations
+
+  type Aux[T, Out0 <: Tuple] = AllAnnotations[T] { type Out = Out0 }
+
+  def mkAnnotations[T, Out0 <: Tuple](annotations: Out0): Aux[T, Out0] =
+    new AllAnnotations[T] {
+      type Out = Out0
+      def apply(): Out = annotations
+    }
+
+  transparent inline given mkAnnotations[T]: AllAnnotations[T] =
+    ${ AnnotationMacros.mkAllAnnotations[T] }
+}
+
+/**
+ * Provides all type annotations for the fields of product type or constructors of sum type `T`.
+ *
+ * If type `T` is a product type, this type class inspects its fields and provides their type annotations. If
+ * type `T` is a sum type, its constructor types are looked for type annotations as well.
+ *
+ * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type,
+ * or number of constructors of `T` if it is a sum type). It is made of tuples
+ * containing all annotations for the corresponding field or constructor (`EmptyTuple` if none).
+ *
+ * Method `apply` provides a tuple of type `Out` made of tuples
+ * containing all annotations for the corresponding field or constructor (`EmptyTuple` if none).
+ *
+ * Note that type annotations must not be abstract for this type class to take them into account.
+ *
+ * Example:
+ * {{{
+ *   case class First(s: String)
+ *   case class Second(i: Int)
+ *
+ *   case class CC(i: Int, s: String @First("a") @Second(0))
+ *
+ *   val ccFirsts = AllTypeAnnotations[CC]
+ *
+ *   // ccFirsts.Out is  (EmptyTuple, (First, Second)
+ *   // ccFirsts.apply() is
+ *   //   (EmptyTuple, (First("a"), Second(0))
+ *
+ * }}}
+ *
+ * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
+ *
+ * @tparam T: product or sum type, whose fields or constructors are annotated
+ *
+ * @author Patrick Grandjean
+ */
+ trait AllTypeAnnotations[T] extends Serializable {
+   type Out <: Tuple
+
+   def apply(): Out
+ }
+
+ object AllTypeAnnotations {
+   def apply[T](implicit annotations: AllTypeAnnotations[T]): Aux[T, annotations.Out] = annotations
+
+   type Aux[T, Out0 <: Tuple] = AllTypeAnnotations[T] { type Out = Out0 }
+
+   def mkAnnotations[T, Out0 <: Tuple](annotations: Out0): Aux[T, Out0] =
+     new AllTypeAnnotations[T] {
+       type Out = Out0
+       def apply(): Out = annotations
+     }
+
+   transparent inline given mkAnnotations[T]: AllTypeAnnotations[T] =
+     ${ AnnotationMacros.mkAllTypeAnnotations[T] }
+ }
+
 object AnnotationMacros {
   def mkAnnotation[A: Type, T: Type](using Quotes): Expr[Annotation[A, T]] = {
     import quotes.reflect._
@@ -131,59 +301,118 @@ object AnnotationMacros {
     val annotTpe = TypeRepr.of[A]
     val annotFlags = annotTpe.typeSymbol.flags
     if (annotFlags.is(Flags.Abstract) || annotFlags.is(Flags.Trait)) {
-      report.error(s"Bad annotation type ${annotTpe.show} is abstract")
-      '{???}
+      report.errorAndAbort(s"Bad annotation type ${annotTpe.show} is abstract")
     } else {
       val annoteeTpe = TypeRepr.of[T]
-      // TODO try to use `getAnnotation` for performance
-      annoteeTpe.typeSymbol.annotations.find(_.tpe <:< annotTpe) match {
-        case Some(tree) => '{ Annotation.mkAnnotation[A, T](${tree.asExprOf[A]}) }
-        case None =>
-          report.error(s"No Annotation of type ${annotTpe.show} for type ${annoteeTpe.show}")
-          '{???}
+      val symbol = if (annoteeTpe.isSingleton) annoteeTpe.termSymbol else annoteeTpe.typeSymbol
+      symbol.getAnnotation(annotTpe.typeSymbol) match {
+        case Some(tree) if tree.tpe <:< annotTpe => '{ Annotation.mkAnnotation[A, T](${tree.asExprOf[A]}) }
+        case _ => report.errorAndAbort(s"No Annotation of type ${annotTpe.show} for type ${annoteeTpe.show}")
       }
     }
   }
 
-  def mkAnnotations[A: Type, T: Type](using q: Quotes): Expr[Annotations[A, T]] = {
+  def mkAnnotations[A: Type, T: Type](using Quotes): Expr[Annotations[A, T]] = mkAnnotationsImpl[A, T, Annotations](ofExprVariableAnnotations)
+
+  def mkTypeAnnotations[A: Type, T: Type](using Quotes): Expr[TypeAnnotations[A, T]] = mkAnnotationsImpl[A, T, TypeAnnotations](ofExprTypeAnnotations)
+
+  private def mkAnnotationsImpl[A: Type, T: Type, AS[A, T]: Type](mk: Seq[Expr[Any]] => Expr[AS[A, T]])(using Quotes): Expr[AS[A, T]] =
     import quotes.reflect._
 
+    val tpe = TypeRepr.of[AS[A, T]] <:< TypeRepr.of[TypeAnnotations[A, T]]
     val annotTpe = TypeRepr.of[A]
     val annotFlags = annotTpe.typeSymbol.flags
     if (annotFlags.is(Flags.Abstract) || annotFlags.is(Flags.Trait)) {
-      report.throwError(s"Bad annotation type ${annotTpe.show} is abstract")
+      report.errorAndAbort(s"Bad annotation type ${annotTpe.show} is abstract")
     } else {
-      val r = new ReflectionUtils(q)
-      import r._
-
-      def mkAnnotations(annotTrees: Seq[Expr[Any]]): Expr[Annotations[A, T]] =
-        Expr.ofTupleFromSeq(annotTrees) match {
-          case '{ $t: tup } => '{ Annotations.mkAnnotations[A, T, tup & Tuple]($t) }
-        }
-
-      def findAnnotation[A: Type](annoteeSym: Symbol): Expr[Option[A]] =
-        // TODO try to use `getAnnotation` for performance
-        annoteeSym.annotations.find(_.tpe <:< TypeRepr.of[A]) match {
+      val annotations = extractAnnotations[T](tpe)
+      val exprs = annotations.map { child =>
+        child.find(_.tpe <:< TypeRepr.of[A]) match {
           case Some(tree) => '{ Some(${tree.asExprOf[A]}) }
           case None       => '{ None }
         }
-
-      val annoteeTpe = TypeRepr.of[T]
-      annoteeTpe.classSymbol match {
-        case Some(annoteeCls) if annoteeCls.flags.is(Flags.Case) =>
-          val valueParams = annoteeCls.primaryConstructor.paramSymss
-            .find(_.headOption.fold(false)( _.isTerm)).getOrElse(Nil)
-          mkAnnotations(valueParams.map { vparam => findAnnotation[A](vparam) })
-        case Some(annoteeCls) =>
-          Mirror(annoteeTpe) match {
-            case Some(rm) =>
-              mkAnnotations(rm.MirroredElemTypes.map { child => findAnnotation[A](child.typeSymbol) })
-            case None =>
-              report.throwError(s"No Annotations for sum type ${annoteeTpe.show} with no Mirror")
-          }
-        case None =>
-          report.throwError(s"No Annotations for non-class ${annoteeTpe.show}")
       }
+
+      mk(exprs)
     }
-  }
+  
+  def mkAllAnnotations[T: Type](using Quotes): Expr[AllAnnotations[T]] = mkAllAnnotationsImpl[T, AllAnnotations](ofExprAllVariableAnnotations)
+
+  def mkAllTypeAnnotations[T: Type](using Quotes): Expr[AllTypeAnnotations[T]] = mkAllAnnotationsImpl[T, AllTypeAnnotations](ofExprAllTypeAnnotations)
+
+  private def mkAllAnnotationsImpl[T: Type, AS[T]: Type](mk: Seq[Expr[Any]] => Expr[AS[T]])(using Quotes): Expr[AS[T]] =
+    import quotes.reflect._
+
+    val tpe = TypeRepr.of[AS[T]] <:< TypeRepr.of[AllTypeAnnotations[T]]
+    val annotations = extractAnnotations[T](tpe)
+    val exprs = annotations.map { anns =>
+      Expr.ofTupleFromSeq(anns.map(_.asExpr))
+    }
+
+    mk(exprs)
+  
+  def extractAnnotations[T: Type](tpe: Boolean)(using q: Quotes): Seq[List[q.reflect.Term]] =
+    import quotes.reflect._
+
+    val r = new ReflectionUtils(q)
+    import r._
+
+    def getAnnotations(tree: Tree, acc: List[Term] = Nil, depth: Int = 0): List[Term] =
+      if (tpe) {
+        tree match {
+          case classDef: ClassDef => classDef.parents.flatMap(getAnnotations(_, acc, depth + 1))
+          case valDef: ValDef => getAnnotations(valDef.tpt, acc, depth + 1)
+          case typeId: TypeIdent => getAnnotationsFromType(typeId.tpe, acc, depth)
+          case inferred: Inferred => getAnnotationsFromType(inferred.tpe, acc, depth)
+          case annotated: Annotated => getAnnotations(annotated.arg, annotated.annotation :: acc, depth + 1)
+          case _ => acc
+        }
+      } else {
+        tree.symbol.annotations.reverse
+      }
+      
+    @tailrec
+    def getAnnotationsFromType(typeRepr: TypeRepr, acc: List[Term] = Nil, depth: Int = 0): List[Term] =
+      typeRepr match {
+        case annotatedType: AnnotatedType => getAnnotationsFromType(annotatedType.underlying, annotatedType.annotation :: acc, depth + 1)
+        case typeRef: TypeRef if typeRef.typeSymbol.isAliasType => getAnnotationsFromType(typeRef.translucentSuperType, acc, depth + 1)
+        case _ => acc
+      }
+
+    val annoteeTpe = TypeRepr.of[T]
+    annoteeTpe.classSymbol match {
+      case Some(annoteeCls) if annoteeCls.flags.is(Flags.Case) =>
+        val valueParams = annoteeCls.primaryConstructor
+          .paramSymss
+          .find(_.exists(_.isTerm))
+          .getOrElse(Nil)
+        valueParams.map { vparam => getAnnotations(vparam.tree) }
+      case Some(annoteeCls) =>
+        Mirror(annoteeTpe) match {
+          case Some(rm) => rm.MirroredElemTypes.map(child => getAnnotations(child.typeSymbol.tree))
+          case None => report.errorAndAbort(s"No Annotations for type ${annoteeTpe.show} without no Mirror")
+        }
+      case None =>
+        report.errorAndAbort(s"No Annotations for non-class ${annoteeTpe.show}")
+    }
+
+  def ofExprVariableAnnotations[A: Type, T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[Annotations[A, T]] =
+    Expr.ofTupleFromSeq(annotTrees) match {
+      case '{ $t: tup } => '{ Annotations.mkAnnotations[A, T, tup & Tuple]($t) }
+    }
+
+  def ofExprTypeAnnotations[A: Type, T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[TypeAnnotations[A, T]] =
+    Expr.ofTupleFromSeq(annotTrees) match {
+      case '{ $t: tup } => '{ TypeAnnotations.mkAnnotations[A, T, tup & Tuple]($t) }
+    }
+
+  def ofExprAllVariableAnnotations[T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[AllAnnotations[T]] =
+    Expr.ofTupleFromSeq(annotTrees) match {
+      case '{ $t: tup } => '{ AllAnnotations.mkAnnotations[T, tup & Tuple]($t) }
+    }
+
+  def ofExprAllTypeAnnotations[T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[AllTypeAnnotations[T]] =
+    Expr.ofTupleFromSeq(annotTrees) match {
+      case '{ $t: tup } => '{ AllTypeAnnotations.mkAnnotations[T, tup & Tuple]($t) }
+    }
 }
