@@ -304,10 +304,9 @@ object AnnotationMacros {
       report.errorAndAbort(s"Bad annotation type ${annotTpe.show} is abstract")
     } else {
       val annoteeTpe = TypeRepr.of[T]
-      // TODO try to use `getAnnotation` for performance
-      annoteeTpe.typeSymbol.annotations.find(_.tpe <:< annotTpe) match {
-        case Some(tree) => '{ Annotation.mkAnnotation[A, T](${tree.asExprOf[A]}) }
-        case None => report.errorAndAbort(s"No Annotation of type ${annotTpe.show} for type ${annoteeTpe.show}")
+      annoteeTpe.typeSymbol.getAnnotation(annotTpe.typeSymbol) match {
+        case Some(tree) if tree.tpe <:< annotTpe => '{ Annotation.mkAnnotation[A, T](${tree.asExprOf[A]}) }
+        case _ => report.errorAndAbort(s"No Annotation of type ${annotTpe.show} for type ${annoteeTpe.show}")
       }
     }
   }
