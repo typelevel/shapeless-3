@@ -301,16 +301,13 @@ object AnnotationMacros {
     val annotTpe = TypeRepr.of[A]
     val annotFlags = annotTpe.typeSymbol.flags
     if (annotFlags.is(Flags.Abstract) || annotFlags.is(Flags.Trait)) {
-      report.error(s"Bad annotation type ${annotTpe.show} is abstract")
-      '{???}
+      report.errorAndAbort(s"Bad annotation type ${annotTpe.show} is abstract")
     } else {
       val annoteeTpe = TypeRepr.of[T]
       // TODO try to use `getAnnotation` for performance
       annoteeTpe.typeSymbol.annotations.find(_.tpe <:< annotTpe) match {
         case Some(tree) => '{ Annotation.mkAnnotation[A, T](${tree.asExprOf[A]}) }
-        case None =>
-          report.error(s"No Annotation of type ${annotTpe.show} for type ${annoteeTpe.show}")
-          '{???}
+        case None => report.errorAndAbort(s"No Annotation of type ${annotTpe.show} for type ${annoteeTpe.show}")
       }
     }
   }
@@ -326,7 +323,7 @@ object AnnotationMacros {
     val annotTpe = TypeRepr.of[A]
     val annotFlags = annotTpe.typeSymbol.flags
     if (annotFlags.is(Flags.Abstract) || annotFlags.is(Flags.Trait)) {
-      report.throwError(s"Bad annotation type ${annotTpe.show} is abstract")
+      report.errorAndAbort(s"Bad annotation type ${annotTpe.show} is abstract")
     } else {
       val annotations = extractAnnotations[T](tpe)
       val exprs = annotations.map { child =>
@@ -387,7 +384,7 @@ object AnnotationMacros {
       case Some(annoteeCls) if annoteeCls.flags.is(Flags.Case) =>
         val valueParams = annoteeCls.primaryConstructor
           .paramSymss
-          .find(_.headOption.fold(false)( _.isTerm))
+          .find(_.exists(_.isTerm))
           .getOrElse(Nil)
         valueParams.map { vparam => getAnnotations(vparam.tree) }
       case Some(annoteeCls) =>
@@ -395,10 +392,10 @@ object AnnotationMacros {
           case Some(rm) =>
             rm.MirroredElemTypes.map { child => getAnnotations(child.typeSymbol.tree) }
           case None =>
-            report.throwError(s"No Annotations for sum type ${annoteeTpe.show} with no Mirror")
+            report.errorAndAbort(s"No Annotations for sum type ${annoteeTpe.show} with no Mirror")
         }
       case None =>
-        report.throwError(s"No Annotations for non-class ${annoteeTpe.show}")
+        report.errorAndAbort(s"No Annotations for non-class ${annoteeTpe.show}")
     }
 
   def ofExprVariableAnnotations[A: Type, T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[Annotations[A, T]] =
