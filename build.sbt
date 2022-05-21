@@ -16,21 +16,7 @@ val jsSettings = Def.settings(
 )
 
 val nativeSettings = Def.settings(
-  libraryDependencies += "org.scala-native" %%% "junit-runtime" % nativeVersion % Test,
-  addCompilerPlugin("org.scala-native" % "junit-plugin" % nativeVersion cross CrossVersion.full),
-  pomPostProcess := { node =>
-    import scala.xml._
-    import scala.xml.transform._
-    new RuleTransformer(new RewriteRule{
-      override def transform(n: Node) =
-        if (n.label == "dependency" && (n \ "artifactId").text.startsWith("junit-runtime_native"))
-          NodeSeq.Empty
-        else
-          n
-    }).transform(node)(0)
-  },
-  testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-s", "-v"),
-  mimaPreviousArtifacts := Set.empty,
+  tlVersionIntroduced := Map("3" -> "3.1.0")
 )
 
 // Aliases
@@ -93,6 +79,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
      )
    )
   .jsEnablePlugins(ScalaJSJUnitPlugin)
+  .nativeEnablePlugins(ScalaNativeJUnitPlugin)
 
 lazy val derivingJVM = deriving.jvm
 lazy val derivingJS = deriving.js
@@ -108,6 +95,7 @@ lazy val test = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jsSettings(jsSettings)
   .nativeSettings(nativeSettings)
   .jsEnablePlugins(ScalaJSJUnitPlugin)
+  .nativeEnablePlugins(ScalaNativeJUnitPlugin)
 
 lazy val testJVM = test.jvm
 lazy val testJS = test.js
@@ -124,6 +112,7 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(mimaPreviousArtifacts := Set.empty) // Not yet
   .nativeSettings(nativeSettings)
   .jsEnablePlugins(ScalaJSJUnitPlugin)
+  .nativeEnablePlugins(ScalaNativeJUnitPlugin)
 
 lazy val typeableJVM = typeable.jvm
 lazy val typeableJS = typeable.js
@@ -143,6 +132,7 @@ lazy val local = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .enablePlugins(NoPublishPlugin)
   .jsEnablePlugins(ScalaJSJUnitPlugin)
+  .nativeEnablePlugins(ScalaNativeJUnitPlugin)
 
 // Settings
 
@@ -152,8 +142,8 @@ lazy val commonSettings = Seq(
     "-Yexplicit-nulls"
   ),
   Compile / doc / sources := Nil,
-
   libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % "test",
+  testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-s", "-v"),
 )
 
 ThisBuild / licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
