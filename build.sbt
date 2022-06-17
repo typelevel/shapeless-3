@@ -38,48 +38,26 @@ addCommandAlias("testNative", ";derivingNative/test;testNative/test;typeableNati
 // Projects
 
 lazy val root = tlCrossRootProject
-  .aggregate(
-    deriving,
-    test,
-    typeable
-  )
+  .aggregate(deriving, test, typeable)
 
 lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("modules/deriving"))
   .dependsOn(test % "test")
-  .settings(
-    moduleName := "shapeless3-deriving",
-  )
-  .platformsSettings(JVMPlatform, JSPlatform)(
-    libraryDependencies += "org.typelevel" %%% "cats-core" % "2.7.0" % "test",
-  )
+  .settings(moduleName := "shapeless3-deriving")
   .jsSettings(jsSettings)
-  .nativeSettings(
-    nativeSettings,
-    Test / sources := {
-      // TODO enable if cats released
-      val exclude = Set(
-        "deriving.scala",
-        "type-classes.scala",
-        "adts.scala",
-        "annotation.scala",
-      )
-      (Test / sources).value.filterNot { src =>
-        exclude.contains(src.getName)
-      }
-    },
-  )
+  .nativeSettings(nativeSettings)
   .settings(commonSettings)
-  .settings(
-     mimaBinaryIssueFilters ++= Seq(
-       ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedInstances.erasedMapK"),
-       ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedProject"),
-       ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK")
-     )
-   )
   .jsEnablePlugins(ScalaJSJUnitPlugin)
   .nativeEnablePlugins(ScalaNativeJUnitPlugin)
+  .settings(
+    libraryDependencies += "org.typelevel" %%% "cats-core" % "2.8.0" % "test",
+    mimaBinaryIssueFilters ++= Seq(
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedInstances.erasedMapK"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedProject"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK")
+    )
+  )
 
 lazy val derivingJVM = deriving.jvm
 lazy val derivingJS = deriving.js
@@ -88,9 +66,7 @@ lazy val derivingNative = deriving.native
 lazy val test = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("modules/test"))
-  .settings(
-    moduleName := "shapeless3-test"
-  )
+  .settings(moduleName := "shapeless3-test")
   .settings(commonSettings)
   .jsSettings(jsSettings)
   .nativeSettings(nativeSettings)
@@ -105,9 +81,7 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("modules/typeable"))
   .dependsOn(test % "test")
-  .settings(
-    moduleName := "shapeless3-typeable"
-  )
+  .settings(moduleName := "shapeless3-typeable")
   .settings(commonSettings)
   .settings(mimaPreviousArtifacts := Set.empty) // Not yet
   .nativeSettings(nativeSettings)
@@ -122,6 +96,10 @@ lazy val local = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("local"))
   .dependsOn(deriving, test, typeable)
+  .settings(commonSettings)
+  .enablePlugins(NoPublishPlugin)
+  .jsEnablePlugins(ScalaJSJUnitPlugin)
+  .nativeEnablePlugins(ScalaNativeJUnitPlugin)
   .settings(
     moduleName := "shapeless3-local",
     scalacOptions ++= List("-Xmax-inlines", "1000"),
@@ -129,18 +107,11 @@ lazy val local = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     Compile / console / scalacOptions -= "-Xprint:postInlining",
     console / initialCommands := """import shapeless3.deriving.* ; import scala.deriving.*"""
   )
-  .settings(commonSettings)
-  .enablePlugins(NoPublishPlugin)
-  .jsEnablePlugins(ScalaJSJUnitPlugin)
-  .nativeEnablePlugins(ScalaNativeJUnitPlugin)
 
 // Settings
 
 lazy val commonSettings = Seq(
-  scalacOptions ++= Seq(
-    "-Xfatal-warnings",
-    "-Yexplicit-nulls"
-  ),
+  scalacOptions ++= Seq("-Xfatal-warnings", "-Yexplicit-nulls"),
   Compile / doc / sources := Nil,
   libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % "test",
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-s", "-v"),
