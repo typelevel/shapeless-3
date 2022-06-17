@@ -52,7 +52,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     moduleName := "shapeless3-deriving",
   )
   .platformsSettings(JVMPlatform, JSPlatform)(
-    libraryDependencies += "org.typelevel" %%% "cats-core" % "2.7.0" % "test",
+    libraryDependencies += "org.typelevel" %%% "cats-core" % "2.8.0" % "test",
   )
   .jsSettings(jsSettings)
   .nativeSettings(
