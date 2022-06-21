@@ -1,6 +1,6 @@
 import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProblem}
 
-val scala3Version = "3.1.2"
+val scala3Version = "3.1.3"
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / tlBaseVersion := "3.1"
@@ -111,7 +111,7 @@ lazy val local = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 // Settings
 
 lazy val commonSettings = Seq(
-  scalacOptions ++= Seq("-Xfatal-warnings", "-Yexplicit-nulls"),
+  scalacOptions ++= Seq("-Xfatal-warnings", "-Yexplicit-nulls", "-deprecation"),
   Compile / doc / sources := Nil,
   libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % "test",
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-s", "-v"),
