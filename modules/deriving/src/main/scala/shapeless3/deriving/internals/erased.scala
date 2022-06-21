@@ -51,7 +51,7 @@ private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirro
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
   
   final def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
-    new ErasedProductInstances1(mirror, f(i))
+    new ErasedProductInstances1(mirror, () => f(i))
 
   final def erasedConstruct(f: Any => Any): Any =
     mirror.fromProduct(Tuple1(f(i)))
@@ -122,7 +122,7 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
 
   final def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
-    new ErasedProductInstancesN(mirror, is.map(f))
+    new ErasedProductInstancesN(mirror, () => is.map(f))
 
   final def erasedConstruct(f: Any => Any): Any = {
     val n = is.length

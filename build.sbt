@@ -111,7 +111,7 @@ lazy val local = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 // Settings
 
 lazy val commonSettings = Seq(
-  scalacOptions ++= Seq("-Xfatal-warnings", "-Yexplicit-nulls"),
+  scalacOptions ++= Seq("-Xfatal-warnings", "-Yexplicit-nulls", "-deprecation"),
   Compile / doc / sources := Nil,
   libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % "test",
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-s", "-v"),

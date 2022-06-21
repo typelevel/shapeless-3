@@ -315,16 +315,14 @@ object TypeableMacros {
         case tree: ValDef => tree.tpt.tpe
       }
       if (!fields.forall(f => caseFields.contains(f) || !isAbstract(fieldTpe(f)))) {
-        report.throwError(s"No Typeable for case class ${target.show} with non-case fields")
+        report.errorAndAbort(s"No Typeable for case class ${target.show} with non-case fields")
       } else {
-        val fieldTps = caseFields.map(f => target.memberType(f))
-        summonAllTypeables(fieldTps) match {
+        summonAllTypeables(caseFields.map(target.memberType)) match {
           case None =>
-            report.throwError(s"Missing Typeable for field of case class ${target.show}")
+            report.errorAndAbort(s"Missing Typeable for field of case class ${target.show}")
           case Some(ftps) =>
             val clazz = Ref(defn.Predef_classOf).appliedToType(target).asExprOf[Class[T]]
             val name = Expr(simpleName(target))
-
             '{ namedCaseClassTypeable($clazz, $ftps, $name) }
         }
       }
@@ -339,15 +337,14 @@ object TypeableMacros {
           val elemTps = rm.MirroredElemTypes
           summonAllTypeables(elemTps) match {
             case None =>
-              report.throwError(s"Missing Typeable for child of sum type ${target.show}")
+              report.errorAndAbort(s"Missing Typeable for child of sum type ${target.show}")
             case Some(etps) =>
               val name = Expr(simpleName(target))
-
               '{ namedSumTypeable[T]($etps, $name) }
           }
 
         case None =>
-          report.throwError(s"Typeable for sum type ${target.show} with no Mirror")
+          report.errorAndAbort(s"Typeable for sum type ${target.show} with no Mirror")
       }
     }
 
@@ -386,33 +383,24 @@ object TypeableMacros {
 
         qual match {
           case Some(_) if sym.flags.is(Flags.Case) => mkCaseClassTypeable
-          case None =>
-            mkNamedSimpleTypeable
-          case Some(tp: TypeRef) if normalizeModuleClass(tp.typeSymbol) == owner =>
-            mkNamedSimpleTypeable
-          case Some(tp: TermRef) if normalizeModuleClass(tp.termSymbol) == owner =>
-            mkNamedSimpleTypeable
+          case None => mkNamedSimpleTypeable
+          case Some(tp: TypeRef) if normalizeModuleClass(tp.typeSymbol) == owner => mkNamedSimpleTypeable
+          case Some(tp: TermRef) if normalizeModuleClass(tp.termSymbol) == owner => mkNamedSimpleTypeable
           case Some(_) if sym.flags.is(Flags.Sealed) => mkSumTypeable
-          case _ =>
-            report.throwError(s"No Typeable for type ${target.show} with a dependent prefix")
+          case _ => report.errorAndAbort(s"No Typeable for type ${target.show} with a dependent prefix")
         }
 
       case tp: AppliedType =>
-        val tycon = tp.tycon
-        val args = tp.args
-
         if (tp.typeSymbol.flags.is(Flags.Case)) mkCaseClassTypeable
         else if (tp.typeSymbol.flags.is(Flags.Sealed)) mkSumTypeable
-        else report.throwError(s"No Typeable for parametrized type ${target.show}")
-
+        else report.errorAndAbort(s"No Typeable for parametrized type ${target.show}")
 
       case tp: AndType =>
-        val conjuncts = collectConjuncts(tp)
-        summonAllTypeables(conjuncts) match {
+        summonAllTypeables(collectConjuncts(tp)) match {
           case Some(ctps) =>
             '{ intersectionTypeable($ctps) }
           case None =>
-            report.throwError(s"No Typeable for & type ${target.show} with missing conjunct(s)")
+            report.errorAndAbort(s"No Typeable for & type ${target.show} with missing conjunct(s)")
         }
 
       case tp: OrType =>
@@ -421,11 +409,11 @@ object TypeableMacros {
           case Some(dtps) =>
             '{ unionTypeable($dtps) }
           case None =>
-            report.throwError(s"No Typeable for | type ${target.show} with missing disjunct(s)")
+            report.errorAndAbort(s"No Typeable for | type ${target.show} with missing disjunct(s)")
         }
 
-      case other =>
-        report.throwError(s"No Typeable for type ${target.show}")
+      case _ =>
+        report.errorAndAbort(s"No Typeable for type ${target.show}")
     }
   }
 }
