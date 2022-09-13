@@ -248,6 +248,53 @@ object Traverse {
    inline def derived[F[_]](using gen: K1.Generic[F]): Traverse[F] = traverseGen
 }
 
+trait Optional[F[_]]:
+  def headOption[A](fa: F[A]): Option[A]
+
+trait NonEmpty[F[_]] extends Optional[F]:
+  def head[A](fa: F[A]): A
+  def headOption[A](fa: F[A]): Option[A] = Some(head(fa))
+
+object Optional:
+  given Optional[List] with
+    def headOption[A](fa: List[A]): Option[A] = fa.headOption
+  given Optional[Option] with
+    def headOption[A](fa: Option[A]): Option[A] = fa
+  given[T]: Optional[Const[T]] with
+    def headOption[A](fa: T): Option[A] = None
+  given NonEmpty[::] with
+    def head[A](fa: ::[A]): A = fa.head
+  given NonEmpty[Some] with
+    def head[A](fa: Some[A]): A = fa.get
+  given NonEmpty[Id] with
+    def head[A](fa: A): A = fa
+
+object NonEmpty:
+  inline given product[F[_]](using gen: K1.ProductGeneric[F]): NonEmpty[F] =
+    // Evidence that at least one of the `Optional` instances is `NonEmpty`.
+    K1.summonFirst[NonEmpty, gen.MirroredElemTypes, Const[Any]]
+    new Product[F](summonInline)
+
+  given coproduct[F[_]](using inst: => K1.CoproductInstances[NonEmpty, F]): NonEmpty[F] with
+    def head[A](fa: F[A]): A = inst.fold(fa) { [f[_]] =>
+      (ne: NonEmpty[f], fa: f[A]) => ne.head(fa)
+    }
+
+  inline def derived[F[_]](using gen: K1.Generic[F]): NonEmpty[F] =
+    inline gen match
+      case given K1.ProductGeneric[F] => product[F]
+      case given K1.CoproductGeneric[F] => coproduct[F]
+
+  class Product[F[_]](inst: K1.ProductInstances[Optional, F]) extends NonEmpty[F]:
+    def head[A](fa: F[A]): A = headOption(fa).get
+    override def headOption[A](fa: F[A]): Option[A] =
+      inst.foldLeft(fa)(Option.empty[A]) { [f[_]] =>
+        (acc: Option[A], opt: Optional[f], fa: f[A]) =>
+          Complete(acc.isDefined)(acc)(opt.headOption(fa))
+      }
+
+end NonEmpty
+
 trait Foldable[F[_]] {
   def foldLeft[A, B](fa: F[A])(b: B)(f: (B, A) => B): B
 
@@ -440,10 +487,12 @@ object Empty {
     mkEmpty(inst.construct([a] => (ma: Empty[a]) => ma.empty))
 
   inline given emptyGenC[A](using gen: K0.CoproductGeneric[A]): Empty[A] =
-    mkEmpty(K0.summonFirst[Empty, gen.MirroredElemTypes, A].empty)
+    K0.summonOnly[Empty, gen.MirroredElemTypes, A]
 
   inline def derived[A](using gen: K0.Generic[A]): Empty[A] =
-    gen.derive(emptyGen, emptyGenC)
+    inline gen match
+      case given K0.ProductGeneric[A] => emptyGen
+      case given K0.CoproductGeneric[A] => emptyGenC
 }
 
 trait EmptyK[F[_]] {
@@ -466,7 +515,7 @@ object EmptyK {
     mkEmptyK([t] => () => inst.construct([f[_]] => (ef: EmptyK[f]) => ef.empty[t]))
 
   inline given emptyKGenC[A[_]](using gen: K1.CoproductGeneric[A]): EmptyK[A] =
-    mkEmptyK[A]([t] => () => K1.summonFirst[EmptyK, gen.MirroredElemTypes, A].empty[t])
+    K1.summonOnly[EmptyK, gen.MirroredElemTypes, A]
 
   inline def derived[A[_]](using gen: K1.Generic[A]): EmptyK[A] =
     inline gen match {

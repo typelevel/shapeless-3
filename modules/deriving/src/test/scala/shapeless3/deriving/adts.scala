@@ -25,7 +25,7 @@ object adts {
 
   case class Recursive(h: Int, t: Option[Recursive]) derives Monoid
 
-  sealed trait OptionInt derives Eq, Empty, Show, Read, Ord
+  sealed trait OptionInt derives Eq, Show, Read, Ord
   case object NoneInt extends OptionInt
   case class SomeInt(value: Int) extends OptionInt
 
@@ -73,4 +73,14 @@ object adts {
   case class BI(b: Boolean, i: Int)
   
   case class Phantom[A]()
+
+  enum LongList derives Empty:
+    case Nil()
+    case Cons(value: Long, tail: LongList)
+
+  enum Zipper[A] derives NonEmpty:
+    case Rep(n: Int, value: Some[A])
+    case Top(head: A, tail: Zipper[A])
+    case Bot(init: Zipper[A], last: A)
+    case Focus(left: List[A], focus: ::[A], right: List[A])
 }
