@@ -96,7 +96,7 @@ object K0 {
     inline erasedValue[T] match
       case _: (a *: b) =>
         summonFrom {
-          case instance: `a` =>
+          case instance: a =>
             summonNone0[b]
             instance
           case _ =>
@@ -107,7 +107,7 @@ object K0 {
     inline erasedValue[T] match
       case _: EmptyTuple => ()
       case _: (a *: b) =>
-        summonInline[NotGiven[`a`]]
+        summonInline[NotGiven[a]]
         summonNone0[b]
 
   extension [T](gen: ProductGeneric[T])
