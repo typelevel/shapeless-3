@@ -87,7 +87,7 @@ object Eq {
       [t] => (acc: Boolean, eqt: Eq[t], t0: t, t1: t) => Complete(!eqt.eqv(t0, t1))(false)(true)
     )
 
-  given eqGenC[A](using inst: => K0.CoproductInstances[Eq, A]): Eq[A] with
+  given eqGenC[A](using inst: K0.CoproductInstances[Eq, A]): Eq[A] with
     def eqv(x: A, y: A): Boolean = inst.fold2(x, y)(false)(
       [t] => (eqt: Eq[t], t0: t, t1: t) => eqt.eqv(t0, t1)
     )
@@ -126,7 +126,7 @@ object Ord {
 
     def compare(x: String, y: String): Int = x.compare(y)
 
-  given ordGen[A](using inst: => K0.ProductInstances[Ord, A]): Ord[A] with
+  given ordGen[A](using inst: K0.ProductInstances[Ord, A]): Ord[A] with
     def compare(x: A, y: A): Int = inst.foldLeft2(x, y)(0: Int)(
       [t] => (acc: Int, ord: Ord[t], t0: t, t1: t) => {
         val cmp = ord.compare(t0, t1)
@@ -134,7 +134,7 @@ object Ord {
       }
     )
 
-  given ordGenC[A](using inst: => K0.CoproductInstances[Ord, A]): Ord[A] with
+  given ordGenC[A](using inst: K0.CoproductInstances[Ord, A]): Ord[A] with
     def compare(x: A, y: A): Int = inst.fold2(x, y)((x: Int, y: Int) => x - y)(
       [t] => (ord: Ord[t], t0: t, t1: t) => ord.compare(t0, t1)
     )
@@ -156,7 +156,7 @@ object Functor {
   given [F[_], G[_]](using ff: Functor[F], fg: Functor[G]): Functor[[t] =>> F[G[t]]] with
     def map[A, B](fga: F[G[A]])(f: A => B): F[G[B]] = ff.map(fga)(ga => fg.map(ga)(f))
 
-  given functorGen[F[_]](using inst: => K1.Instances[Functor, F]): Functor[F] with
+  given functorGen[F[_]](using inst: K1.Instances[Functor, F]): Functor[F] with
     def map[A, B](fa: F[A])(f: A => B): F[B] = inst.map(fa)([t[_]] => (ft: Functor[t], ta: t[A]) => ft.map(ta)(f))
 
   given [T]: Functor[Const[T]] with
@@ -235,7 +235,7 @@ object Traverse {
     def traverse[G[_], A, B](fa: Const[X][A])(f: A => G[B])(using G: Applicative[G]): G[Const[X][B]] =
       G.pure(fa)
 
-  given traverseGen[F[_]](using inst: => K1.Instances[Traverse, F], func: K1.Instances[Functor, F]): Traverse[F] with
+  given traverseGen[F[_]](using inst: K1.Instances[Traverse, F], func: K1.Instances[Functor, F]): Traverse[F] with
     import Functor.functorGen as delegate
 
     def map[A, B](fa: F[A])(f: A => B): F[B] = delegate[F].map(fa)(f)
@@ -268,7 +268,7 @@ object Foldable {
 
     def foldRight[A, B](fa: Const[X][A])(lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] = lb
 
-  given foldableProduct[F[_]](using inst: => K1.ProductInstances[Foldable, F]): Foldable[F] with
+  given foldableProduct[F[_]](using inst: K1.ProductInstances[Foldable, F]): Foldable[F] with
     def foldLeft[A, B](fa: F[A])(b: B)(f: (B, A) => B): B =
       inst.foldLeft[A, B](fa)(b)(
         [t[_]] => (acc: B, fd: Foldable[t], t0: t[A]) => Continue(fd.foldLeft(t0)(acc)(f))
@@ -280,7 +280,7 @@ object Foldable {
           Continue(Eval.defer(fd.foldRight(t0)(acc)(f)))
       )
 
-  given foldableCoproduct[F[_]](using inst: => K1.CoproductInstances[Foldable, F]): Foldable[F] with
+  given foldableCoproduct[F[_]](using inst: K1.CoproductInstances[Foldable, F]): Foldable[F] with
     def foldLeft[A, B](fa: F[A])(b: B)(f: (B, A) => B): B =
       inst.fold[A, B](fa)(
         [t[_]] => (fd: Foldable[t], t0: t[A]) => fd.foldLeft(t0)(b)(f)
@@ -306,7 +306,7 @@ object FunctorK {
   given [T]: FunctorK[K11.Id[T]] with
     def mapK[A[_], B[_]](at: A[T])(f: A ~> B): B[T] = f(at)
 
-  given functorKGen[H[_[_]]](using inst: => K11.Instances[FunctorK, H]): FunctorK[H] with
+  given functorKGen[H[_[_]]](using inst: K11.Instances[FunctorK, H]): FunctorK[H] with
     def mapK[A[_], B[_]](ha: H[A])(f: A ~> B): H[B] =
       inst.map(ha)([t[_[_]]] => (ft: FunctorK[t], ta: t[A]) => ft.mapK(ta)(f))
 
@@ -340,7 +340,7 @@ object Bifunctor {
         case Right(b) => Right(g(b))
       }
 
-  given bifunctorGen[F[_, _]](using inst: => K2.Instances[Bifunctor, F]): Bifunctor[F] with
+  given bifunctorGen[F[_, _]](using inst: K2.Instances[Bifunctor, F]): Bifunctor[F] with
     def bimap[A, B, C, D](fab: F[A, B])(f: A => C, g: B => D): F[C, D] =
       inst.map(fab)([t[_, _]] => (bft: Bifunctor[t], tab: t[A, B]) => bft.bimap(tab)(f, g))
 
@@ -548,7 +548,7 @@ object Show {
         ).mkString(s"${labelling.label}(", ", ", ")")
   }
 
-  given showGenC[T](using inst: => K0.CoproductInstances[Show, T]): Show[T] with {
+  given showGenC[T](using inst: K0.CoproductInstances[Show, T]): Show[T] with {
     def show(t: T): String = inst.fold(t)([t] => (st: Show[t], t: t) => st.show(t))
   }
 
@@ -631,7 +631,7 @@ object Read {
     }
   }
 
-  given readGenC[T](using inst: => K0.CoproductInstances[Read, T], labelling: Labelling[T]): Read[T] with {
+  given readGenC[T](using inst: K0.CoproductInstances[Read, T], labelling: Labelling[T]): Read[T] with {
     def read(s: String): Option[(T, String)] = {
       labelling.elemLabels.zipWithIndex.iterator.map((p: (String, Int)) => {
         val (label, i) = p
