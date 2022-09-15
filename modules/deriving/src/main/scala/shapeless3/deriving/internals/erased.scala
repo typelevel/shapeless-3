@@ -163,7 +163,7 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
   }
 
   final def erasedConstructA[F[_]](f: Any => F[Any])(pure: Pure[F], map: MapF[F], ap: Ap[F]): F[Any] =
-    traverseProduct(new DummyProduct(is.length), (tc, _) => f(tc))(pure, map, ap)
+    traverseProduct(new ArrayProduct(is), (tc, _) => f(tc))(pure, map, ap)
 
   final def erasedConstructM[F[_]](f: Any => F[Any])(pure: Pure[F], map: MapF[F], tailRecM: TailRecM[F]): F[Any] =
     val n = is.length
@@ -331,12 +331,6 @@ private[shapeless3] object ErasedProductInstances {
     def productElement(n: Int): Any = elems(n)
     def productArity: Int = elems.length
     override def productIterator: Iterator[Any] = elems.iterator
-  }
-
-  final class DummyProduct(n: Int) extends Product {
-    def canEqual(that: Any): Boolean = true
-    def productElement(n: Int): Any = null
-    def productArity: Int = n
   }
 
   inline def summonOne[T] = inline erasedValue[T] match {
