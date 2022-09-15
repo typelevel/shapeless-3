@@ -23,8 +23,16 @@ import scala.reflect.ClassTag
 
 type Id[t] = t
 type Const[c] = [t] =>> c
-
 type ~>[A[_], B[_]] = [t] => A[t] => B[t]
+
+/** Corresponds to `Applicative.pure` in Cats. */
+type Pure[F[_]] = [a] => a => F[a]
+/** Corresponds to `Functor.map` in Cats. */
+type MapF[F[_]] = [a, b] => (F[a], a => b) => F[b]
+/** Corresponds to `Apply.ap` in Cats. */
+type Ap[F[_]] = [a, b] => (F[a => b], F[a]) => F[b]
+/** Corresponds to `FlatMap.tailRecM` in Cats. */
+type TailRecM[F[_]] = [a, b] => (a, a => F[Either[a, b]]) => F[b]
 
 inline def summonAsArray[T <: Tuple]: Array[Any] =
   summonAsArray0[T](0, new Array[Any](constValue[Tuple.Size[T]]))
