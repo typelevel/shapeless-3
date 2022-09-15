@@ -144,7 +144,7 @@ for everyone.
 
 [codeofconduct]: https://www.scala-lang.org/conduct/
 [typelevel]: http://typelevel.org/
-[source]: https://github.com/milessabin/shapeless
+[source]: https://github.com/typelevel/shapeless-3
 [sonatype]: https://oss.sonatype.org/index.html#nexus-search;quick~shapeless
 [gitter]: https://gitter.im/milessabin/shapeless
 [discord]: https://discord.gg/bSQBZA3Ced
@@ -152,5 +152,5 @@ for everyone.
 [communitybuild]: https://github.com/lampepfl/dotty/tree/master/community-build/community-projects
 [kittens]: https://github.com/typelevel/kittens
 [cats]: https://github.com/typelevel/cats
-[functor]: https://github.com/milessabin/shapeless/blob/shapeless-3/modules/deriving/src/test/scala/shapeless3/deriving/type-classes.scala#L135-L156 
-[functork]:https://github.com/milessabin/shapeless/blob/shapeless-3/modules/deriving/src/test/scala/shapeless3/deriving/type-classes.scala#L329-L347 
+[functor]: https://github.com/typelevel/shapeless-3/blob/505d44658d907c8ce193b6e66a4a9e6396ba0d9a/modules/deriving/src/test/scala/shapeless3/deriving/type-classes.scala#L137-L158
+[functork]:https://github.com/typelevel/shapeless-3/blob/505d44658d907c8ce193b6e66a4a9e6396ba0d9a/modules/deriving/src/test/scala/shapeless3/deriving/type-classes.scala#L290-L308

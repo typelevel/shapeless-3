@@ -16,15 +16,22 @@
 
 package shapeless3.deriving
 
+import shapeless3.deriving.internals.*
+
+import scala.Tuple.Union
 import scala.compiletime.*
 import scala.compiletime.ops.int.S
 import scala.deriving.*
-import scala.Tuple.Union
-
-import shapeless3.deriving.internals.*
+import scala.util.NotGiven
 
 object K0 {
-  type Kind[C, O] = C { type Kind = K0.type ; type MirroredType = O ; type MirroredElemTypes <: Tuple }
+  type Kind[C, O] = C {
+    type Kind = K0.type
+    type MirroredType = O
+    type MirroredMonoType = O
+    type MirroredElemTypes <: Tuple
+  }
+  
   type Generic[O] = Kind[Mirror, O]
   type ProductGeneric[O] = Kind[Mirror.Product, O]
   type CoproductGeneric[O] = Kind[Mirror.Sum, O]
@@ -60,24 +67,36 @@ object K0 {
       case _ => EmptyTuple
     }
 
-  @deprecated("unsound - use .withFirst on CoproductGeneric or `summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]`", "3.0.2")
-  inline def summonFirst[F[_], T, U]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
+  /**
+   * Summon the first given instance `F[U]` from the tuple `T`.
+   * Remaining elements of `T` may or may not have an instance of `F`.
+   */
+  inline def summonFirst[F[_], T]: F[Any] =
+    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[Any]]
 
-  transparent inline def summonFirst0[T]: Any = inline erasedValue[T] match {
-    case _: (a *: b) => summonFrom {
-      case aa: `a` => aa
-      case _ => summonFirst0[b]
-    }
-  }
+  @deprecated("Use summonFirst instead", "3.2.0")
+  transparent inline def summonFirst0[T]: Any =
+    Kinds.summonFirst[T]
+
+  /**
+   * Summon the only given instance `F[U]` from the tuple `T`.
+   * Remaining elements of `T` are guaranteed to not have an instance of `F`.
+   */
+  inline def summonOnly[F[_], T, U]: F[U] =
+    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[U]]
+
+  /** Ensure that no element of the tuple `T` has an instance of `F`. */
+  inline def summonNone[F[_], T]: Unit =
+    Kinds.summonNone[LiftP[F, T]]
 
   extension [T](gen: ProductGeneric[T])
     inline def toRepr(o: T): gen.MirroredElemTypes = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes]
-    inline def fromRepr(r: gen.MirroredElemTypes): T = gen.fromProduct(r.asInstanceOf).asInstanceOf[T]
+    inline def fromRepr(r: gen.MirroredElemTypes): T = gen.fromProduct(r.asInstanceOf)
 
   extension [T](gen: CoproductGeneric[T])
     inline def toRepr(o: T): Union[gen.MirroredElemTypes] = o.asInstanceOf
     inline def fromRepr(r: Union[gen.MirroredElemTypes]): T = r.asInstanceOf
-    inline def withFirst[F[_], R](f: [t <: T] => F[t] => R): R = (f.asInstanceOf[Any => R])(summonFirst0[LiftP[F, gen.MirroredElemTypes]])
+    inline def withFirst[F[_], R](f: [t <: T] => F[t] => R): R = f(summonFirst[F, gen.MirroredElemTypes].asInstanceOf)
 
   extension [F[_], T](gen: Generic[T])
     inline def derive(f: => (ProductGeneric[T] & gen.type) ?=> F[T], g: => (CoproductGeneric[T] & gen.type) ?=> F[T]): F[T] =
@@ -118,18 +137,18 @@ object K0 {
       inst.asInstanceOf
 
   extension [F[_], T](inst: CoproductInstances[F, T])
-    inline def mapK[G[_]](f: [t] => F[t] => G[t]): CoproductInstances[G, T] =
+    inline def mapK[G[_]](f: [t <: T] => F[t] => G[t]): CoproductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def inject[R](p: Int)(f: [t <: T] => F[t] => R): R =
       inst.erasedInject(p)(f.asInstanceOf).asInstanceOf
     @deprecated("use inject", "3.0.2")
     inline def project[Acc](p: Int)(i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
       inst.erasedProject(p)(i)(f.asInstanceOf).asInstanceOf
-    inline def fold[R](x: T)(f: [t] => (F[t], t) => R): R =
+    inline def fold[R](x: T)(f: [t <: T] => (F[t], t) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
-    inline def fold2[R](x: T, y: T)(a: => R)(f: [t] => (F[t], t, t) => R): R =
+    inline def fold2[R](x: T, y: T)(a: => R)(f: [t <: T] => (F[t], t, t) => R): R =
       inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
-    inline def fold2[R](x: T, y: T)(g: (Int, Int) => R)(f: [t] => (F[t], t, t) => R): R =
+    inline def fold2[R](x: T, y: T)(g: (Int, Int) => R)(f: [t <: T] => (F[t], t, t) => R): R =
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t] >: F[t]]: CoproductInstances[G, T] = 
       inst.asInstanceOf
@@ -148,7 +167,13 @@ object K0 {
 }
 
 object K1 {
-  type Kind[C, O[_]] = C { type Kind = K1.type ; type MirroredType[X] = O[X] ; type MirroredElemTypes[_] <: Tuple }
+  type Kind[C, O[_]] = C {
+    type Kind = K1.type
+    type MirroredType[X] = O[X]
+    type MirroredMonoType = O[Any]
+    type MirroredElemTypes[_] <: Tuple
+  }
+  
   type Generic[O[_]] = Kind[Mirror, O]
   type ProductGeneric[O[_]] = Kind[Mirror.Product, O]
   type CoproductGeneric[O[_]] = Kind[Mirror.Sum, O]
@@ -174,15 +199,27 @@ object K1 {
       case _ => EmptyTuple
     }
 
-  @deprecated("unsound - use .withFirst on CoproductGeneric or `summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]`", "3.0.2")
-  inline def summonFirst[F[_[_]], T[_], U[_]]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
+  /**
+   * Summon the first given instance `F[U]` from the tuple `T`.
+   * Remaining elements of `T` may or may not have an instance of `F`.
+   */
+  inline def summonFirst[F[_[_]], T[_]]: F[[_] =>> Any] =
+    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[[_] =>> Any]]
 
-  transparent inline def summonFirst0[T]: Any = inline erasedValue[T] match {
-    case _: (a *: b) => summonFrom {
-      case aa: `a` => aa
-      case _ => summonFirst0[b]
-    }
-  }
+  @deprecated("Use summonFirst instead", "3.2.0")
+  transparent inline def summonFirst0[T]: Any =
+    Kinds.summonFirst[T]
+
+  /**
+   * Summon the only given instance `F[U]` from the tuple `T`.
+   * Remaining elements of `T` are guaranteed to not have an instance of `F`.
+   */
+  inline def summonOnly[F[_[_]], T[_], U[_]]: F[U] =
+    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[U]]
+
+  /** Ensure that no element of the tuple `T` has an instance of `F`. */
+  inline def summonNone[F[_[_]], T[_]]: Unit =
+    Kinds.summonNone[LiftP[F, T]]
 
   extension [T[_], A] (gen: ProductGeneric[T])
     inline def toRepr(o: T[A]): gen.MirroredElemTypes[A] = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A]]
@@ -191,7 +228,7 @@ object K1 {
   extension [T[_], A](gen: CoproductGeneric[T])
     inline def toRepr(o: T[A]): Union[gen.MirroredElemTypes[A]] = o.asInstanceOf
     inline def fromRepr(r: Union[gen.MirroredElemTypes[A]]): T[A] = r.asInstanceOf
-    inline def withFirst[F[_[_]], R](f: [t[x] <: T[x]] => F[t] => R): R = (f.asInstanceOf[Any => R])(summonFirst0[LiftP[F, gen.MirroredElemTypes]])
+    inline def withFirst[F[_[_]], R](f: [t[x] <: T[x]] => F[t] => R): R = f(summonFirst[F, gen.MirroredElemTypes].asInstanceOf)
 
   extension [F[_[_]], T[_]](gen: Generic[T]) inline def derive(f: => (ProductGeneric[T] & gen.type) ?=> F[T], g: => (CoproductGeneric[T] & gen.type) ?=> F[T]): F[T] =
     inline gen match {
@@ -230,13 +267,13 @@ object K1 {
       inst.asInstanceOf
 
   extension [F[_[_]], T[_]](inst: CoproductInstances[F, T])
-    inline def mapK[G[_[_]]](f: [t[_]] => F[t] => G[t]): CoproductInstances[G, T] =
+    inline def mapK[G[_[_]]](f: [t[x] <: T[x]] => F[t] => G[t]): CoproductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
-    inline def fold[A, R](x: T[A])(f: [t[_]] => (F[t], t[A]) => R): R =
+    inline def fold[A, R](x: T[A])(f: [t[x] <: T[x]] => (F[t], t[A]) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A, B, R](x: T[A], y: T[B])(a: => R)(f: [t[_]] => (F[t], t[A], t[B]) => R): R =
+    inline def fold2[A, B, R](x: T[A], y: T[B])(a: => R)(f: [t[x] <: T[x]] => (F[t], t[A], t[B]) => R): R =
       inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A, B, R](x: T[A], y: T[B])(g: (Int, Int) => R)(f: [t[_]] => (F[t], t[A], t[B]) => R): R =
+    inline def fold2[A, B, R](x: T[A], y: T[B])(g: (Int, Int) => R)(f: [t[x] <: T[x]] => (F[t], t[A], t[B]) => R): R =
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_]] >: F[t]]: CoproductInstances[G, T] = 
       inst.asInstanceOf
@@ -255,7 +292,13 @@ object K1 {
 }
 
 object K11 {
-  type Kind[C, O[_[_]]] = C { type Kind = K11.type ; type MirroredType[X[_]] = O[X] ; type MirroredElemTypes[_[_]] <: Tuple }
+  type Kind[C, O[_[_]]] = C {
+    type Kind = K11.type
+    type MirroredType[X[_]] = O[X]
+    type MirroredMonoType = O[[_] =>> Any]
+    type MirroredElemTypes[_[_]] <: Tuple
+  }
+  
   type Generic[O[_[_]]] = Kind[Mirror, O]
   type ProductGeneric[O[_[_]]] = Kind[Mirror.Product, O]
   type CoproductGeneric[O[_[_]]] = Kind[Mirror.Sum, O]
@@ -284,14 +327,27 @@ object K11 {
       case _ => EmptyTuple
     }
 
-  inline def summonFirst[F[_[_[_]]], T[_[_]], U[_[_]]]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
+  /**
+   * Summon the first given instance `F[U]` from the tuple `T`.
+   * Remaining elements of `T` may or may not have an instance of `F`.
+   */
+  inline def summonFirst[F[_[_[_]]], T[_[_]], U[_[_]]]: F[U] =
+    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[U]]
 
-  transparent inline def summonFirst0[T]: Any = inline erasedValue[T] match {
-    case _: (a *: b) => summonFrom {
-      case aa: `a` => aa
-      case _ => summonFirst0[b]
-    }
-  }
+  @deprecated("Use summonFirst instead", "3.2.0")
+  transparent inline def summonFirst0[T]: Any =
+    Kinds.summonFirst[T]
+
+  /**
+   * Summon the only given instance `F[U]` from the tuple `T`.
+   * Remaining elements of `T` are guaranteed to not have an instance of `F`.
+   */
+  inline def summonOnly[F[_[_[_]]], T[_[_]], U[_[_]]]: F[U] =
+    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[U]]
+
+  /** Ensure that no element of the tuple `T` has an instance of `F`. */
+  inline def summonNone[F[_[_[_]]], T[_[_]]]: Unit =
+    Kinds.summonNone[LiftP[F, T]]
 
   extension [T[_[_]], A[_]](gen: ProductGeneric[T])
     inline def toRepr(o: T[A]): gen.MirroredElemTypes[A] = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A]]
@@ -338,13 +394,13 @@ object K11 {
       inst.asInstanceOf
 
   extension [F[_[_[_]]], T[_[_]]](inst: CoproductInstances[F, T])
-    inline def mapK[G[_[_[_]]]](f: [t[_[_]]] => F[t] => G[t]): CoproductInstances[G, T] =
+    inline def mapK[G[_[_[_]]]](f: [t[x[_]] <: T[x]] => F[t] => G[t]): CoproductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
-    inline def fold[A[_], R](x: T[A])(f: [t[_[_]]] => (F[t], t[A]) => R): R =
+    inline def fold[A[_], R](x: T[A])(f: [t[x[_]] <: T[x]] => (F[t], t[A]) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A[_], B[_], R](x: T[A], y: T[B])(a: => R)(f: [t[_[_]]] => (F[t], t[A], t[B]) => R): R =
+    inline def fold2[A[_], B[_], R](x: T[A], y: T[B])(a: => R)(f: [t[x[_]] <: T[x]] => (F[t], t[A], t[B]) => R): R =
       inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A[_], B[_], R](x: T[A], y: T[B])(g: (Int, Int) => R)(f: [t[_[_]]] => (F[t], t[A], t[B]) => R): R =
+    inline def fold2[A[_], B[_], R](x: T[A], y: T[B])(g: (Int, Int) => R)(f: [t[x[_]] <: T[x]] => (F[t], t[A], t[B]) => R): R =
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_[_]]] >: F[t]]: CoproductInstances[G, T] = 
       inst.asInstanceOf
@@ -363,7 +419,13 @@ object K11 {
 }
 
 object K2 {
-  type Kind[C, O[_, _]] = C { type Kind = K2.type ; type MirroredType[X, Y] = O[X, Y] ; type MirroredElemTypes[_, _] <: Tuple }
+  type Kind[C, O[_, _]] = C {
+    type Kind = K2.type
+    type MirroredType[X, Y] = O[X, Y] 
+    type MirroredMonoType = O[Any, Any]
+    type MirroredElemTypes[_, _] <: Tuple
+  }
+  
   type Generic[O[_, _]] = Kind[Mirror, O]
   type ProductGeneric[O[_, _]] = Kind[Mirror.Product, O]
   type CoproductGeneric[O[_, _]] = Kind[Mirror.Sum, O]
@@ -393,14 +455,27 @@ object K2 {
       case _ => EmptyTuple
     }
 
-  inline def summonFirst[F[_[_, _]], T[_, _], U[_, _]]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
+  /**
+   * Summon the first given instance `F[U]` from the tuple `T`.
+   * Remaining elements of `T` may or may not have an instance of `F`.
+   */
+  inline def summonFirst[F[_[_, _]], T[_, _], U[_, _]]: F[U] =
+    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[U]]
 
-  transparent inline def summonFirst0[T]: Any = inline erasedValue[T] match {
-    case _: (a *: b) => summonFrom {
-      case aa: `a` => aa
-      case _ => summonFirst0[b]
-    }
-  }
+  @deprecated("Use summonFirst instead", "3.2.0")
+  transparent inline def summonFirst0[T]: Any =
+    Kinds.summonFirst[T]
+
+  /**
+   * Summon the only given instance `F[U]` from the tuple `T`.
+   * Remaining elements of `T` are guaranteed to not have an instance of `F`.
+   */
+  inline def summonOnly[F[_[_, _]], T[_, _], U[_, _]]: F[U] =
+    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[U]]
+
+  /** Ensure that no element of the tuple `T` has an instance of `F`. */
+  inline def summonNone[F[_[_, _]], T[_, _], U[_, _]]: Unit =
+    Kinds.summonNone[LiftP[F, T]]
 
   extension [T[_, _], A, B](gen: ProductGeneric[T]) inline def toRepr(o: T[A, B]): gen.MirroredElemTypes[A, B] = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A, B]]
   extension [T[_, _], A, B](gen: ProductGeneric[T]) inline def fromRepr(r: gen.MirroredElemTypes[A, B]): T[A, B] = gen.fromProduct(r.asInstanceOf).asInstanceOf[T[A, B]]
@@ -445,13 +520,13 @@ object K2 {
       inst.asInstanceOf
 
   extension [F[_[_, _]], T[_, _]](inst: CoproductInstances[F, T])
-    inline def mapK[G[_[_, _]]](f: [t[_, _]] => F[t] => G[t]): CoproductInstances[G, T] =
+    inline def mapK[G[_[_, _]]](f: [t[x, y] <: T[x, y]] => F[t] => G[t]): CoproductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
-    inline def fold[A, B, R](x: T[A, B])(f: [t[_, _]] => (F[t], t[A, B]) => R): R =
+    inline def fold[A, B, R](x: T[A, B])(f: [t[x, y] <: T[x, y]] => (F[t], t[A, B]) => R): R =
       inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A, B, C, D, R](x: T[A, B], y: T[C, D])(a: => R)(f: [t[_, _]] => (F[t], t[A, B], t[C, D]) => R): R =
+    inline def fold2[A, B, C, D, R](x: T[A, B], y: T[C, D])(a: => R)(f: [t[x, y] <: T[x, y]] => (F[t], t[A, B], t[C, D]) => R): R =
       inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
-    inline def fold2[A, B, C, D, R](x: T[A, B], y: T[C, D])(g: (Int, Int) => R)(f: [t[_, _]] => (F[t], t[A, B], t[C, D]) => R): R =
+    inline def fold2[A, B, C, D, R](x: T[A, B], y: T[C, D])(g: (Int, Int) => R)(f: [t[x, y] <: T[x, y]] => (F[t], t[A, B], t[C, D]) => R): R =
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_, _]] >: F[t]]: CoproductInstances[G, T] =
       inst.asInstanceOf

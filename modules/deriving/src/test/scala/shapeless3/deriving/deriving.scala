@@ -50,6 +50,10 @@ class DerivationTests {
     val v1 = Monoid[Box[Int]]
     assert(v1.empty == Box(0))
     assert(v1.combine(Box(1), Box(2)) == Box(3))
+
+    val v2 = Monoid[Recursive]
+    assert(v2.empty == Recursive(0, None))
+    assert(v2.combine(Recursive(1, Some(Recursive(2, None))), Recursive(1, Some(Recursive(3, None)))) == Recursive(2, Some(Recursive(5, None))))
   }
 
   @Test
@@ -225,16 +229,21 @@ class DerivationTests {
     assert(v3.traverse(Nn)((x: Int) => List(x + 1)) == List(Nn))
 
     val v4 = Traverse[Const[CNil.type]]
-    assert(v4.traverse(CNil)(Option(_)) == Some(CNil))
+    assert(v4.traverse(CNil)(Option.apply) == Some(CNil))
     val v5 = Traverse[CCons]
-    assert(v5.traverse(CCons("foo", CCons("bar", CNil)))(Option(_)) == Some(CCons("foo", CCons("bar", CNil))))
+    assert(v5.traverse(CList("foo", "bar"))(Option.apply) == Some(CList("foo", "bar")))
     val v6 = Traverse[CList]
-    assert(v6.traverse(CCons("foo", CCons("bar", CNil)))(Option(_)) == Some(CCons("foo", CCons("bar", CNil))))
-    assert(v6.traverse(CNil)(Option(_)) == Some(CNil))
+    assert(v6.traverse(CList("foo", "bar"))(Option.apply) == Some(CList("foo", "bar")))
+    assert(v6.traverse(CNil)(Option.apply) == Some(CNil))
+    assert(v6.traverse(CList("foo", "bar"))(() => _).apply() == CList("foo", "bar"))
+    assert(v6.traverse(CList(1, 2))(x => List(x, x + 1)) == List(CList(1, 2), CList(1, 3), CList(2, 2), CList(2, 3)))
 
     val v7 = Traverse[OptE]
     assert(v7.traverse(SmE(1))((x: Int) => List(x + 1)) == List(SmE(2)))
     assert(v7.traverse(NnE)((x: Int) => List(x + 1)) == List(NnE))
+
+    val v8 = Traverse[Phantom]
+    assert(v8.traverse(Phantom())(Option.apply) == Some(Phantom()))
   }
 
 

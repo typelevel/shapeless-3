@@ -23,7 +23,9 @@ object adts {
 
   case class Box[A](x: A) derives Monoid, Eq, Show, Read, Functor, Pure, Ord, Traverse, Foldable
 
-  sealed trait OptionInt derives Eq, Empty, Show, Read, Ord
+  case class Recursive(h: Int, t: Option[Recursive]) derives Monoid
+
+  sealed trait OptionInt derives Eq, Show, Read, Ord
   case object NoneInt extends OptionInt
   case class SomeInt(value: Int) extends OptionInt
 
@@ -38,6 +40,10 @@ object adts {
   sealed trait CList[+A] derives Eq, Show, Read, Functor, EmptyK, Traverse, Foldable
   case class CCons[+A](hd: A, tl: CList[A]) extends CList[A]
   case object CNil extends CList[Nothing]
+  object CList {
+    def apply[A](x: A, xs: A*): CCons[A] =
+      CCons(x, xs.foldRight[CList[A]](CNil)(CCons.apply))
+  }
 
   case class Order[F[_]](
     item: F[String],
@@ -65,4 +71,16 @@ object adts {
   case object NilF extends ListF[Nothing, Nothing]
 
   case class BI(b: Boolean, i: Int)
+  
+  case class Phantom[A]()
+
+  enum LongList derives Empty:
+    case Nil()
+    case Cons(value: Long, tail: LongList)
+
+  enum Zipper[A] derives NonEmpty:
+    case Rep(n: Int, value: Some[A])
+    case Top(head: A, tail: Zipper[A])
+    case Bot(init: Zipper[A], last: A)
+    case Focus(left: List[A], focus: ::[A], right: List[A])
 }
