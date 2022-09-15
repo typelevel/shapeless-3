@@ -487,7 +487,7 @@ object Empty {
     mkEmpty(inst.construct([a] => (_: Empty[a]).empty))
 
   inline given emptyGenC[A](using gen: K0.CoproductGeneric[A]): Empty[A] =
-    mkEmpty(gen.withFirst[Empty, A]([a <: A] => (_: Empty[a]).empty))
+    mkEmpty(gen.withOnly[Empty, A]([a <: A] => (_: Empty[a]).empty))
 
   inline def derived[A](using gen: K0.Generic[A]): Empty[A] =
     inline gen match
@@ -512,10 +512,10 @@ object EmptyK {
     }
 
   given emptyKGen[A[_]](using inst: K1.ProductInstances[EmptyK, A]): EmptyK[A] =
-    mkEmptyK([t] => () => inst.construct([f[_]] => (ef: EmptyK[f]) => ef.empty[t]))
+    mkEmptyK([t] => () => inst.construct([f[_]] => (_: EmptyK[f]).empty[t]))
 
   inline given emptyKGenC[A[_]](using gen: K1.CoproductGeneric[A]): EmptyK[A] =
-    mkEmptyK[A]([t] => () => gen.withFirst[EmptyK, A[t]]([a[x] <: A[x]] => (_: EmptyK[a]).empty[t]))
+    mkEmptyK[A]([t] => () => gen.withOnly[EmptyK, A[t]]([a[x] <: A[x]] => (_: EmptyK[a]).empty[t]))
 
   inline def derived[A[_]](using gen: K1.Generic[A]): EmptyK[A] =
     inline gen match {
