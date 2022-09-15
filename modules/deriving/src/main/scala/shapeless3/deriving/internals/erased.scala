@@ -324,7 +324,7 @@ object ErasedProductInstancesN {
 }
 
 private[shapeless3] object ErasedProductInstances {
-  final class ArrayProduct(val elems: Array[Any]) extends Product {
+  class ArrayProduct(val elems: Array[Any]) extends Product {
     def canEqual(that: Any): Boolean = true
     def productElement(n: Int): Any = elems(n)
     def productArity: Int = elems.length
