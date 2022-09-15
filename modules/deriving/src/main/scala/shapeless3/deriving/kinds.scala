@@ -71,8 +71,8 @@ object K0 {
    * Summon the first given instance `F[U]` from the tuple `T`.
    * Remaining elements of `T` may or may not have an instance of `F`.
    */
-  inline def summonFirst[F[_], T, U]: F[U] =
-    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonFirst[F[_], T]: F[Any] =
+    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[Any]]
 
   @deprecated("Use summonFirst instead", "3.2.0")
   transparent inline def summonFirst0[T]: Any =
@@ -82,8 +82,8 @@ object K0 {
    * Summon the only given instance `F[U]` from the tuple `T`.
    * Remaining elements of `T` are guaranteed to not have an instance of `F`.
    */
-  inline def summonOnly[F[_], T, U]: F[U] =
-    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonOnly[F[_], T]: F[Any] =
+    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[Any]]
 
   /** Ensure that no element of the tuple `T` has an instance of `F`. */
   inline def summonNone[F[_], T]: Unit =
@@ -96,6 +96,8 @@ object K0 {
   extension [T](gen: CoproductGeneric[T])
     inline def toRepr(o: T): Union[gen.MirroredElemTypes] = o.asInstanceOf
     inline def fromRepr(r: Union[gen.MirroredElemTypes]): T = r.asInstanceOf
+    inline def withFirst[F[_], R](f: [t <: T] => F[t] => R): R = f(summonFirst[F, gen.MirroredElemTypes].asInstanceOf)
+    inline def withOnly[F[_], R](f: [t <: T] => F[t] => R): R = f(summonOnly[F, gen.MirroredElemTypes].asInstanceOf)
 
   extension [F[_], T](gen: Generic[T])
     inline def derive(f: => (ProductGeneric[T] & gen.type) ?=> F[T], g: => (CoproductGeneric[T] & gen.type) ?=> F[T]): F[T] =
@@ -207,8 +209,8 @@ object K1 {
    * Summon the first given instance `F[U]` from the tuple `T`.
    * Remaining elements of `T` may or may not have an instance of `F`.
    */
-  inline def summonFirst[F[_[_]], T[_], U[_]]: F[U] =
-    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonFirst[F[_[_]], T[_]]: F[[_] =>> Any] =
+    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[[_] =>> Any]]
 
   @deprecated("Use summonFirst instead", "3.2.0")
   transparent inline def summonFirst0[T]: Any =
@@ -218,8 +220,8 @@ object K1 {
    * Summon the only given instance `F[U]` from the tuple `T`.
    * Remaining elements of `T` are guaranteed to not have an instance of `F`.
    */
-  inline def summonOnly[F[_[_]], T[_], U[_]]: F[U] =
-    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonOnly[F[_[_]], T[_]]: F[[_] =>> Any] =
+    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[[_] =>> Any]]
 
   /** Ensure that no element of the tuple `T` has an instance of `F`. */
   inline def summonNone[F[_[_]], T[_]]: Unit =
@@ -232,6 +234,8 @@ object K1 {
   extension [T[_], A](gen: CoproductGeneric[T])
     inline def toRepr(o: T[A]): Union[gen.MirroredElemTypes[A]] = o.asInstanceOf
     inline def fromRepr(r: Union[gen.MirroredElemTypes[A]]): T[A] = r.asInstanceOf
+    inline def withFirst[F[_[_]], R](f: [t[x] <: T[x]] => F[t] => R): R = f(summonFirst[F, gen.MirroredElemTypes].asInstanceOf)
+    inline def withOnly[F[_[_]], R](f: [t[x] <: T[x]] => F[t] => R): R = f(summonOnly[F, gen.MirroredElemTypes].asInstanceOf)
 
   extension [F[_[_]], T[_]](gen: Generic[T]) inline def derive(f: => (ProductGeneric[T] & gen.type) ?=> F[T], g: => (CoproductGeneric[T] & gen.type) ?=> F[T]): F[T] =
     inline gen match {
@@ -338,8 +342,8 @@ object K11 {
    * Summon the first given instance `F[U]` from the tuple `T`.
    * Remaining elements of `T` may or may not have an instance of `F`.
    */
-  inline def summonFirst[F[_[_[_]]], T[_[_]], U[_[_]]]: F[U] =
-    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonFirst[F[_[_[_]]], T[_[_]]]: F[[_[_]] =>> Any] =
+    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[[_[_]] =>> Any]]
 
   @deprecated("Use summonFirst instead", "3.2.0")
   transparent inline def summonFirst0[T]: Any =
@@ -349,8 +353,8 @@ object K11 {
    * Summon the only given instance `F[U]` from the tuple `T`.
    * Remaining elements of `T` are guaranteed to not have an instance of `F`.
    */
-  inline def summonOnly[F[_[_[_]]], T[_[_]], U[_[_]]]: F[U] =
-    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonOnly[F[_[_[_]]], T[_[_]]]: F[[_[_]] =>> Any] =
+    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[[_[_]] =>> Any]]
 
   /** Ensure that no element of the tuple `T` has an instance of `F`. */
   inline def summonNone[F[_[_[_]]], T[_[_]]]: Unit =
@@ -363,6 +367,8 @@ object K11 {
   extension [T[_[_]], A[_]](gen: CoproductGeneric[T])
     inline def toRepr(o: T[A]): Union[gen.MirroredElemTypes[A]] = o.asInstanceOf
     inline def fromRepr(r: Union[gen.MirroredElemTypes[A]]): T[A] = r.asInstanceOf
+    inline def withFirst[F[_[_[_]]], R](f: [t[x[_]] <: T[x]] => F[t] => R): R = f(summonFirst[F, gen.MirroredElemTypes].asInstanceOf)
+    inline def withOnly[F[_[_[_]]], R](f: [t[x[_]] <: T[x]] => F[t] => R): R = f(summonOnly[F, gen.MirroredElemTypes].asInstanceOf)
 
   extension [F[_[_[_]]], T[_[_]]](gen: Generic[T]) inline def derive(f: => (ProductGeneric[T] & gen.type) ?=> F[T], g: => (CoproductGeneric[T] & gen.type) ?=> F[T]): F[T] =
     inline gen match {
@@ -470,8 +476,8 @@ object K2 {
    * Summon the first given instance `F[U]` from the tuple `T`.
    * Remaining elements of `T` may or may not have an instance of `F`.
    */
-  inline def summonFirst[F[_[_, _]], T[_, _], U[_, _]]: F[U] =
-    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonFirst[F[_[_, _]], T[_, _]]: F[[_, _] =>> Any] =
+    Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[[_, _] =>> Any]]
 
   @deprecated("Use summonFirst instead", "3.2.0")
   transparent inline def summonFirst0[T]: Any =
@@ -481,18 +487,22 @@ object K2 {
    * Summon the only given instance `F[U]` from the tuple `T`.
    * Remaining elements of `T` are guaranteed to not have an instance of `F`.
    */
-  inline def summonOnly[F[_[_, _]], T[_, _], U[_, _]]: F[U] =
-    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[U]]
+  inline def summonOnly[F[_[_, _]], T[_, _]]: F[[_, _] =>> Any] =
+    Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[[_, _] =>> Any]]
 
   /** Ensure that no element of the tuple `T` has an instance of `F`. */
   inline def summonNone[F[_[_, _]], T[_, _], U[_, _]]: Unit =
     Kinds.summonNone[LiftP[F, T]]
 
-  extension [T[_, _], A, B](gen: ProductGeneric[T]) inline def toRepr(o: T[A, B]): gen.MirroredElemTypes[A, B] = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A, B]]
-  extension [T[_, _], A, B](gen: ProductGeneric[T]) inline def fromRepr(r: gen.MirroredElemTypes[A, B]): T[A, B] = gen.fromProduct(r.asInstanceOf).asInstanceOf[T[A, B]]
+  extension [T[_, _], A, B](gen: ProductGeneric[T])
+    inline def toRepr(o: T[A, B]): gen.MirroredElemTypes[A, B] = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A, B]]
+    inline def fromRepr(r: gen.MirroredElemTypes[A, B]): T[A, B] = gen.fromProduct(r.asInstanceOf).asInstanceOf[T[A, B]]
 
-  extension [T[_, _], A, B](gen: CoproductGeneric[T]) inline def toRepr(o: T[A, B]): Union[gen.MirroredElemTypes[A, B]] = o.asInstanceOf
-  extension [T[_, _], A, B](gen: CoproductGeneric[T]) inline def fromRepr(r: Union[gen.MirroredElemTypes[A, B]]): T[A, B] = r.asInstanceOf
+  extension [T[_, _], A, B](gen: CoproductGeneric[T])
+    inline def toRepr(o: T[A, B]): Union[gen.MirroredElemTypes[A, B]] = o.asInstanceOf
+    inline def fromRepr(r: Union[gen.MirroredElemTypes[A, B]]): T[A, B] = r.asInstanceOf
+    inline def withFirst[F[_[_, _]], R](f: [t[x, y] <: T[x, y]] => F[t] => R): R = f(summonFirst[F, gen.MirroredElemTypes].asInstanceOf)
+    inline def withOnly[F[_[_, _]], R](f: [t[x, y] <: T[x, y]] => F[t] => R): R = f(summonOnly[F, gen.MirroredElemTypes].asInstanceOf)
 
   extension [F[_[_, _]], T[_, _]](gen: Generic[T]) inline def derive(f: => (ProductGeneric[T] & gen.type) ?=> F[T], g: => (CoproductGeneric[T] & gen.type) ?=> F[T]): F[T] =
     inline gen match {
