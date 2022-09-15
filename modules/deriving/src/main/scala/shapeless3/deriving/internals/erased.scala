@@ -129,15 +129,38 @@ final private[shapeless3] class ErasedProductInstancesN[K, FT](val mirror: Mirro
       x: Product,
       f: (Any, Any) => F[Any]
   )(pure: Pure[F], map: MapF[F], ap: Ap[F]): F[Any] =
-    val n = is.length
-    if n == 0 then pure(fromEmptyProduct)
-    else
+    def leaf(from: Int, until: Int): F[Vector[Any]] =
       var acc = pure(Vector.empty[Any])
-      var i = 0
-      while i < n do
+      var i = from
+      while i < until do
         acc = ap(map(acc, _.appended), f(is(i), x.productElement(i)))
         i += 1
-      map(acc, fromIndexedSeq)
+      acc
+
+    def branch(nodes: Array[F[Vector[Any]]], until: Int): F[Vector[Any]] =
+      var acc = pure(Vector.empty[Any])
+      var i = 0
+      while i < until do
+        acc = ap(map(acc, xs => (ys: Vector[Any]) => xs ++ ys), nodes(i))
+        i += 1
+      acc
+
+    val factor = 128 // branching factor
+    val n = is.length
+    if n == 0 then pure(fromEmptyProduct)
+    else if n <= factor then map(leaf(0, n), fromIndexedSeq)
+    else
+      val acc = new Array[F[Vector[Any]]](factor)
+      var i, j = 0
+      while j < n do
+        val until = n.min(j + 128)
+        acc(i) = leaf(j, until)
+        i += 1
+        j = until
+        if i >= factor then
+          acc(0) = branch(acc, i)
+          i = 1
+      map(branch(acc, i), fromIndexedSeq)
   end traverseProduct
 
   final def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
