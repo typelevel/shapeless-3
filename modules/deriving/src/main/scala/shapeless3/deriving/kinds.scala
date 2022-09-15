@@ -110,8 +110,8 @@ object K0 {
     inline def map(x: T)(f: [t] => (F[t], t) => t): T = 
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t] >: F[t]]: Instances[G, T] = inst.asInstanceOf
-    inline def traverse[G[_]](x: T)(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t] => (F[t], t) => G[t]): G[T] =
-      inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
+    inline def traverse[G[_]](x: T)(map: inst.Map[G])(pure: inst.Pure[G])(ap: inst.Ap[G])(f: [t] => (F[t], t) => G[t]): G[T] =
+      inst.erasedTraverse(x)(map)(pure)(ap)(f.asInstanceOf).asInstanceOf
 
   extension [F[_], T](inst: ProductInstances[F, T])
     inline def mapK[G[_]](f: [t] => F[t] => G[t]): ProductInstances[G, T] =
