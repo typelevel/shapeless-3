@@ -744,3 +744,53 @@ object Transform {
       genu.fromRepr(mkRecord[genu.MirroredElemLabels, genu.MirroredElemTypes, gent.MirroredElemLabels, gent.MirroredElemTypes](gent.toRepr(t)))
   }
 }
+
+trait Parser[T]:
+  protected def parse(text: String, accum: Boolean): Either[String, T]
+  final def parseShort(text: String): Either[String, T] = parse(text, false)
+  final def parseAccum(text: String): Either[String, T] = parse(text, true)
+
+object Parser:
+  def apply[A: Parser]: Parser[A] = summon
+
+  private val pure = [A] => (a: A) => Right(a)
+  private val map = [A, B] => (fa: Either[String, A], f: A => B) => fa.map(f)
+  private val ap = [A, B] => (ff: Either[String, A => B], fa: Either[String, A]) => (ff, fa) match
+    case (Left(e1), Left(e2)) => Left(e1 + e2)
+    case (Left(err), _) => Left(err)
+    case (_, Left(err)) => Left(err)
+    case (Right(f), Right(a)) => Right(f(a))
+
+  private val tailRecM = [A, B] => (a: A, f: A => Either[String, Either[A, B]]) =>
+    @tailrec def loop(a: A): Either[String, B] = f(a) match
+      case Left(err) => Left(err)
+      case Right(Left(a)) => loop(a)
+      case Right(Right(b)) => Right(b)
+    loop(a)
+
+  given Parser[String] = (text, _) => Right(text)
+  given Parser[Boolean] = (text, _) => text.toBooleanOption.toRight(s"Invalid Boolean '$text';")
+  given Parser[Int] = (text, _) => text.toIntOption.toRight(s"Invalid Int '$text';")
+
+  given [A](using inst: K0.ProductInstances[Parser, A], labelling: Labelling[A]): Parser[A] = (text, accum) =>
+    val (errors, fields) = text.split("\\s*,\\s*").partitionMap(_.split("\\s*=\\s*") match
+      case Array(name, value) => Right(name -> value)
+      case invalid => Left(s"Invalid field '${invalid.mkString}';")
+    )
+
+    if errors.nonEmpty then
+      if accum then Left(errors.mkString)
+      else Left(errors.head)
+    else
+      val fieldMap = fields.toMap
+      val labels = labelling.elemLabels.iterator
+      val parseField = [t] => (parser: Parser[t]) =>
+        for
+          field <- Right(labels.next())
+          value <- fieldMap.get(field).toRight(s"Missing field '$field';")
+          parsed <- parser.parse(value, accum)
+        yield parsed
+      if accum then inst.constructA(parseField)(pure, map, ap)
+      else inst.constructM(parseField)(pure, map, tailRecM)
+
+end Parser
