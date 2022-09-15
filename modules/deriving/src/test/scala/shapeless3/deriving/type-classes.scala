@@ -272,7 +272,7 @@ object Optional:
 object NonEmpty:
   inline given product[F[_]](using gen: K1.ProductGeneric[F]): NonEmpty[F] =
     // Evidence that at least one of the `Optional` instances is `NonEmpty`.
-    K1.summonFirst[NonEmpty, gen.MirroredElemTypes, Const[Any]]
+    K1.summonFirst[NonEmpty, gen.MirroredElemTypes]
     new Product[F](summonInline)
 
   given coproduct[F[_]](using inst: => K1.CoproductInstances[NonEmpty, F]): NonEmpty[F] with
@@ -484,10 +484,10 @@ object Empty {
   given Empty[Boolean] = mkEmpty(false)
 
   given emptyGen[A](using inst: K0.ProductInstances[Empty, A]): Empty[A] =
-    mkEmpty(inst.construct([a] => (ma: Empty[a]) => ma.empty))
+    mkEmpty(inst.construct([a] => (_: Empty[a]).empty))
 
   inline given emptyGenC[A](using gen: K0.CoproductGeneric[A]): Empty[A] =
-    K0.summonOnly[Empty, gen.MirroredElemTypes, A]
+    mkEmpty(gen.withOnly[Empty, A]([a <: A] => (_: Empty[a]).empty))
 
   inline def derived[A](using gen: K0.Generic[A]): Empty[A] =
     inline gen match
@@ -512,10 +512,10 @@ object EmptyK {
     }
 
   given emptyKGen[A[_]](using inst: K1.ProductInstances[EmptyK, A]): EmptyK[A] =
-    mkEmptyK([t] => () => inst.construct([f[_]] => (ef: EmptyK[f]) => ef.empty[t]))
+    mkEmptyK([t] => () => inst.construct([f[_]] => (_: EmptyK[f]).empty[t]))
 
   inline given emptyKGenC[A[_]](using gen: K1.CoproductGeneric[A]): EmptyK[A] =
-    K1.summonOnly[EmptyK, gen.MirroredElemTypes, A]
+    mkEmptyK[A]([t] => () => gen.withOnly[EmptyK, A[t]]([a[x] <: A[x]] => (_: EmptyK[a]).empty[t]))
 
   inline def derived[A[_]](using gen: K1.Generic[A]): EmptyK[A] =
     inline gen match {
@@ -563,7 +563,7 @@ object Pure {
     mkPure[A]([t] => (a: t) => inst.construct([f[_]] => (af: Alt1.Of[Pure, EmptyK][f]) => af.fold[f[t]](_.pure(a))(_.empty[t])))
 
   inline given pureGenC[A[_]](using gen: K1.CoproductGeneric[A]): Pure[A] =
-    mkPure[A]([t] => (a: t) => K1.summonFirst[Pure, gen.MirroredElemTypes, A].pure(a))
+    mkPure[A]([t] => (a: t) => gen.withFirst[Pure, A[t]]([f[x] <: A[x]] => (_: Pure[f]).pure(a)))
 
   inline def derived[A[_]](using gen: K1.Generic[A]): Pure[A] =
     inline gen match {
