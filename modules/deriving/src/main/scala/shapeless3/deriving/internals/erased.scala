@@ -178,11 +178,10 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
     val n = is.length
     def step(xs: Vector[Any]) =
       val i = xs.length
-      if i >= n then pure(Right(xs))
+      if i >= n then pure(Right(fromIndexedSeq(xs): Any))
       else map(f(is(i)), a => Left(xs :+ a))
-
     if n == 0 then pure(fromEmptyProduct)
-    else map(tailRecM(Vector.empty[Any], step), fromIndexedSeq)
+    else tailRecM(Vector.empty, step)
   end erasedConstructM
 
   final def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) = {
