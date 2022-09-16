@@ -25,12 +25,14 @@ import shapeless3.deriving.*
 private[shapeless3] abstract class ErasedInstances[K, FT] extends Serializable {
   def erasedMapK(f: Any => Any): ErasedInstances[K, ?]
   def erasedMap(x: Any)(f: (Any, Any) => Any): Any
-  def erasedTraverse(x0: Any)(map: (Any, Any) => Any)(pure: Any => Any)(ap: (Any, Any) => Any)(f: (Any, Any) => Any): Any
+  def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any]
 }
 
 private[shapeless3] abstract class ErasedProductInstances[K, FT] extends ErasedInstances[K, FT] {
   def erasedMapK(f: Any => Any): ErasedProductInstances[K, _]
   def erasedConstruct(f: Any => Any): Any
+  def erasedConstructA[F[_]](f: Any => F[Any])(pure: Pure[F], map: MapF[F], ap: Ap[F]): F[Any]
+  def erasedConstructM[F[_]](f: Any => F[Any])(pure: Pure[F], map: MapF[F], tailRecM: TailRecM[F]): F[Any]
   def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any])
   def erasedMap(x0: Any)(f: (Any, Any) => Any): Any
   def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any
@@ -49,12 +51,20 @@ private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirro
   lazy val i = i0()
 
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
+  private def toElement(x: Any) = toProduct(x).productElement(0)
+  private def fromElement(x: Any) = mirror.fromProduct(Tuple1(x))
   
   final def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
     new ErasedProductInstances1(mirror, () => f(i))
 
   final def erasedConstruct(f: Any => Any): Any =
-    mirror.fromProduct(Tuple1(f(i)))
+    fromElement(f(i))
+
+  final def erasedConstructA[F[_]](f: Any => F[Any])(pure: Pure[F], map: MapF[F], ap: Ap[F]): F[Any] =
+    map(f(i), fromElement)
+
+  final def erasedConstructM[F[_]](f: Any => F[Any])(pure: Pure[F], map: MapF[F], tailRecM: TailRecM[F]): F[Any] =
+    map(f(i), fromElement)
 
   final def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) = {
     val (acc0, e0) = f(a, i)
@@ -64,45 +74,45 @@ private[shapeless3] final class ErasedProductInstances1[K, FT](val mirror: Mirro
     }
   }
 
-  final def erasedMap(x0: Any)(f: (Any, Any) => Any): Any =
-    mirror.fromProduct(Tuple1(f(i, toProduct(x0).productElement(0))))
+  final def erasedMap(x: Any)(f: (Any, Any) => Any): Any =
+    fromElement(f(i, toElement(x)))
 
-  final def erasedTraverse(x0: Any)(map: (Any, Any) => Any)(pure: Any => Any)(ap: (Any, Any) => Any)(f: (Any, Any) => Any) =
-    map(f(i, toProduct(x0).productElement(0)), (x: Any) => mirror.fromProduct(Tuple1(x)))
+  final def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any] =
+    map(f(i, toElement(x)), fromElement)
 
-  final def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any =
-    mirror.fromProduct(Tuple1(f(i, toProduct(x0).productElement(0), toProduct(y0).productElement(0))))
+  final def erasedMap2(x: Any, y: Any)(f: (Any, Any, Any) => Any): Any =
+    fromElement(f(i, toElement(x), toElement(y)))
 
-  final def erasedFoldLeft(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any = {
-    f(a, i, toProduct(x0).productElement(0)) match {
+  final def erasedFoldLeft(x: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any = {
+    f(a, i, toElement(x)) match {
       case Complete(r) => r
       case acc => acc
     }
   }
 
-  final def erasedFoldLeft2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any = {
-    f(a, i, toProduct(x0).productElement(0), toProduct(y0).productElement(0)) match {
+  final def erasedFoldLeft2(x: Any, y: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any = {
+    f(a, i, toElement(x), toElement(y)) match {
       case Complete(r) => r
       case acc => acc
     }
   }
 
-  final def erasedFoldRight(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any = {
-    f(i, toProduct(x0).productElement(0), a) match {
+  final def erasedFoldRight(x: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any = {
+    f(i, toElement(x), a) match {
       case Complete(r) => r
       case acc => acc
     }
   }
 
-  final def erasedFoldRight2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any = {
-    f(i, toProduct(x0).productElement(0), toProduct(y0).productElement(0), a) match {
+  final def erasedFoldRight2(x: Any, y: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any = {
+    f(i, toElement(x), toElement(y), a) match {
       case Complete(r) => r
       case acc => acc
     }
   }
 
-  final def erasedProject(x0: Any)(p: Int)(f: (Any, Any) => Any): Any =
-    f(i, toProduct(x0).productElement(0))
+  final def erasedProject(x: Any)(p: Int)(f: (Any, Any) => Any): Any =
+    f(i, toElement(x))
 }
 
 object ErasedProductInstances1 {
@@ -111,22 +121,36 @@ object ErasedProductInstances1 {
 }
 
 private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirror.Product, is0: () => Array[Any]) extends ErasedProductInstances[K, FT] {
+  import ErasedProductInstances._
 
   @deprecated("Preserved for bincompat reasons. DO NOT USE as it will lead to stack overflows when deriving instances for recursive types")
   def this(mirror: Mirror.Product, is0: Array[Any]) = this(mirror, () => is0)
 
   lazy val is: Array[Any] = is0()
 
-  import ErasedProductInstances.ArrayProduct
-
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
+  private def fromArray(xs: Array[Any]) = mirror.fromProduct(new ArrayProduct(xs))
+  private def fromIndexedSeq(xs: IndexedSeq[Any]) = mirror.fromProduct(new IndexedSeqProduct(xs))
+  private def fromEmptyProduct = mirror.fromProduct(None)
+
+  private def traverseProduct[F[_]](x: Product, f: (Any, Any) => F[Any])(pure: Pure[F], map: MapF[F], ap: Ap[F]): F[Any] =
+    val n = is.length
+    if n == 0 then pure(fromEmptyProduct)
+    else
+      var acc = pure(Vector.empty[Any])
+      var i = 0
+      while i < n do
+        acc = ap(map(acc, _.appended), f(is(i), x.productElement(i)))
+        i += 1
+      map(acc, fromIndexedSeq)
+  end traverseProduct
 
   final def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
     new ErasedProductInstancesN(mirror, () => is.map(f))
 
   final def erasedConstruct(f: Any => Any): Any = {
     val n = is.length
-    if (n == 0) mirror.fromProduct(None)
+    if (n == 0) fromEmptyProduct
     else {
       val arr = new Array[Any](n)
       var i = 0
@@ -134,13 +158,26 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
         arr(i) = f(is(i))
         i = i+1
       }
-      mirror.fromProduct(new ArrayProduct(arr))
+      fromArray(arr)
     }
   }
 
+  final def erasedConstructA[F[_]](f: Any => F[Any])(pure: Pure[F], map: MapF[F], ap: Ap[F]): F[Any] =
+    traverseProduct(new ArrayProduct(is), (tc, _) => f(tc))(pure, map, ap)
+
+  final def erasedConstructM[F[_]](f: Any => F[Any])(pure: Pure[F], map: MapF[F], tailRecM: TailRecM[F]): F[Any] =
+    val n = is.length
+    def step(xs: Vector[Any]) =
+      val i = xs.length
+      if i >= n then pure(Right(fromIndexedSeq(xs): Any))
+      else map(f(is(i)), a => Left(xs :+ a))
+    if n == 0 then pure(fromEmptyProduct)
+    else tailRecM(Vector.empty, step)
+  end erasedConstructM
+
   final def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) = {
     val n = is.length
-    if (n == 0) (a, Some(mirror.fromProduct(None)))
+    if (n == 0) (a, Some(fromEmptyProduct))
     else {
       val arr = new Array[Any](n)
       var acc = a
@@ -156,7 +193,7 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
         }
         i = i+1
       }
-      (acc, Some(mirror.fromProduct(new ArrayProduct(arr))))
+      (acc, Some(fromArray(arr)))
     }
   }
 
@@ -171,33 +208,12 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
         arr(i) = f(is(i), x.productElement(i))
         i = i+1
       }
-      mirror.fromProduct(new ArrayProduct(arr))
+      fromArray(arr)
     }
   }
 
-  final def erasedTraverse(x0: Any)(map: (Any, Any) => Any)(pure: Any => Any)(ap: (Any, Any) => Any)(f: (Any, Any) => Any) = {
-    val n = is.length
-
-    def prepend(xs: List[Any])(x: Any) = x :: xs
-    def fromList(xs: List[Any]) =
-      val arr = new Array[Any](n)
-      @tailrec def toProduct(xs: List[Any], i: Int): Product = xs match
-        case x :: xs => arr(i) = x; toProduct(xs, i - 1)
-        case Nil => new ArrayProduct(arr)
-      mirror.fromProduct(toProduct(xs, n - 1))
-
-    if (n == 0) pure(x0)
-    else {
-      val x = toProduct(x0)
-      var acc = pure(Nil)
-      var i = 0
-      while(i < n) {
-        acc = ap(map(acc, prepend), f(is(i), x.productElement(i)))
-        i = i+1
-      }
-      map(acc, fromList)
-    }
-  }
+  final def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any] =
+    traverseProduct(toProduct(x), f)(pure, map, ap)
 
   final def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any = {
     val n = is.length
@@ -211,7 +227,7 @@ private[shapeless3] final class ErasedProductInstancesN[K, FT](val mirror: Mirro
         arr(i) = f(is(i), x.productElement(i), y.productElement(i))
         i = i+1
       }
-      mirror.fromProduct(new ArrayProduct(arr))
+      fromArray(arr)
     }
   }
 
@@ -305,8 +321,15 @@ object ErasedProductInstancesN {
 private[shapeless3] object ErasedProductInstances {
   class ArrayProduct(val elems: Array[Any]) extends Product {
     def canEqual(that: Any): Boolean = true
-    def productElement(n: Int) = elems(n)
-    def productArity = elems.length
+    def productElement(n: Int): Any = elems(n)
+    def productArity: Int = elems.length
+    override def productIterator: Iterator[Any] = elems.iterator
+  }
+
+  final class IndexedSeqProduct(elems: IndexedSeq[Any]) extends Product {
+    def canEqual(that: Any): Boolean = true
+    def productElement(n: Int): Any = elems(n)
+    def productArity: Int = elems.length
     override def productIterator: Iterator[Any] = elems.iterator
   }
 
@@ -348,10 +371,8 @@ private[shapeless3] final class ErasedCoproductInstances[K, FT](mirror: Mirror.S
     f(i, x)
   }
 
-  final def erasedTraverse(x: Any)(map: (Any, Any) => Any)(pure: Any => Any)(ap: (Any, Any) => Any)(f: (Any, Any) => Any): Any = {
-    val i = ordinal(x)
-    f(i, x)
-  }
+  final def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any] =
+    f(ordinal(x), x)
 
   final def erasedFold2(x: Any, y: Any)(a: => Any)(f: (Any, Any, Any) => Any): Any = {
     val i = mirror.ordinal(x.asInstanceOf)

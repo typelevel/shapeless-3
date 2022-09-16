@@ -111,15 +111,20 @@ object K0 {
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def map(x: T)(f: [t] => (F[t], t) => t): T = 
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
-    inline def widen[G[t] >: F[t]]: Instances[G, T] = inst.asInstanceOf
-    inline def traverse[G[_]](x: T)(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t] => (F[t], t) => G[t]): G[T] =
-      inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
+    inline def widen[G[t] >: F[t]]: Instances[G, T] =
+      inst.asInstanceOf
+    inline def traverse[G[_]](x: T)(map: MapF[G])(pure: Pure[G])(ap: Ap[G])(f: [t] => (F[t], t) => G[t]): G[T] =
+      inst.erasedTraverse(x)(map)(pure)(ap)(f.asInstanceOf).asInstanceOf
 
   extension [F[_], T](inst: ProductInstances[F, T])
     inline def mapK[G[_]](f: [t] => F[t] => G[t]): ProductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def construct(f: [t] => F[t] => t): T =
       inst.erasedConstruct(f.asInstanceOf).asInstanceOf
+    inline def constructA[G[_]](f: [t] => F[t] => G[t])(pure: Pure[G], map: MapF[G], ap: Ap[G]): G[T] =
+      inst.erasedConstructA(f.asInstanceOf)(pure, map, ap).asInstanceOf
+    inline def constructM[G[_]](f: [t] => F[t] => G[t])(pure: Pure[G], map: MapF[G], tailRecM: TailRecM[G]): G[T] =
+      inst.erasedConstructM(f.asInstanceOf)(pure, map, tailRecM).asInstanceOf
     inline def map2(x: T, y: T)(f: [t] => (F[t], t, t) => t): T =
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def unfold[Acc](i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
@@ -245,14 +250,18 @@ object K1 {
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_]] >: F[t]]: Instances[G, T] = 
       inst.asInstanceOf
-    inline def traverse[A, G[_], R](x: T[A])(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t[_]] => (F[t], t[A]) => G[t[R]]): G[T[R]] =
-      inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
+    inline def traverse[A, G[_], R](x: T[A])(map: MapF[G])(pure: Pure[G])(ap: Ap[G])(f: [t[_]] => (F[t], t[A]) => G[t[R]]): G[T[R]] =
+      inst.erasedTraverse(x)(map)(pure)(ap)(f.asInstanceOf).asInstanceOf
 
   extension [F[_[_]], T[_]](inst: ProductInstances[F, T])
     inline def mapK[G[_[_]]](f: [t[_]] => F[t] => G[t]): ProductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def construct[R](f: [t[_]] => F[t] => t[R]): T[R] =
       inst.erasedConstruct(f.asInstanceOf).asInstanceOf
+    inline def constructA[G[_], R](f: [t[_]] => F[t] => G[t[R]])(pure: Pure[G], map: MapF[G], ap: Ap[G]): G[T[R]] =
+      inst.erasedConstructA(f.asInstanceOf)(pure, map, ap).asInstanceOf
+    inline def constructM[G[_], R](f: [t[_]] => F[t] => G[t[R]])(pure: Pure[G], map: MapF[G], tailRecM: TailRecM[G]): G[T[R]] =
+      inst.erasedConstructM(f.asInstanceOf)(pure, map, tailRecM).asInstanceOf
     inline def map2[A, B, R](x: T[A], y: T[B])(f: [t[_]] => (F[t], t[A], t[B]) => t[R]): T[R] =
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[A, Acc](x: T[A])(i: Acc)(f: [t[_]] => (Acc, F[t], t[A]) => CompleteOr[Acc]): Acc =
@@ -374,14 +383,18 @@ object K11 {
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_[_]]] >: F[t]]: Instances[G, T] = 
       inst.asInstanceOf
-    inline def traverse[A[_], G[_], R[_]](x: T[A])(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t[_[_]]] => (F[t], t[A]) => G[t[R]]): G[T[R]] =
-      inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
+    inline def traverse[A[_], G[_], R[_]](x: T[A])(map: MapF[G])(pure: Pure[G])(ap: Ap[G])(f: [t[_[_]]] => (F[t], t[A]) => G[t[R]]): G[T[R]] =
+      inst.erasedTraverse(x)(map)(pure)(ap)(f.asInstanceOf).asInstanceOf
 
   extension [F[_[_[_]]], T[_[_]]](inst: ProductInstances[F, T])
     inline def mapK[G[_[_[_]]]](f: [t[_[_]]] => F[t] => G[t]): ProductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def construct[R[_]](f: [t[_[_]]] => F[t] => t[R]): T[R] =
       inst.erasedConstruct(f.asInstanceOf).asInstanceOf
+    inline def constructA[G[_], R[_]](f: [t[_[_]]] => F[t] => G[t[R]])(pure: Pure[G], map: MapF[G], ap: Ap[G]): G[T[R]] =
+      inst.erasedConstructA(f.asInstanceOf)(pure, map, ap).asInstanceOf
+    inline def constructM[G[_], R[_]](f: [t[_[_]]] => F[t] => G[t[R]])(pure: Pure[G], map: MapF[G], tailRecM: TailRecM[G]): G[T[R]] =
+      inst.erasedConstructM(f.asInstanceOf)(pure, map, tailRecM).asInstanceOf
     inline def map2[A[_], B[_], R[_]](x: T[A], y: T[B])(f: [t[_[_]]] => (F[t], t[A], t[B]) => t[R]): T[R] =
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[A[_], Acc](x: T[A])(i: Acc)(f: [t[_[_]]] => (Acc, F[t], t[A]) => CompleteOr[Acc]): Acc =
@@ -504,14 +517,18 @@ object K2 {
       inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
     inline def widen[G[t[_, _]] >: F[t]]: Instances[G, T] =
       inst.asInstanceOf
-    inline def traverse[A, B, G[_], R, S](x: T[A, B])(map: [a,b] => (G[a], (a => b)) => G[b])(pure: [a] => a => G[a])(ap: [a,b] => (G[a => b], G[a]) => G[b])(k: [t[_, _]] => (F[t], t[A, B]) => G[t[R, S]]): G[T[R, S]] =
-      inst.erasedTraverse(x)(map.asInstanceOf)(pure.asInstanceOf)(ap.asInstanceOf)(k.asInstanceOf).asInstanceOf
+    inline def traverse[A, B, G[_], R, S](x: T[A, B])(map: MapF[G])(pure: Pure[G])(ap: Ap[G])(f: [t[_, _]] => (F[t], t[A, B]) => G[t[R, S]]): G[T[R, S]] =
+      inst.erasedTraverse(x)(map)(pure)(ap)(f.asInstanceOf).asInstanceOf
 
   extension [F[_[_, _]], T[_, _]](inst: ProductInstances[F, T])
     inline def mapK[G[_[_, _]]](f: [t[_, _]] => F[t] => G[t]): ProductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def construct[R, S](f: [t[_, _]] => F[t] => t[R, S]): T[R, S] =
       inst.erasedConstruct(f.asInstanceOf).asInstanceOf
+    inline def constructA[G[_], R, S](f: [t[_, _]] => F[t] => G[t[R, S]])(pure: Pure[G], map: MapF[G], ap: Ap[G]): G[T[R, S]] =
+      inst.erasedConstructA(f.asInstanceOf)(pure, map, ap).asInstanceOf
+    inline def constructM[G[_], R, S](f: [t[_, _]] => F[t] => G[t[R, S]])(pure: Pure[G], map: MapF[G], tailRecM: TailRecM[G]): G[T[R, S]] =
+      inst.erasedConstructM(f.asInstanceOf)(pure, map, tailRecM).asInstanceOf
     inline def map2[A, B, C, D, R, S](x: T[A, B], y: T[C, D])(f: [t[_, _]] => (F[t], t[A, B], t[C, D]) => t[R, S]): T[R, S] =
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[A, B, Acc](x: T[A, B])(i: Acc)(f: [t[_, _]] => (Acc, F[t], t[A, B]) => CompleteOr[Acc]): Acc =

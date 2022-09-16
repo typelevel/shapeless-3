@@ -16,6 +16,7 @@
 
 package shapeless3.deriving
 
+import org.junit.Assert.*
 import org.junit.Test
 
 import scala.annotation.tailrec
@@ -385,4 +386,16 @@ class DerivationTests {
     val v3a: (String, Int) = v3
     assert(v3 == ("Epoisse", 10))
   }
+
+  @Test
+  def parsing: Unit =
+    val parser = Parser[ISB]
+    // Applicative
+    assertEquals(Right(ISB(42, "foo", true)), parser.parseAccum("s=foo,i=42,b=true,hidden=?"))
+    assertEquals(Left("Missing field 's';Invalid Boolean 'kinda';"), parser.parseAccum("i=42,b=kinda"))
+    assertEquals(Left("Invalid field 'broken';Invalid field '?';"), parser.parseAccum("i=42,broken,?"))
+    // Monadic
+    assertEquals(Right(ISB(42, "foo", true)), parser.parseShort("s=foo,i=42,b=true,hidden=?"))
+    assertEquals(Left("Missing field 's';"), parser.parseShort("i=42,b=kinda"))
+    assertEquals(Left("Invalid field 'broken';"), parser.parseShort("i=42,broken,?"))
 }
