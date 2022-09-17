@@ -3,7 +3,7 @@ import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProble
 val scala3Version = "3.1.3"
 
 ThisBuild / organization := "org.typelevel"
-ThisBuild / tlBaseVersion := "3.1"
+ThisBuild / tlBaseVersion := "3.2"
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / crossScalaVersions := Seq(scala3Version)
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
@@ -124,3 +124,5 @@ ThisBuild / developers := List(
   Developer("joroKr21", "Georgi Krastev", "joro.kr.21@gmail.com", url("https://twitter.com/Joro_Kr")),
   Developer("TimWSpence", "Tim Spence", "timothywspence@gmail.com", url("https://twitter.com/timwspence"))
 )
+
+lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
