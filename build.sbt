@@ -3,7 +3,7 @@ import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProble
 val scala3Version = "3.1.3"
 
 ThisBuild / organization := "org.typelevel"
-ThisBuild / tlBaseVersion := "3.1"
+ThisBuild / tlBaseVersion := "3.2"
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / crossScalaVersions := Seq(scala3Version)
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
