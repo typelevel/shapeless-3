@@ -124,3 +124,5 @@ ThisBuild / developers := List(
   Developer("joroKr21", "Georgi Krastev", "joro.kr.21@gmail.com", url("https://twitter.com/Joro_Kr")),
   Developer("TimWSpence", "Tim Spence", "timothywspence@gmail.com", url("https://twitter.com/timwspence"))
 )
+
+lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
