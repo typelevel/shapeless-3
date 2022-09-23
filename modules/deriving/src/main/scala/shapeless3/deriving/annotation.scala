@@ -352,49 +352,40 @@ object AnnotationMacros {
     mk(exprs)
   
   def extractAnnotations[T: Type](tpe: Boolean)(using q: Quotes): Seq[List[q.reflect.Term]] =
+    val utils = new ReflectionUtils(q)
     import quotes.reflect._
+    import utils._
 
-    val r = new ReflectionUtils(q)
-    import r._
+    @tailrec def typeAnnotationsOfType(tpe: TypeRepr, acc: List[Term]): List[Term] = tpe match
+      case annotated: AnnotatedType => typeAnnotationsOfType(annotated.underlying, annotated.annotation :: acc)
+      case alias: TypeRef if alias.typeSymbol.isAliasType => typeAnnotationsOfType(alias.translucentSuperType, acc)
+      case _ => acc
 
-    def getAnnotations(tree: Tree, acc: List[Term] = Nil, depth: Int = 0): List[Term] =
-      if (tpe) {
-        tree match {
-          case classDef: ClassDef => classDef.parents.flatMap(getAnnotations(_, acc, depth + 1))
-          case valDef: ValDef => getAnnotations(valDef.tpt, acc, depth + 1)
-          case typeId: TypeIdent => getAnnotationsFromType(typeId.tpe, acc, depth)
-          case inferred: Inferred => getAnnotationsFromType(inferred.tpe, acc, depth)
-          case annotated: Annotated => getAnnotations(annotated.arg, annotated.annotation :: acc, depth + 1)
-          case _ => acc
-        }
-      } else {
-        tree.symbol.annotations.reverse
-      }
-      
-    @tailrec
-    def getAnnotationsFromType(typeRepr: TypeRepr, acc: List[Term] = Nil, depth: Int = 0): List[Term] =
-      typeRepr match {
-        case annotatedType: AnnotatedType => getAnnotationsFromType(annotatedType.underlying, annotatedType.annotation :: acc, depth + 1)
-        case typeRef: TypeRef if typeRef.typeSymbol.isAliasType => getAnnotationsFromType(typeRef.translucentSuperType, acc, depth + 1)
-        case _ => acc
-      }
+    def typeAnnotationsOfTree(tree: Tree, acc: List[Term]): List[Term] = tree match
+      case classDef: ClassDef => classDef.parents.flatMap(typeAnnotationsOfTree(_, acc))
+      case valDef: ValDef => typeAnnotationsOfTree(valDef.tpt, acc)
+      case typeId: TypeIdent => typeAnnotationsOfType(typeId.tpe, acc)
+      case inferred: Inferred => typeAnnotationsOfType(inferred.tpe, acc)
+      case annotated: Annotated => typeAnnotationsOfTree(annotated.arg, annotated.annotation :: acc)
+      case _ => acc
+
+    def annotationsOfSym(sym: Symbol): List[Term] =
+      if tpe then typeAnnotationsOfTree(sym.tree, Nil) else sym.annotations.reverse
+
+    def annotationsOfType(tpe: TypeRepr): List[Term] =
+      annotationsOfSym(if tpe.isSingleton then tpe.termSymbol else tpe.typeSymbol)
 
     val annoteeTpe = TypeRepr.of[T]
-    annoteeTpe.classSymbol match {
+    annoteeTpe.classSymbol match
       case Some(annoteeCls) if annoteeCls.flags.is(Flags.Case) =>
-        val valueParams = annoteeCls.primaryConstructor
-          .paramSymss
-          .find(_.exists(_.isTerm))
-          .getOrElse(Nil)
-        valueParams.map { vparam => getAnnotations(vparam.tree) }
-      case Some(annoteeCls) =>
-        Mirror(annoteeTpe) match {
-          case Some(rm) => rm.MirroredElemTypes.map(child => getAnnotations(child.typeSymbol.tree))
-          case None => report.errorAndAbort(s"No Annotations for type ${annoteeTpe.show} without no Mirror")
-        }
+        annoteeCls.primaryConstructor.paramSymss.find(_.exists(_.isTerm)).getOrElse(Nil).map(annotationsOfSym)
+      case Some(_) =>
+        Mirror(annoteeTpe) match
+          case Some(mirror) => mirror.MirroredElemTypes.map(annotationsOfType)
+          case None => report.errorAndAbort(s"No Annotations for type ${annoteeTpe.show} without a Mirror")
       case None =>
         report.errorAndAbort(s"No Annotations for non-class ${annoteeTpe.show}")
-    }
+  end extractAnnotations
 
   def ofExprVariableAnnotations[A: Type, T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[Annotations[A, T]] =
     Expr.ofTupleFromSeq(annotTrees) match {
