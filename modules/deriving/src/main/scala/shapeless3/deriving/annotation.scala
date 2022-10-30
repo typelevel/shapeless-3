@@ -22,30 +22,31 @@ import shapeless3.deriving.internals.*
 
 import scala.annotation.tailrec
 
-/** Evidence that type `T` has annotation `A`, and provides an instance of the annotation.
-  *
-  * If type `T` has an annotation of type `A`, then an implicit `Annotation[A, T]` can be found, and its `apply` method
-  * provides an instance of the annotation.
-  *
-  * Example:
-  * {{{
-  *   case class First(i: Int)
-  *
-  *   @First(3) trait Something
-  *
-  *
-  *   val somethingFirst = Annotation[First, Something].apply()
-  *   assert(somethingFirst == First(3))
-  * }}}
-  *
-  * @tparam A:
-  *   annotation type
-  * @tparam T:
-  *   annotated type
-  *
-  * @author
-  *   Alexandre Archambault
-  */
+/**
+ * Evidence that type `T` has annotation `A`, and provides an instance of the annotation.
+ *
+ * If type `T` has an annotation of type `A`, then an implicit `Annotation[A, T]` can be found, and its `apply` method
+ * provides an instance of the annotation.
+ *
+ * Example:
+ * {{{
+ *   case class First(i: Int)
+ *
+ *   @First(3) trait Something
+ *
+ *
+ *   val somethingFirst = Annotation[First, Something].apply()
+ *   assert(somethingFirst == First(3))
+ * }}}
+ *
+ * @tparam A:
+ *   annotation type
+ * @tparam T:
+ *   annotated type
+ *
+ * @author
+ *   Alexandre Archambault
+ */
 trait Annotation[A, T] extends Serializable {
   def apply(): A
 }
@@ -63,51 +64,52 @@ object Annotation {
   inline given [A, T]: Annotation[A, T] = mkAnnotation[A, T]
 }
 
-/** Provides the annotations of type `A` of the fields of product type or constructors of sum type `T`.
-  *
-  * If type `T` is a product type, this type class inspects its fields and provides their annotations of type `A`. If
-  * type `T` is a sum type, its constructor types are inspected for annotations.
-  *
-  * Type `Out` is a tuple having the same number of elements as `T` (number of parameters of `T` if `T` is a product
-  * type, or number of constructors of `T` if it is a sum type). It is made of `None.type` (no annotation on
-  * corresponding field or constructor) and `Some[A]` (corresponding field or constructor is annotated).
-  *
-  * Method `apply` provides a tuple of type `Out` made of `None` (corresponding field or constructor not annotated) or
-  * `Some(annotation)` (corresponding field or constructor has annotation `annotation`).
-  *
-  * Note that annotation types must be concrete for this type class to take them into account.
-  *
-  * Example:
-  * {{{
-  *   case class First(s: String)
-  *
-  *   case class CC(i: Int, @First("a") s: String)
-  *
-  *   sealed trait Base
-  *   @First("b") case class BaseI(i: Int) extends Base
-  *   case class BaseS(s: String) extends Base
-  *
-  *
-  *   val ccFirsts = Annotations[First, CC]
-  *   val baseFirsts = Annotations[First, Base]
-  *
-  *   // ccFirsts.Out is  (None.type, Some[First], None.type)
-  *   // ccFirsts.apply() is
-  *   //   (None, Some(First("a")), None)
-  *
-  *   // baseFirsts.Out is  (Some[First], None.type)
-  *   // baseFirsts.apply() is
-  *   //   (Some(First("b")), None)
-  * }}}
-  *
-  * @tparam A:
-  *   annotation type
-  * @tparam T:
-  *   product or sum type, whose constructor parameters or constructors are annotated
-  *
-  * @author
-  *   Alexandre Archambault
-  */
+/**
+ * Provides the annotations of type `A` of the fields of product type or constructors of sum type `T`.
+ *
+ * If type `T` is a product type, this type class inspects its fields and provides their annotations of type `A`. If
+ * type `T` is a sum type, its constructor types are inspected for annotations.
+ *
+ * Type `Out` is a tuple having the same number of elements as `T` (number of parameters of `T` if `T` is a product
+ * type, or number of constructors of `T` if it is a sum type). It is made of `None.type` (no annotation on
+ * corresponding field or constructor) and `Some[A]` (corresponding field or constructor is annotated).
+ *
+ * Method `apply` provides a tuple of type `Out` made of `None` (corresponding field or constructor not annotated) or
+ * `Some(annotation)` (corresponding field or constructor has annotation `annotation`).
+ *
+ * Note that annotation types must be concrete for this type class to take them into account.
+ *
+ * Example:
+ * {{{
+ *   case class First(s: String)
+ *
+ *   case class CC(i: Int, @First("a") s: String)
+ *
+ *   sealed trait Base
+ *   @First("b") case class BaseI(i: Int) extends Base
+ *   case class BaseS(s: String) extends Base
+ *
+ *
+ *   val ccFirsts = Annotations[First, CC]
+ *   val baseFirsts = Annotations[First, Base]
+ *
+ *   // ccFirsts.Out is  (None.type, Some[First], None.type)
+ *   // ccFirsts.apply() is
+ *   //   (None, Some(First("a")), None)
+ *
+ *   // baseFirsts.Out is  (Some[First], None.type)
+ *   // baseFirsts.apply() is
+ *   //   (Some(First("b")), None)
+ * }}}
+ *
+ * @tparam A:
+ *   annotation type
+ * @tparam T:
+ *   product or sum type, whose constructor parameters or constructors are annotated
+ *
+ * @author
+ *   Alexandre Archambault
+ */
 trait Annotations[A, T] extends Serializable {
   type Out <: Tuple
 
@@ -129,43 +131,44 @@ object Annotations {
     ${ AnnotationMacros.mkAnnotations[A, T] }
 }
 
-/** Provides the type annotations of type `A` of the fields of a product type or constructors of a sum type `T`.
-  *
-  * If type `T` is a product type, this type class inspects its fields and provides their type annotations of type `A`.
-  * If type `T` is a sum type, its constructor types are looked for type annotations.
-  *
-  * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type,
-  * or number of constructors of `T` if it is a sum type). It is made of `None.type` (no annotation on corresponding
-  * field or constructor) and `Some[A]` (corresponding field or constructor is annotated).
-  *
-  * Method `apply` provides a tuple of type `Out` made of `None` (corresponding field or constructor not annotated) or
-  * `Some(annotation)` (corresponding field or constructor has annotation `annotation`).
-  *
-  * Note that type annotations must not be abstract for this type class to take them into account.
-  *
-  * Example:
-  * {{{
-  *   case class First(s: String)
-  *
-  *   case class CC(i: Int, s: String @First("a"))
-  *
-  *   val ccFirsts = TypeAnnotations[First, CC]
-  *
-  *   // ccFirsts.Out is  (None.type, Some[First])
-  *   // ccFirsts.apply() is (None, Some(First("a")))
-  *
-  * }}}
-  *
-  * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
-  *
-  * @tparam A:
-  *   type annotation type
-  * @tparam T:
-  *   product or sum type, whose fields or constructors are annotated
-  *
-  * @author
-  *   Patrick Grandjean
-  */
+/**
+ * Provides the type annotations of type `A` of the fields of a product type or constructors of a sum type `T`.
+ *
+ * If type `T` is a product type, this type class inspects its fields and provides their type annotations of type `A`.
+ * If type `T` is a sum type, its constructor types are looked for type annotations.
+ *
+ * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type, or
+ * number of constructors of `T` if it is a sum type). It is made of `None.type` (no annotation on corresponding field
+ * or constructor) and `Some[A]` (corresponding field or constructor is annotated).
+ *
+ * Method `apply` provides a tuple of type `Out` made of `None` (corresponding field or constructor not annotated) or
+ * `Some(annotation)` (corresponding field or constructor has annotation `annotation`).
+ *
+ * Note that type annotations must not be abstract for this type class to take them into account.
+ *
+ * Example:
+ * {{{
+ *   case class First(s: String)
+ *
+ *   case class CC(i: Int, s: String @First("a"))
+ *
+ *   val ccFirsts = TypeAnnotations[First, CC]
+ *
+ *   // ccFirsts.Out is  (None.type, Some[First])
+ *   // ccFirsts.apply() is (None, Some(First("a")))
+ *
+ * }}}
+ *
+ * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
+ *
+ * @tparam A:
+ *   type annotation type
+ * @tparam T:
+ *   product or sum type, whose fields or constructors are annotated
+ *
+ * @author
+ *   Patrick Grandjean
+ */
 trait TypeAnnotations[A, T] extends Serializable {
   type Out <: Tuple
 
@@ -187,43 +190,44 @@ object TypeAnnotations {
     ${ AnnotationMacros.mkTypeAnnotations[A, T] }
 }
 
-/** Provides all variable annotations for the fields of a product type or constructors of a sum type `T`.
-  *
-  * If type `T` is a product type, this type class inspects its fields and provides their variable annotations. If type
-  * `T` is a sum type, its constructor types are looked for variable annotations as well.
-  *
-  * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type,
-  * or number of constructors of `T` if it is a sum type). It is made of tuples containing all annotations for the
-  * corresponding field or constructor (`EmptyTuple` if none).
-  *
-  * Method `apply` provides a tuple of type `Out` made of tuples containing all annotations of the corresponding field
-  * or constructor (`EmptyTuple` if none).
-  *
-  * Note that variable annotations must not be abstract for this type class to take them into account.
-  *
-  * Example:
-  * {{{
-  *   case class First(s: String)
-  *   case class Second(i: Int)
-  *
-  *   case class CC(i: Int, @First("a") @Second(0) s: String)
-  *
-  *   val ccFirsts = AllAnnotations[CC]
-  *
-  *   // ccFirsts.Out is  (EmptyTuple, (First, Second))
-  *   // ccFirsts.apply() is
-  *   //   (EmptyTuple, (First("a"), Second(0)))
-  *
-  * }}}
-  *
-  * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
-  *
-  * @tparam T:
-  *   product or sum type, whose fields or constructors are annotated
-  *
-  * @author
-  *   Patrick Grandjean
-  */
+/**
+ * Provides all variable annotations for the fields of a product type or constructors of a sum type `T`.
+ *
+ * If type `T` is a product type, this type class inspects its fields and provides their variable annotations. If type
+ * `T` is a sum type, its constructor types are looked for variable annotations as well.
+ *
+ * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type, or
+ * number of constructors of `T` if it is a sum type). It is made of tuples containing all annotations for the
+ * corresponding field or constructor (`EmptyTuple` if none).
+ *
+ * Method `apply` provides a tuple of type `Out` made of tuples containing all annotations of the corresponding field or
+ * constructor (`EmptyTuple` if none).
+ *
+ * Note that variable annotations must not be abstract for this type class to take them into account.
+ *
+ * Example:
+ * {{{
+ *   case class First(s: String)
+ *   case class Second(i: Int)
+ *
+ *   case class CC(i: Int, @First("a") @Second(0) s: String)
+ *
+ *   val ccFirsts = AllAnnotations[CC]
+ *
+ *   // ccFirsts.Out is  (EmptyTuple, (First, Second))
+ *   // ccFirsts.apply() is
+ *   //   (EmptyTuple, (First("a"), Second(0)))
+ *
+ * }}}
+ *
+ * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
+ *
+ * @tparam T:
+ *   product or sum type, whose fields or constructors are annotated
+ *
+ * @author
+ *   Patrick Grandjean
+ */
 trait AllAnnotations[T] extends Serializable {
   type Out <: Tuple
 
@@ -245,43 +249,44 @@ object AllAnnotations {
     ${ AnnotationMacros.mkAllAnnotations[T] }
 }
 
-/** Provides all type annotations for the fields of product type or constructors of sum type `T`.
-  *
-  * If type `T` is a product type, this type class inspects its fields and provides their type annotations. If type `T`
-  * is a sum type, its constructor types are looked for type annotations as well.
-  *
-  * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type,
-  * or number of constructors of `T` if it is a sum type). It is made of tuples containing all annotations for the
-  * corresponding field or constructor (`EmptyTuple` if none).
-  *
-  * Method `apply` provides a tuple of type `Out` made of tuples containing all annotations for the corresponding field
-  * or constructor (`EmptyTuple` if none).
-  *
-  * Note that type annotations must not be abstract for this type class to take them into account.
-  *
-  * Example:
-  * {{{
-  *   case class First(s: String)
-  *   case class Second(i: Int)
-  *
-  *   case class CC(i: Int, s: String @First("a") @Second(0))
-  *
-  *   val ccFirsts = AllTypeAnnotations[CC]
-  *
-  *   // ccFirsts.Out is  (EmptyTuple, (First, Second)
-  *   // ccFirsts.apply() is
-  *   //   (EmptyTuple, (First("a"), Second(0))
-  *
-  * }}}
-  *
-  * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
-  *
-  * @tparam T:
-  *   product or sum type, whose fields or constructors are annotated
-  *
-  * @author
-  *   Patrick Grandjean
-  */
+/**
+ * Provides all type annotations for the fields of product type or constructors of sum type `T`.
+ *
+ * If type `T` is a product type, this type class inspects its fields and provides their type annotations. If type `T`
+ * is a sum type, its constructor types are looked for type annotations as well.
+ *
+ * Type `Out` is a tuple having the same number of elements as `T` (number of fields of `T` if `T` is a product type, or
+ * number of constructors of `T` if it is a sum type). It is made of tuples containing all annotations for the
+ * corresponding field or constructor (`EmptyTuple` if none).
+ *
+ * Method `apply` provides a tuple of type `Out` made of tuples containing all annotations for the corresponding field
+ * or constructor (`EmptyTuple` if none).
+ *
+ * Note that type annotations must not be abstract for this type class to take them into account.
+ *
+ * Example:
+ * {{{
+ *   case class First(s: String)
+ *   case class Second(i: Int)
+ *
+ *   case class CC(i: Int, s: String @First("a") @Second(0))
+ *
+ *   val ccFirsts = AllTypeAnnotations[CC]
+ *
+ *   // ccFirsts.Out is  (EmptyTuple, (First, Second)
+ *   // ccFirsts.apply() is
+ *   //   (EmptyTuple, (First("a"), Second(0))
+ *
+ * }}}
+ *
+ * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
+ *
+ * @tparam T:
+ *   product or sum type, whose fields or constructors are annotated
+ *
+ * @author
+ *   Patrick Grandjean
+ */
 trait AllTypeAnnotations[T] extends Serializable {
   type Out <: Tuple
 

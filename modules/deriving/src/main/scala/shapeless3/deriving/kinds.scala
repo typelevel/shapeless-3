@@ -68,9 +68,10 @@ object K0 {
       case _ => EmptyTuple
     }
 
-  /** Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
-    * instance of `F`.
-    */
+  /**
+   * Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
+   * instance of `F`.
+   */
   inline def summonFirst[F[_], T]: F[Any] =
     Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[Any]]
 
@@ -78,9 +79,10 @@ object K0 {
   transparent inline def summonFirst0[T]: Any =
     Kinds.summonFirst[T]
 
-  /** Summon the only given instance `F[U]` from the tuple `T`. Remaining elements of `T` are guaranteed to not have an
-    * instance of `F`.
-    */
+  /**
+   * Summon the only given instance `F[U]` from the tuple `T`. Remaining elements of `T` are guaranteed to not have an
+   * instance of `F`.
+   */
   inline def summonOnly[F[_], T]: F[Any] =
     Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[Any]]
 
@@ -208,9 +210,10 @@ object K1 {
       case _ => EmptyTuple
     }
 
-  /** Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
-    * instance of `F`.
-    */
+  /**
+   * Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
+   * instance of `F`.
+   */
   inline def summonFirst[F[_[_]], T[_]]: F[[_] =>> Any] =
     Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[[_] =>> Any]]
 
@@ -218,9 +221,10 @@ object K1 {
   transparent inline def summonFirst0[T]: Any =
     Kinds.summonFirst[T]
 
-  /** Summon the only given instance `F[U]` from the tuple `T`. Remaining elements of `T` are guaranteed to not have an
-    * instance of `F`.
-    */
+  /**
+   * Summon the only given instance `F[U]` from the tuple `T`. Remaining elements of `T` are guaranteed to not have an
+   * instance of `F`.
+   */
   inline def summonOnly[F[_[_]], T[_]]: F[[_] =>> Any] =
     Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[[_] =>> Any]]
 
@@ -356,9 +360,10 @@ object K11 {
       case _ => EmptyTuple
     }
 
-  /** Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
-    * instance of `F`.
-    */
+  /**
+   * Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
+   * instance of `F`.
+   */
   inline def summonFirst[F[_[_[_]]], T[_[_]]]: F[[_[_]] =>> Any] =
     Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[[_[_]] =>> Any]]
 
@@ -366,9 +371,10 @@ object K11 {
   transparent inline def summonFirst0[T]: Any =
     Kinds.summonFirst[T]
 
-  /** Summon the only given instance `F[U]` from the tuple `T`. Remaining elements of `T` are guaranteed to not have an
-    * instance of `F`.
-    */
+  /**
+   * Summon the only given instance `F[U]` from the tuple `T`. Remaining elements of `T` are guaranteed to not have an
+   * instance of `F`.
+   */
   inline def summonOnly[F[_[_[_]]], T[_[_]]]: F[[_[_]] =>> Any] =
     Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[[_[_]] =>> Any]]
 
@@ -509,9 +515,10 @@ object K2 {
       case _ => EmptyTuple
     }
 
-  /** Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
-    * instance of `F`.
-    */
+  /**
+   * Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
+   * instance of `F`.
+   */
   inline def summonFirst[F[_[_, _]], T[_, _]]: F[[_, _] =>> Any] =
     Kinds.summonFirst[LiftP[F, T]].asInstanceOf[F[[_, _] =>> Any]]
 
@@ -519,9 +526,10 @@ object K2 {
   transparent inline def summonFirst0[T]: Any =
     Kinds.summonFirst[T]
 
-  /** Summon the only given instance `F[U]` from the tuple `T`. Remaining elements of `T` are guaranteed to not have an
-    * instance of `F`.
-    */
+  /**
+   * Summon the only given instance `F[U]` from the tuple `T`. Remaining elements of `T` are guaranteed to not have an
+   * instance of `F`.
+   */
   inline def summonOnly[F[_[_, _]], T[_, _]]: F[[_, _] =>> Any] =
     Kinds.summonOnly[LiftP[F, T]].asInstanceOf[F[[_, _] =>> Any]]
 
