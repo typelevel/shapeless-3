@@ -47,22 +47,19 @@ import scala.annotation.tailrec
  * @author
  *   Alexandre Archambault
  */
-trait Annotation[A, T] extends Serializable {
+trait Annotation[A, T] extends Serializable:
   def apply(): A
-}
 
-object Annotation {
+object Annotation:
   def apply[A, T](implicit annotation: Annotation[A, T]): Annotation[A, T] = annotation
 
   def mkAnnotation[A, T](annotation: A): Annotation[A, T] =
-    new Annotation[A, T] {
+    new Annotation[A, T]:
       def apply() = annotation
-    }
 
   inline def mkAnnotation[A, T]: Annotation[A, T] = ${ AnnotationMacros.mkAnnotation }
 
   inline given [A, T]: Annotation[A, T] = mkAnnotation[A, T]
-}
 
 /**
  * Provides the annotations of type `A` of the fields of product type or constructors of sum type `T`.
@@ -110,26 +107,23 @@ object Annotation {
  * @author
  *   Alexandre Archambault
  */
-trait Annotations[A, T] extends Serializable {
+trait Annotations[A, T] extends Serializable:
   type Out <: Tuple
 
   def apply(): Out
-}
 
-object Annotations {
+object Annotations:
   def apply[A, T](implicit annotations: Annotations[A, T]): Aux[A, T, annotations.Out] = annotations
 
   type Aux[A, T, Out0 <: Tuple] = Annotations[A, T] { type Out = Out0 }
 
   def mkAnnotations[A, T, Out0 <: Tuple](annotations: Out0): Aux[A, T, Out0] =
-    new Annotations[A, T] {
+    new Annotations[A, T]:
       type Out = Out0
       def apply() = annotations
-    }
 
   implicit transparent inline def mkAnnotations[A, T]: Annotations[A, T] =
     ${ AnnotationMacros.mkAnnotations[A, T] }
-}
 
 /**
  * Provides the type annotations of type `A` of the fields of a product type or constructors of a sum type `T`.
@@ -169,26 +163,23 @@ object Annotations {
  * @author
  *   Patrick Grandjean
  */
-trait TypeAnnotations[A, T] extends Serializable {
+trait TypeAnnotations[A, T] extends Serializable:
   type Out <: Tuple
 
   def apply(): Out
-}
 
-object TypeAnnotations {
+object TypeAnnotations:
   def apply[A, T](implicit annotations: TypeAnnotations[A, T]): Aux[A, T, annotations.Out] = annotations
 
   type Aux[A, T, Out0 <: Tuple] = TypeAnnotations[A, T] { type Out = Out0 }
 
   def mkAnnotations[A, T, Out0 <: Tuple](annotations: Out0): Aux[A, T, Out0] =
-    new TypeAnnotations[A, T] {
+    new TypeAnnotations[A, T]:
       type Out = Out0
       def apply(): Out = annotations
-    }
 
   transparent inline given mkAnnotations[A, T]: TypeAnnotations[A, T] =
     ${ AnnotationMacros.mkTypeAnnotations[A, T] }
-}
 
 /**
  * Provides all variable annotations for the fields of a product type or constructors of a sum type `T`.
@@ -228,26 +219,23 @@ object TypeAnnotations {
  * @author
  *   Patrick Grandjean
  */
-trait AllAnnotations[T] extends Serializable {
+trait AllAnnotations[T] extends Serializable:
   type Out <: Tuple
 
   def apply(): Out
-}
 
-object AllAnnotations {
+object AllAnnotations:
   def apply[T](implicit annotations: AllAnnotations[T]): Aux[T, annotations.Out] = annotations
 
   type Aux[T, Out0 <: Tuple] = AllAnnotations[T] { type Out = Out0 }
 
   def mkAnnotations[T, Out0 <: Tuple](annotations: Out0): Aux[T, Out0] =
-    new AllAnnotations[T] {
+    new AllAnnotations[T]:
       type Out = Out0
       def apply(): Out = annotations
-    }
 
   transparent inline given mkAnnotations[T]: AllAnnotations[T] =
     ${ AnnotationMacros.mkAllAnnotations[T] }
-}
 
 /**
  * Provides all type annotations for the fields of product type or constructors of sum type `T`.
@@ -287,44 +275,38 @@ object AllAnnotations {
  * @author
  *   Patrick Grandjean
  */
-trait AllTypeAnnotations[T] extends Serializable {
+trait AllTypeAnnotations[T] extends Serializable:
   type Out <: Tuple
 
   def apply(): Out
-}
 
-object AllTypeAnnotations {
+object AllTypeAnnotations:
   def apply[T](implicit annotations: AllTypeAnnotations[T]): Aux[T, annotations.Out] = annotations
 
   type Aux[T, Out0 <: Tuple] = AllTypeAnnotations[T] { type Out = Out0 }
 
   def mkAnnotations[T, Out0 <: Tuple](annotations: Out0): Aux[T, Out0] =
-    new AllTypeAnnotations[T] {
+    new AllTypeAnnotations[T]:
       type Out = Out0
       def apply(): Out = annotations
-    }
 
   transparent inline given mkAnnotations[T]: AllTypeAnnotations[T] =
     ${ AnnotationMacros.mkAllTypeAnnotations[T] }
-}
 
-object AnnotationMacros {
-  def mkAnnotation[A: Type, T: Type](using Quotes): Expr[Annotation[A, T]] = {
-    import quotes.reflect._
+object AnnotationMacros:
+  def mkAnnotation[A: Type, T: Type](using Quotes): Expr[Annotation[A, T]] =
+    import quotes.reflect.*
 
     val annotTpe = TypeRepr.of[A]
     val annotFlags = annotTpe.typeSymbol.flags
-    if (annotFlags.is(Flags.Abstract) || annotFlags.is(Flags.Trait)) {
+    if annotFlags.is(Flags.Abstract) || annotFlags.is(Flags.Trait) then
       report.errorAndAbort(s"Bad annotation type ${annotTpe.show} is abstract")
-    } else {
+    else
       val annoteeTpe = TypeRepr.of[T]
-      val symbol = if (annoteeTpe.isSingleton) annoteeTpe.termSymbol else annoteeTpe.typeSymbol
-      symbol.getAnnotation(annotTpe.typeSymbol) match {
+      val symbol = if annoteeTpe.isSingleton then annoteeTpe.termSymbol else annoteeTpe.typeSymbol
+      symbol.getAnnotation(annotTpe.typeSymbol) match
         case Some(tree) if tree.tpe <:< annotTpe => '{ Annotation.mkAnnotation[A, T](${ tree.asExprOf[A] }) }
         case _ => report.errorAndAbort(s"No Annotation of type ${annotTpe.show} for type ${annoteeTpe.show}")
-      }
-    }
-  }
 
   def mkAnnotations[A: Type, T: Type](using Quotes): Expr[Annotations[A, T]] =
     mkAnnotationsImpl[A, T, Annotations](ofExprVariableAnnotations)
@@ -335,24 +317,22 @@ object AnnotationMacros {
   private def mkAnnotationsImpl[A: Type, T: Type, AS[A, T]: Type](mk: Seq[Expr[Any]] => Expr[AS[A, T]])(using
       Quotes
   ): Expr[AS[A, T]] =
-    import quotes.reflect._
+    import quotes.reflect.*
 
     val tpe = TypeRepr.of[AS[A, T]] <:< TypeRepr.of[TypeAnnotations[A, T]]
     val annotTpe = TypeRepr.of[A]
     val annotFlags = annotTpe.typeSymbol.flags
-    if (annotFlags.is(Flags.Abstract) || annotFlags.is(Flags.Trait)) {
+    if annotFlags.is(Flags.Abstract) || annotFlags.is(Flags.Trait) then
       report.errorAndAbort(s"Bad annotation type ${annotTpe.show} is abstract")
-    } else {
+    else
       val annotations = extractAnnotations[T](tpe)
       val exprs = annotations.map { child =>
-        child.find(_.tpe <:< TypeRepr.of[A]) match {
+        child.find(_.tpe <:< TypeRepr.of[A]) match
           case Some(tree) => '{ Some(${ tree.asExprOf[A] }) }
           case None => '{ None }
-        }
       }
 
       mk(exprs)
-    }
 
   def mkAllAnnotations[T: Type](using Quotes): Expr[AllAnnotations[T]] =
     mkAllAnnotationsImpl[T, AllAnnotations](ofExprAllVariableAnnotations)
@@ -361,7 +341,7 @@ object AnnotationMacros {
     mkAllAnnotationsImpl[T, AllTypeAnnotations](ofExprAllTypeAnnotations)
 
   private def mkAllAnnotationsImpl[T: Type, AS[T]: Type](mk: Seq[Expr[Any]] => Expr[AS[T]])(using Quotes): Expr[AS[T]] =
-    import quotes.reflect._
+    import quotes.reflect.*
 
     val tpe = TypeRepr.of[AS[T]] <:< TypeRepr.of[AllTypeAnnotations[T]]
     val annotations = extractAnnotations[T](tpe)
@@ -373,8 +353,8 @@ object AnnotationMacros {
 
   def extractAnnotations[T: Type](tpe: Boolean)(using q: Quotes): Seq[List[q.reflect.Term]] =
     val utils = new ReflectionUtils(q)
-    import quotes.reflect._
-    import utils._
+    import quotes.reflect.*
+    import utils.*
 
     @tailrec def typeAnnotationsOfType(tpe: TypeRepr, acc: List[Term]): List[Term] = tpe match
       case annotated: AnnotatedType => typeAnnotationsOfType(annotated.underlying, annotated.annotation :: acc)
@@ -408,22 +388,17 @@ object AnnotationMacros {
   end extractAnnotations
 
   def ofExprVariableAnnotations[A: Type, T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[Annotations[A, T]] =
-    Expr.ofTupleFromSeq(annotTrees) match {
+    Expr.ofTupleFromSeq(annotTrees) match
       case '{ $t: tup } => '{ Annotations.mkAnnotations[A, T, tup & Tuple]($t) }
-    }
 
   def ofExprTypeAnnotations[A: Type, T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[TypeAnnotations[A, T]] =
-    Expr.ofTupleFromSeq(annotTrees) match {
+    Expr.ofTupleFromSeq(annotTrees) match
       case '{ $t: tup } => '{ TypeAnnotations.mkAnnotations[A, T, tup & Tuple]($t) }
-    }
 
   def ofExprAllVariableAnnotations[T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[AllAnnotations[T]] =
-    Expr.ofTupleFromSeq(annotTrees) match {
+    Expr.ofTupleFromSeq(annotTrees) match
       case '{ $t: tup } => '{ AllAnnotations.mkAnnotations[T, tup & Tuple]($t) }
-    }
 
   def ofExprAllTypeAnnotations[T: Type](annotTrees: Seq[Expr[Any]])(using Quotes): Expr[AllTypeAnnotations[T]] =
-    Expr.ofTupleFromSeq(annotTrees) match {
+    Expr.ofTupleFromSeq(annotTrees) match
       case '{ $t: tup } => '{ AllTypeAnnotations.mkAnnotations[T, tup & Tuple]($t) }
-    }
-}

@@ -16,9 +16,9 @@
 
 package shapeless3
 
-import scala.quoted._
+import scala.quoted.*
 
-package object test {
+package object test:
   def typed[T](t: => T): Unit = {}
 
   def sameTyped[T](t1: => T)(t2: => T): Unit = {}
@@ -28,4 +28,3 @@ package object test {
   inline def showType[T](t: => T): String = ${ impl[T] }
 
   def impl[T: Type](using Quotes): Expr[String] = Expr(Type.show[T])
-}

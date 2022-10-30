@@ -40,42 +40,37 @@ type TailRecM[F[_]] = [a, b] => (a, a => F[Either[a, b]]) => F[b]
 inline def summonAsArray[T <: Tuple]: Array[Any] =
   summonAsArray0[T](0, new Array[Any](constValue[Tuple.Size[T]]))
 
-inline def summonAsArray0[T](i: Int, arr: Array[Any]): Array[Any] = inline erasedValue[T] match {
+inline def summonAsArray0[T](i: Int, arr: Array[Any]): Array[Any] = inline erasedValue[T] match
   case _: EmptyTuple => arr
   case _: (a *: b) =>
     arr(i) = summonInline[a]
     summonAsArray0[b](i + 1, arr)
-}
 
 inline def summonValuesAsArray[T <: Tuple, E: ClassTag]: Array[E] =
   summonValuesAsArray0[T, E](0, new Array[E](constValue[Tuple.Size[T]]))
 
-inline def summonValuesAsArray0[T, E](i: Int, arr: Array[E]): Array[E] = inline erasedValue[T] match {
+inline def summonValuesAsArray0[T, E](i: Int, arr: Array[E]): Array[E] = inline erasedValue[T] match
   case _: EmptyTuple => arr
   case _: (a *: b) =>
     arr(i) = constValue[a & E]
     summonValuesAsArray0[b, E](i + 1, arr)
-}
 
 case class Labelling[T](label: String, elemLabels: IndexedSeq[String])
-object Labelling {
+object Labelling:
   inline given apply[T0](using mirror: Mirror { type MirroredType = T0 }): Labelling[T0] =
     Labelling[T0](
       constValue[mirror.MirroredLabel & String],
       ArraySeq.unsafeWrapArray(summonValuesAsArray[mirror.MirroredElemLabels, String])
     )
-}
 
 type CompleteOr[T] = T | Complete[T]
 
 case class Complete[T](t: T)
 
-object Complete {
+object Complete:
   inline def apply[T](c: Boolean)(t: T)(f: T): CompleteOr[T] =
-    if (c) Complete(t)
+    if c then Complete(t)
     else f
-}
 
-object Continue {
+object Continue:
   inline def apply[T](t: T): CompleteOr[T] = t
-}

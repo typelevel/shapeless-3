@@ -18,7 +18,7 @@ package shapeless3.deriving
 
 // ADTs
 
-object adts {
+object adts:
   case class ISB(i: Int, s: String, b: Boolean) derives Monoid, Eq, Empty, Show, Read
 
   case class Box[A](x: A) derives Monoid, Eq, Show, Read, Functor, Pure, Ord, Traverse, Foldable
@@ -40,33 +40,28 @@ object adts {
   sealed trait CList[+A] derives Eq, Show, Read, Functor, EmptyK, Traverse, Foldable
   case class CCons[+A](hd: A, tl: CList[A]) extends CList[A]
   case object CNil extends CList[Nothing]
-  object CList {
+  object CList:
     def apply[A](x: A, xs: A*): CCons[A] =
       CCons(x, xs.foldRight[CList[A]](CNil)(CCons.apply))
-  }
 
   case class Order[F[_]](
       item: F[String],
       quantity: F[Int]
   ) derives FunctorK
 
-  sealed trait OptionD[T] {
-    def fold: T = this match {
+  sealed trait OptionD[T]:
+    def fold: T = this match
       case Given(t) => t
       case Default(t) => t
-    }
-  }
-  object OptionD {
+  object OptionD:
     val fold: OptionD ~> Id = [t] => (ot: OptionD[t]) => ot.fold
-  }
 
   case class Given[T](value: T) extends OptionD[T]
   case class Default[T](value: T) extends OptionD[T]
 
   sealed trait ListF[+A, +R] derives Bifunctor
-  object ListF {
+  object ListF:
     type List[A] = Fix[ListF, A]
-  }
   case class ConsF[+A, +R](hd: A, tl: R) extends ListF[A, R]
   case object NilF extends ListF[Nothing, Nothing]
 
@@ -83,4 +78,3 @@ object adts {
     case Top(head: A, tail: Zipper[A])
     case Bot(init: Zipper[A], last: A)
     case Focus(left: List[A], focus: ::[A], right: List[A])
-}

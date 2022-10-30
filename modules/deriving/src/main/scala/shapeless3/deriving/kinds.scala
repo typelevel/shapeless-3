@@ -24,7 +24,7 @@ import scala.compiletime.ops.int.S
 import scala.deriving.*
 import scala.util.NotGiven
 
-object K0 {
+object K0:
   type Kind[C, O] = C {
     type Kind = K0.type
     type MirroredType = O
@@ -50,23 +50,22 @@ object K0 {
 
   type IndexOf[E, X] = IndexOf0[E, X, 0]
 
-  type IndexOf0[E, X, I <: Int] <: Int = X match {
+  type IndexOf0[E, X, I <: Int] <: Int = X match
     case EmptyTuple => -1
     case x *: xs =>
-      x match {
+      x match
         case E => I
         case _ => IndexOf0[E, xs, S[I]]
-      }
-  }
 
-  type Head[T] = T match { case h *: t => h }
-  type Tail[T] = T match { case h *: t => t }
+  type Head[T] = T match
+    case h *: t => h
+  type Tail[T] = T match
+    case h *: t => t
 
   type LiftP[F[_], T] <: Tuple =
-    T match {
+    T match
       case _ *: _ => F[Head[T]] *: LiftP[F, Tail[T]]
       case _ => EmptyTuple
-    }
 
   /**
    * Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
@@ -106,10 +105,9 @@ object K0 {
         f: => (ProductGeneric[T] & gen.type) ?=> F[T],
         g: => (CoproductGeneric[T] & gen.type) ?=> F[T]
     ): F[T] =
-      inline gen match {
+      inline gen match
         case p: ProductGeneric[T] => f(using p.asInstanceOf)
         case c: CoproductGeneric[T] => g(using c.asInstanceOf)
-      }
 
   extension [F[_], T](inst: Instances[F, T])
     inline def mapK[G[_]](f: [t] => F[t] => G[t]): Instances[G, T] =
@@ -165,19 +163,17 @@ object K0 {
       inst.asInstanceOf
 
   inline given mkInstances[F[_], T](using gen: Generic[T]): Instances[F, T] =
-    inline gen match {
+    inline gen match
       case p: ProductGeneric[T] => mkProductInstances[F, T](using p)
       case c: CoproductGeneric[T] => mkCoproductInstances[F, T](using c)
-    }
 
   inline given mkProductInstances[F[_], T](using gen: ProductGeneric[T]): ProductInstances[F, T] =
     ErasedProductInstances[K0.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
   inline given mkCoproductInstances[F[_], T](using gen: CoproductGeneric[T]): CoproductInstances[F, T] =
     ErasedCoproductInstances[K0.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen): CoproductInstances[F, T]
-}
 
-object K1 {
+object K1:
   type Kind[C, O[_]] = C {
     type Kind = K1.type
     type MirroredType[X] = O[X]
@@ -201,14 +197,15 @@ object K1 {
   def ProductInstances[F[_[_]], T[_]](using inst: ProductInstances[F, T]): inst.type = inst
   def CoproductInstances[F[_[_]], T[_]](using inst: CoproductInstances[F, T]): inst.type = inst
 
-  type Head[T <: [X] =>> Any, A] = T[A] match { case h *: t => h }
-  type Tail[T <: [X] =>> Any, A] = T[A] match { case h *: t => t }
+  type Head[T <: [X] =>> Any, A] = T[A] match
+    case h *: t => h
+  type Tail[T <: [X] =>> Any, A] = T[A] match
+    case h *: t => t
 
   type LiftP[F[_[_]], T <: [X] =>> Any] <: Tuple =
-    T[Any] match {
+    T[Any] match
       case _ *: _ => F[[X] =>> Head[T, X]] *: LiftP[F, [X] =>> Tail[T, X]]
       case _ => EmptyTuple
-    }
 
   /**
    * Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
@@ -252,10 +249,9 @@ object K1 {
         f: => (ProductGeneric[T] & gen.type) ?=> F[T],
         g: => (CoproductGeneric[T] & gen.type) ?=> F[T]
     ): F[T] =
-      inline gen match {
+      inline gen match
         case p: ProductGeneric[T] => f(using p.asInstanceOf)
         case c: CoproductGeneric[T] => g(using c.asInstanceOf)
-      }
 
   extension [F[_[_]], T[_]](inst: Instances[F, T])
     inline def mapK[G[_[_]]](f: [t[_]] => F[t] => G[t]): Instances[G, T] =
@@ -312,19 +308,17 @@ object K1 {
       inst.asInstanceOf
 
   inline given mkInstances[F[_[_]], T[_]](using gen: Generic[T]): Instances[F, T] =
-    inline gen match {
+    inline gen match
       case p: ProductGeneric[T] => mkProductInstances[F, T](using p)
       case c: CoproductGeneric[T] => mkCoproductInstances[F, T](using c)
-    }
 
   inline given mkProductInstances[F[_[_]], T[_]](using gen: ProductGeneric[T]): ProductInstances[F, T] =
     ErasedProductInstances[K1.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
   inline given mkCoproductInstances[F[_[_]], T[_]](using gen: CoproductGeneric[T]): CoproductInstances[F, T] =
     ErasedCoproductInstances[K1.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
-}
 
-object K11 {
+object K11:
   type Kind[C, O[_[_]]] = C {
     type Kind = K11.type
     type MirroredType[X[_]] = O[X]
@@ -351,14 +345,15 @@ object K11 {
   type Id[t] = [f[_]] =>> f[t]
   type Const[c] = [f[_]] =>> c
 
-  type Head[T <: [G[_]] =>> Any, A[_]] = T[A] match { case h *: t => h }
-  type Tail[T <: [G[_]] =>> Any, A[_]] = T[A] match { case h *: t => t }
+  type Head[T <: [G[_]] =>> Any, A[_]] = T[A] match
+    case h *: t => h
+  type Tail[T <: [G[_]] =>> Any, A[_]] = T[A] match
+    case h *: t => t
 
   type LiftP[F[_[_[_]]], T <: [G[_]] =>> Any] <: Tuple =
-    T[Option] match {
+    T[Option] match
       case _ *: _ => F[[A[_]] =>> Head[T, A]] *: LiftP[F, [A[_]] =>> Tail[T, A]]
       case _ => EmptyTuple
-    }
 
   /**
    * Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
@@ -402,10 +397,9 @@ object K11 {
         f: => (ProductGeneric[T] & gen.type) ?=> F[T],
         g: => (CoproductGeneric[T] & gen.type) ?=> F[T]
     ): F[T] =
-      inline gen match {
+      inline gen match
         case p: ProductGeneric[T] => f(using p.asInstanceOf)
         case c: CoproductGeneric[T] => g(using c.asInstanceOf)
-      }
 
   extension [F[_[_[_]]], T[_[_]]](inst: Instances[F, T])
     inline def mapK[G[_[_[_]]]](f: [t[_[_]]] => F[t] => G[t]): Instances[G, T] =
@@ -466,19 +460,17 @@ object K11 {
       inst.asInstanceOf
 
   inline given mkInstances[F[_[_[_]]], T[_[_]]](using gen: Generic[T]): Instances[F, T] =
-    inline gen match {
+    inline gen match
       case p: ProductGeneric[T] => mkProductInstances[F, T](using p)
       case c: CoproductGeneric[T] => mkCoproductInstances[F, T](using c)
-    }
 
   inline given mkProductInstances[F[_[_[_]]], T[_[_]]](using gen: ProductGeneric[T]): ProductInstances[F, T] =
     ErasedProductInstances[K11.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
   inline given mkCoproductInstances[F[_[_[_]]], T[_[_]]](using gen: CoproductGeneric[T]): CoproductInstances[F, T] =
     ErasedCoproductInstances[K11.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
-}
 
-object K2 {
+object K2:
   type Kind[C, O[_, _]] = C {
     type Kind = K2.type
     type MirroredType[X, Y] = O[X, Y]
@@ -506,14 +498,15 @@ object K2 {
   type Id2[t, u] = u
   type Const[c] = [t, u] =>> c
 
-  type Head[T <: [X, Y] =>> Any, A, B] = T[A, B] match { case h *: t => h }
-  type Tail[T <: [X, Y] =>> Any, A, B] = T[A, B] match { case h *: t => t }
+  type Head[T <: [X, Y] =>> Any, A, B] = T[A, B] match
+    case h *: t => h
+  type Tail[T <: [X, Y] =>> Any, A, B] = T[A, B] match
+    case h *: t => t
 
   type LiftP[F[_[_, _]], T <: [X, Y] =>> Any] <: Tuple =
-    T[Any, Any] match {
+    T[Any, Any] match
       case _ *: _ => F[[X, Y] =>> Head[T, X, Y]] *: LiftP[F, [X, Y] =>> Tail[T, X, Y]]
       case _ => EmptyTuple
-    }
 
   /**
    * Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
@@ -557,10 +550,9 @@ object K2 {
         f: => (ProductGeneric[T] & gen.type) ?=> F[T],
         g: => (CoproductGeneric[T] & gen.type) ?=> F[T]
     ): F[T] =
-      inline gen match {
+      inline gen match
         case p: ProductGeneric[T] => f(using p.asInstanceOf)
         case c: CoproductGeneric[T] => g(using c.asInstanceOf)
-      }
 
   extension [F[_[_, _]], T[_, _]](inst: Instances[F, T])
     inline def mapK[G[_[_, _]]](f: [t[_, _]] => F[t] => G[t]): Instances[G, T] =
@@ -625,14 +617,12 @@ object K2 {
       inst.asInstanceOf
 
   inline given mkInstances[F[_[_, _]], T[_, _]](using gen: Generic[T]): Instances[F, T] =
-    inline gen match {
+    inline gen match
       case p: ProductGeneric[T] => mkProductInstances[F, T](using p)
       case c: CoproductGeneric[T] => mkCoproductInstances[F, T](using c)
-    }
 
   inline given mkProductInstances[F[_[_, _]], T[_, _]](using gen: ProductGeneric[T]): ProductInstances[F, T] =
     ErasedProductInstances[K2.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
   inline given mkCoproductInstances[F[_[_, _]], T[_, _]](using gen: CoproductGeneric[T]): CoproductInstances[F, T] =
     ErasedCoproductInstances[K2.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
-}
