@@ -27,10 +27,13 @@ type ~>[A[_], B[_]] = [t] => A[t] => B[t]
 
 /** Corresponds to `Applicative.pure` in Cats. */
 type Pure[F[_]] = [a] => a => F[a]
+
 /** Corresponds to `Functor.map` in Cats. */
 type MapF[F[_]] = [a, b] => (F[a], a => b) => F[b]
+
 /** Corresponds to `Apply.ap` in Cats. */
 type Ap[F[_]] = [a, b] => (F[a => b], F[a]) => F[b]
+
 /** Corresponds to `FlatMap.tailRecM` in Cats. */
 type TailRecM[F[_]] = [a, b] => (a, a => F[Either[a, b]]) => F[b]
 
@@ -41,7 +44,7 @@ inline def summonAsArray0[T](i: Int, arr: Array[Any]): Array[Any] = inline erase
   case _: EmptyTuple => arr
   case _: (a *: b) =>
     arr(i) = summonInline[a]
-    summonAsArray0[b](i+1, arr)
+    summonAsArray0[b](i + 1, arr)
 }
 
 inline def summonValuesAsArray[T <: Tuple, E: ClassTag]: Array[E] =
@@ -51,7 +54,7 @@ inline def summonValuesAsArray0[T, E](i: Int, arr: Array[E]): Array[E] = inline 
   case _: EmptyTuple => arr
   case _: (a *: b) =>
     arr(i) = constValue[a & E]
-    summonValuesAsArray0[b, E](i+1, arr)
+    summonValuesAsArray0[b, E](i + 1, arr)
 }
 
 case class Labelling[T](label: String, elemLabels: IndexedSeq[String])
@@ -69,7 +72,7 @@ case class Complete[T](t: T)
 
 object Complete {
   inline def apply[T](c: Boolean)(t: T)(f: T): CompleteOr[T] =
-    if(c) Complete(t)
+    if (c) Complete(t)
     else f
 }
 

@@ -36,8 +36,8 @@ object Size {
 }
 
 object Inc {
-  given Case[Inc.type, Int, Int] = _+1
-  given Case[Inc.type, String, String] = _+"!"
+  given Case[Inc.type, Int, Int] = _ + 1
+  given Case[Inc.type, String, String] = _ + "!"
   given Case[Inc.type, Boolean, Boolean] = !_
 }
 
@@ -54,7 +54,12 @@ class DerivationTests {
 
     val v2 = Monoid[Recursive]
     assert(v2.empty == Recursive(0, None))
-    assert(v2.combine(Recursive(1, Some(Recursive(2, None))), Recursive(1, Some(Recursive(3, None)))) == Recursive(2, Some(Recursive(5, None))))
+    assert(
+      v2.combine(Recursive(1, Some(Recursive(2, None))), Recursive(1, Some(Recursive(3, None)))) == Recursive(
+        2,
+        Some(Recursive(5, None))
+      )
+    )
   }
 
   @Test
@@ -163,7 +168,12 @@ class DerivationTests {
     val v6 = Functor[CList]
     assert(v6.map(CCons("foo", CCons("quux", CCons("wibble", CNil))))(_.length) == CCons(3, CCons(4, CCons(6, CNil))))
     val v7 = Functor[[t] =>> CList[Opt[t]]]
-    assert(v7.map(CCons(Sm("foo"), CCons(Nn, CCons(Sm("quux"), CNil))))(_.length) == CCons(Sm(3), CCons(Nn, CCons(Sm(4), CNil))))
+    assert(
+      v7.map(CCons(Sm("foo"), CCons(Nn, CCons(Sm("quux"), CNil))))(_.length) == CCons(
+        Sm(3),
+        CCons(Nn, CCons(Sm(4), CNil))
+      )
+    )
 
     val v8 = Functor[OptE]
     assert(v8.map(SmE("foo"))(_.length) == SmE(3))
@@ -173,8 +183,8 @@ class DerivationTests {
   def mkCList(n: Int) = {
     @tailrec
     def loop(n: Int, acc: CList[Int]): CList[Int] =
-      if(n == 0) acc
-      else loop(n-1, CCons(1, acc))
+      if (n == 0) acc
+      else loop(n - 1, CCons(1, acc))
     loop(n, CNil)
   }
 
@@ -246,7 +256,6 @@ class DerivationTests {
     val v8 = Traverse[Phantom]
     assert(v8.traverse(Phantom())(Option.apply) == Some(Phantom()))
   }
-
 
   @Test
   def functork: Unit = {
@@ -331,7 +340,9 @@ class DerivationTests {
     assert(v3.show(Nn) == "Nn")
 
     val v4 = Show[CList[Int]]
-    assert(v4.show((CCons(1, CCons(2, CCons(3, CNil))))) == "CCons(hd: 1, tl: CCons(hd: 2, tl: CCons(hd: 3, tl: CNil)))")
+    assert(
+      v4.show((CCons(1, CCons(2, CCons(3, CNil))))) == "CCons(hd: 1, tl: CCons(hd: 2, tl: CCons(hd: 3, tl: CNil)))"
+    )
 
     val v5 = Show[Order[Id]]
     assert(v5.show(Order[Id]("Epoisse", 10)) == """Order(item: "Epoisse", quantity: 10)""")
@@ -358,7 +369,11 @@ class DerivationTests {
     assert(v3.read("Nn") == Some((Nn, "")))
 
     val v4 = Read[CList[Int]]
-    assert(v4.read("CCons(hd: 1, tl: CCons(hd: 2, tl: CCons(hd: 3, tl: CNil)))") == Some((CCons(1, CCons(2, CCons(3, CNil))), "")))
+    assert(
+      v4.read("CCons(hd: 1, tl: CCons(hd: 2, tl: CCons(hd: 3, tl: CNil)))") == Some(
+        (CCons(1, CCons(2, CCons(3, CNil))), "")
+      )
+    )
 
     val v5 = Read[Order[Id]]
     assert(v5.read("""Order(item: "Epoisse", quantity: 10)""") == Some((Order[Id]("Epoisse", 10), "")))

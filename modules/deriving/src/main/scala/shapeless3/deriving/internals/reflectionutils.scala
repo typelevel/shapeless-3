@@ -25,21 +25,21 @@ private[shapeless3] class ReflectionUtils[Q <: Quotes & Singleton](val q: Q) {
   import q.reflect._
 
   case class Mirror(
-    MirroredType: TypeRepr,
-    MirroredMonoType: TypeRepr,
-    MirroredElemTypes: Seq[TypeRepr],
-    MirroredLabel: String,
-    MirroredElemLabels: Seq[String]
+      MirroredType: TypeRepr,
+      MirroredMonoType: TypeRepr,
+      MirroredElemTypes: Seq[TypeRepr],
+      MirroredLabel: String,
+      MirroredElemLabels: Seq[String]
   )
 
   object Mirror {
     def apply(mirror: Expr[scala.deriving.Mirror]): Option[Mirror] = {
       val mirrorTpe = mirror.asTerm.tpe.widen
       for {
-        mt   <- findMemberType(mirrorTpe, "MirroredType")
-        mmt  <- findMemberType(mirrorTpe, "MirroredMonoType")
+        mt <- findMemberType(mirrorTpe, "MirroredType")
+        mmt <- findMemberType(mirrorTpe, "MirroredMonoType")
         mets <- findMemberType(mirrorTpe, "MirroredElemTypes")
-        ml   <- findMemberType(mirrorTpe, "MirroredLabel")
+        ml <- findMemberType(mirrorTpe, "MirroredLabel")
         mels <- findMemberType(mirrorTpe, "MirroredElemLabels")
       } yield {
         val mets0 = tupleTypeElements(mets)

@@ -17,7 +17,7 @@
 package shapeless3.typeable
 
 class TypeableTests {
-  import java.{ lang => jl }
+  import java.{lang => jl}
 
   import org.junit.Test
   import org.junit.Assert._
@@ -47,7 +47,7 @@ class TypeableTests {
     val cl = l.cast[Long]
     assertTrue(cl.isDefined)
 
-    val f: Any = 23.0F
+    val f: Any = 23.0f
     val cf = f.cast[Float]
     assertTrue(cf.isDefined)
 
@@ -86,7 +86,7 @@ class TypeableTests {
     val cl = l.cast[jl.Long]
     assertTrue(cl.isDefined)
 
-    val f: Any = 23.0F
+    val f: Any = 23.0f
     val cf = f.cast[jl.Float]
     assertTrue(cf.isDefined)
 
@@ -426,9 +426,9 @@ class TypeableTests {
       t match {
         case T(t) => Some(t)
         case `List[T]`(lt) => lt.headOption
-        case `(String, T)`(s, t) => typed[String](s) ; Some(t)
+        case `(String, T)`(s, t) => typed[String](s); Some(t)
         case `List[(String, T)]`((s, t) :: _) => typed[String](s); Some(t)
-        case `List[(String, T)]`(lst) => assertTrue(lst.isEmpty) ; None
+        case `List[(String, T)]`(lst) => assertTrue(lst.isEmpty); None
         case _ => None
       }
     }
@@ -498,10 +498,10 @@ class TypeableTests {
     val a: Any = ()
     assertEquals("Typeable[Any]", typeableString(a))
 
-    val av: AnyVal =  7
+    val av: AnyVal = 7
     assertEquals("Typeable[AnyVal]", typeableString(av))
 
-    val ar: AnyRef =  ""
+    val ar: AnyRef = ""
     assertEquals("Typeable[AnyRef]", typeableString(ar))
 
     val f: Foo = Foo(0, "", true)
@@ -512,7 +512,7 @@ class TypeableTests {
 
     val i1: A with B = new C
     assertEquals("Typeable[A & B]", typeableString(i1))
-    assertEquals("Typeable[A]", typeableString(new A{}))
+    assertEquals("Typeable[A]", typeableString(new A {}))
     assertEquals("Typeable[A]", Typeable[A].toString)
 
     val o: Option[Long] = Some(4L)
@@ -522,7 +522,7 @@ class TypeableTests {
     assertEquals("Typeable[Either[Long, String]]", typeableString(e))
     assertEquals("Typeable[Right[Nothing, Long]]", typeableString(Right(3L)))
 
-    val l: List[Int] = List(1,2)
+    val l: List[Int] = List(1, 2)
     assertEquals("Typeable[List[Int]]", typeableString(l))
 
     val m: Map[Int, String] = Map(1 -> "one", 2 -> "two")
@@ -545,31 +545,31 @@ class TypeableTests {
     illTyped("Typeable[A1[Int]#C]")
 
     trait A2[T] { case class C(t: T) }
-    val ttA2   = Typeable[A2[Int]#C]
-    val a2Int  = { val tmp = new A2[Int] {}; tmp.C(1) }
-    val a2Str  = { val tmp = new A2[String] {}; tmp.C("hi") }
+    val ttA2 = Typeable[A2[Int]#C]
+    val a2Int = { val tmp = new A2[Int] {}; tmp.C(1) }
+    val a2Str = { val tmp = new A2[String] {}; tmp.C("hi") }
     assertEquals(Some(a2Int), ttA2.cast(a2Int))
     assertEquals(None, ttA2.cast(a2Str))
 
     trait B1T { type T; class C(val t: T) }
-    class B1C[U] extends B1T { override final type T = U }
+    class B1C[U] extends B1T { final override type T = U }
     illTyped("Typeable[B1C[Int]#C]")
 
     trait B2T { type T; case class C(t: T) }
-    class B2C[U] extends B2T { override final type T = U }
-    val ttB2C  = Typeable[B2C[Int]#C]
+    class B2C[U] extends B2T { final override type T = U }
+    val ttB2C = Typeable[B2C[Int]#C]
     val b2CInt = { val tmp = new B2C[Int]; tmp.C(5) }
     val b2CSym = { val tmp = new B2C[Symbol]; tmp.C(Symbol("foo")) }
     assertEquals(Some(b2CInt), ttB2C.cast(b2CInt))
     assertEquals(None, ttB2C.cast(b2CSym))
 
     trait C1T { type T; class C(t: (Int, T)) }
-    class C1C[U] extends C1T { override final type T = U }
+    class C1C[U] extends C1T { final override type T = U }
     illTyped("Typeable[C1C[Int]#C]")
 
     trait C2T { type T; case class C(t: (Int, T)) }
-    class C2C[U] extends C2T { override final type T = U }
-    val ttC2C  = Typeable[C2C[String]#C]
+    class C2C[U] extends C2T { final override type T = U }
+    val ttC2C = Typeable[C2C[String]#C]
     val c2CStr = { val tmp = new C2C[String]; tmp.C((1, "zwei")) }
     val c2CDbl = { val tmp = new C2C[Double]; tmp.C((1, 2.3d)) }
     assertEquals(Some(c2CStr), ttC2C.cast(c2CStr))
@@ -580,8 +580,8 @@ class TypeableTests {
 
     class D2[T] { case class D2I[U](t: T, u: U) }
     val ttD2I = Typeable[D2[Long]#D2I[String]]
-    val d2LS  = { val d = new D2[Long]; d.D2I[String](1L, "hello") }
-    val d2SF  = { val d = new D2[Symbol]; d.D2I[Float](Symbol("bippy"), 4.2f) }
+    val d2LS = { val d = new D2[Long]; d.D2I[String](1L, "hello") }
+    val d2SF = { val d = new D2[Symbol]; d.D2I[Float](Symbol("bippy"), 4.2f) }
     assertEquals(Some(d2LS), ttD2I.cast(d2LS))
     assertEquals(None, ttD2I.cast(d2SF))
   }

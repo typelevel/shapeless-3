@@ -18,7 +18,7 @@ package shapeless3.deriving
 
 import org.junit.Test
 
-trait TypeClass[A] { 
+trait TypeClass[A] {
   def method(a: A): Int
   def another: AnotherTypeClass[A] = method(_).toString
 }

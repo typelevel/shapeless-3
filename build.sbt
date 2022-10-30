@@ -10,6 +10,7 @@ ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 
 // GHA configuration
 ThisBuild / tlCiReleaseBranches := Seq("main")
+ThisBuild / tlCiScalafmtCheck := true
 ThisBuild / mergifyStewardConfig :=
   Some(MergifyStewardConfig(author = "typelevel-steward[bot]", mergeMinors = true))
 
@@ -30,12 +31,23 @@ addCommandAlias("validateNative", ";buildNative;mimaNative;testNative")
 addCommandAlias("buildJVM", ";derivingJVM/compile;testJVM/compile;typeableJVM/compile")
 addCommandAlias("buildJS", ";derivingJS/compile;testJS/compile;typeableJS/compile")
 addCommandAlias("buildNative", ";derivingNative/compile;testNative/compile;typeableNative/compile")
-addCommandAlias("mimaJVM", ";derivingJVM/mimaReportBinaryIssues;testJVM/mimaReportBinaryIssues;typeableJVM/mimaReportBinaryIssues")
-addCommandAlias("mimaJS", ";derivingJS/mimaReportBinaryIssues;testJS/mimaReportBinaryIssues;typeableJS/mimaReportBinaryIssues")
-addCommandAlias("mimaNative", ";derivingNative/mimaReportBinaryIssues;testNative/mimaReportBinaryIssues;typeableNative/mimaReportBinaryIssues")
+addCommandAlias(
+  "mimaJVM",
+  ";derivingJVM/mimaReportBinaryIssues;testJVM/mimaReportBinaryIssues;typeableJVM/mimaReportBinaryIssues"
+)
+addCommandAlias(
+  "mimaJS",
+  ";derivingJS/mimaReportBinaryIssues;testJS/mimaReportBinaryIssues;typeableJS/mimaReportBinaryIssues"
+)
+addCommandAlias(
+  "mimaNative",
+  ";derivingNative/mimaReportBinaryIssues;testNative/mimaReportBinaryIssues;typeableNative/mimaReportBinaryIssues"
+)
 addCommandAlias("testJVM", ";derivingJVM/test;testJVM/test;typeableJVM/test")
 addCommandAlias("testJS", ";derivingJS/test;testJS/test;typeableJS/test")
 addCommandAlias("testNative", ";derivingNative/test;testNative/test;typeableNative/test")
+addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
+addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 // Projects
 
@@ -56,8 +68,10 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += "org.typelevel" %%% "cats-core" % "2.8.0" % "test",
     mimaBinaryIssueFilters ++= Seq(
       ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedInstances.erasedMapK"),
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedProject"),
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK")
+      ProblemFilters
+        .exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedProject"),
+      ProblemFilters
+        .exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK")
     )
   )
 
@@ -117,7 +131,7 @@ lazy val commonSettings = Seq(
   Test / scalacOptions -= "-Yexplicit-nulls",
   Compile / doc / sources := Nil,
   libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % "test",
-  testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-s", "-v"),
+  testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-s", "-v")
 )
 
 ThisBuild / licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))

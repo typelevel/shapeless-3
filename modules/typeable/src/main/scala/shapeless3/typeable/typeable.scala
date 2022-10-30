@@ -19,11 +19,11 @@ package shapeless3.typeable
 import scala.compiletime._
 import scala.quoted._
 
-/**
- * Type class supporting type safe cast.
- *
- * @author Miles Sabin
- */
+/** Type class supporting type safe cast.
+  *
+  * @author
+  *   Miles Sabin
+  */
 trait Typeable[T] extends Serializable {
   def cast(t: Any): Option[T] = if (castable(t)) Some(t.asInstanceOf[T]) else None
   def castable(t: Any): Boolean
@@ -34,35 +34,29 @@ trait Typeable[T] extends Serializable {
 object syntax {
   object typeable {
     extension [T](t: T) {
-      /**
-       * Cast the receiver to a value of type `U` if possible. This operation
-       * will be as precise wrt erasure as possible given the in-scope
-       * `Typeable` instances available.
-       */
+
+      /** Cast the receiver to a value of type `U` if possible. This operation will be as precise wrt erasure as
+        * possible given the in-scope `Typeable` instances available.
+        */
       inline def cast[U](using tu: Typeable[U]): Option[U] = tu.cast(t)
 
-      /**
-       * Test whether the receiver can be cast to a value of type `U`. This
-       * operation will be as precise wrt erasure as possible given the
-       * in-scope `Typeable` instances available.
-       */
+      /** Test whether the receiver can be cast to a value of type `U`. This operation will be as precise wrt erasure as
+        * possible given the in-scope `Typeable` instances available.
+        */
       inline def castable[U](using tu: Typeable[U]): Boolean = tu.castable(t)
 
-      /**
-       * Cast the receiver to a value of subtype `U` of the receiver's static
-       * type if possible. This operation will be as precise wrt erasure as
-       * possible given the in-scope `Typeable` instances available.
-       */
+      /** Cast the receiver to a value of subtype `U` of the receiver's static type if possible. This operation will be
+        * as precise wrt erasure as possible given the in-scope `Typeable` instances available.
+        */
       inline def narrowTo[U](using ev: U <:< T, tu: Typeable[U]): Option[U] = t.cast[U]
     }
   }
 }
 
-/**
- * Provides instances of `Typeable`.
- */
+/** Provides instances of `Typeable`.
+  */
 object Typeable extends Typeable0 {
-  import java.{ lang => jl }
+  import java.{lang => jl}
   import scala.reflect.ClassTag
   import syntax.typeable.*
 
@@ -80,52 +74,77 @@ object Typeable extends Typeable0 {
 
   /** Typeable instance for `Byte`. */
   given byteTypeable: Typeable[Byte] = ValueTypeable[Byte, jl.Byte](classOf[jl.Byte], "Byte")
+
   /** Typeable instance for `Short`. */
   given shortTypeable: Typeable[Short] = ValueTypeable[Short, jl.Short](classOf[jl.Short], "Short")
+
   /** Typeable instance for `Char`. */
   given charTypeable: Typeable[Char] = ValueTypeable[Char, jl.Character](classOf[jl.Character], "Char")
+
   /** Typeable instance for `Int`. */
   given intTypeable: Typeable[Int] = ValueTypeable[Int, jl.Integer](classOf[jl.Integer], "Int")
+
   /** Typeable instance for `Long`. */
   given longTypeable: Typeable[Long] = ValueTypeable[Long, jl.Long](classOf[jl.Long], "Long")
+
   /** Typeable instance for `Float`. */
   given floatTypeable: Typeable[Float] = ValueTypeable[Float, jl.Float](classOf[jl.Float], "Float")
+
   /** Typeable instance for `Double`. */
   given doubleTypeable: Typeable[Double] = ValueTypeable[Double, jl.Double](classOf[jl.Double], "Double")
+
   /** Typeable instance for `Boolean`. */
   given booleanTypeable: Typeable[Boolean] = ValueTypeable[Boolean, jl.Boolean](classOf[jl.Boolean], "Boolean")
+
   /** Typeable instance for `Unit`. */
-  given unitTypeable: Typeable[Unit] = ValueTypeable[Unit, scala.runtime.BoxedUnit](classOf[scala.runtime.BoxedUnit], "Unit")
+  given unitTypeable: Typeable[Unit] =
+    ValueTypeable[Unit, scala.runtime.BoxedUnit](classOf[scala.runtime.BoxedUnit], "Unit")
 
   /** Typeable instance for `java.lang.Byte`. */
   given jlByteTypeable: Typeable[jl.Byte] = ValueTypeable[jl.Byte, jl.Byte](classOf[jl.Byte], "java.lang.Byte")
+
   /** Typeable instance for `java.lang.Short`. */
   given jlShortTypeable: Typeable[jl.Short] = ValueTypeable[jl.Short, jl.Short](classOf[jl.Short], "java.lang.Short")
+
   /** Typeable instance for `java.lang.Character`. */
-  given jlCharacterTypeable: Typeable[jl.Character] = ValueTypeable[jl.Character, jl.Character](classOf[jl.Character], "java.lang.Character")
+  given jlCharacterTypeable: Typeable[jl.Character] =
+    ValueTypeable[jl.Character, jl.Character](classOf[jl.Character], "java.lang.Character")
+
   /** Typeable instance for `java.lang.Integer`. */
-  given jlIntegerTypeable: Typeable[jl.Integer] = ValueTypeable[jl.Integer, jl.Integer](classOf[jl.Integer], "java.lang.Integer")
+  given jlIntegerTypeable: Typeable[jl.Integer] =
+    ValueTypeable[jl.Integer, jl.Integer](classOf[jl.Integer], "java.lang.Integer")
+
   /** Typeable instance for `java.lang.Long`. */
   given jlLongTypeable: Typeable[jl.Long] = ValueTypeable[jl.Long, jl.Long](classOf[jl.Long], "java.lang.Long")
+
   /** Typeable instance for `java.lang.Float`. */
   given jlFloatTypeable: Typeable[jl.Float] = ValueTypeable[jl.Float, jl.Float](classOf[jl.Float], "java.lang.Float")
+
   /** Typeable instance for `java.lang.Double`. */
-  given jlDoubleTypeable: Typeable[jl.Double] = ValueTypeable[jl.Double, jl.Double](classOf[jl.Double], "java.lang.Double")
+  given jlDoubleTypeable: Typeable[jl.Double] =
+    ValueTypeable[jl.Double, jl.Double](classOf[jl.Double], "java.lang.Double")
+
   /** Typeable instance for `java.lang.Boolean`. */
-  given jlBooleanTypeable: Typeable[jl.Boolean] = ValueTypeable[jl.Boolean, jl.Boolean](classOf[jl.Boolean], "java.lang.Boolean")
+  given jlBooleanTypeable: Typeable[jl.Boolean] =
+    ValueTypeable[jl.Boolean, jl.Boolean](classOf[jl.Boolean], "java.lang.Boolean")
+
   /** Typeable instance for `scala.runtime.BoxedUnit`. */
-  given srBoxedUnitTypeable: Typeable[scala.runtime.BoxedUnit] = ValueTypeable[scala.runtime.BoxedUnit, scala.runtime.BoxedUnit](classOf[scala.runtime.BoxedUnit], "scala.runtime.BoxedUnit")
+  given srBoxedUnitTypeable: Typeable[scala.runtime.BoxedUnit] =
+    ValueTypeable[scala.runtime.BoxedUnit, scala.runtime.BoxedUnit](
+      classOf[scala.runtime.BoxedUnit],
+      "scala.runtime.BoxedUnit"
+    )
 
   def isAnyValClass[T](clazz: Class[T]) =
     clazz == classOf[jl.Byte] ||
-    clazz == classOf[jl.Short] ||
-    clazz == classOf[jl.Integer] ||
-    clazz == classOf[jl.Long] ||
-    clazz == classOf[jl.Float] ||
-    clazz == classOf[jl.Double] ||
-    clazz == classOf[jl.Boolean] ||
-    clazz == classOf[jl.Character] ||
-    clazz == classOf[scala.runtime.BoxedUnit]
+      clazz == classOf[jl.Short] ||
+      clazz == classOf[jl.Integer] ||
+      clazz == classOf[jl.Long] ||
+      clazz == classOf[jl.Float] ||
+      clazz == classOf[jl.Double] ||
+      clazz == classOf[jl.Boolean] ||
+      clazz == classOf[jl.Character] ||
+      clazz == classOf[scala.runtime.BoxedUnit]
 
   /** Typeable instance for `Any`. */
   given anyTypeable: Typeable[Any] with {
@@ -145,10 +164,10 @@ object Typeable extends Typeable0 {
     def describe = "AnyRef"
   }
 
-  /** Typeable instance for `Iterable`. Note that the contents be will tested
-   *  for conformance to the element type.
-   */
-  given iterableTypeable[CC[t] <: Iterable[t], T](using CCTag: ClassTag[CC[Any]], tt: Typeable[T]): Typeable[CC[T]] with {
+  /** Typeable instance for `Iterable`. Note that the contents be will tested for conformance to the element type.
+    */
+  given iterableTypeable[CC[t] <: Iterable[t], T](using CCTag: ClassTag[CC[Any]], tt: Typeable[T]): Typeable[CC[T]]
+    with {
     def castable(t: Any): Boolean =
       t match {
         case (cc: CC[_] @unchecked) if CCTag.runtimeClass.isAssignableFrom(t.getClass) =>
@@ -158,10 +177,13 @@ object Typeable extends Typeable0 {
     def describe = s"${CCTag.runtimeClass.getSimpleName}[${tt.describe}]"
   }
 
-  /** Typeable instance for `Map`. Note that the contents will be tested for
-   *  conformance to the key/value types.
-   */
-  given mapTypeable[M[k, v] <: Map[k, v], K, V](using MTag: ClassTag[M[Any, Any]], tk: Typeable[K], tv: Typeable[V]): Typeable[M[K, V]] with {
+  /** Typeable instance for `Map`. Note that the contents will be tested for conformance to the key/value types.
+    */
+  given mapTypeable[M[k, v] <: Map[k, v], K, V](using
+      MTag: ClassTag[M[Any, Any]],
+      tk: Typeable[K],
+      tv: Typeable[V]
+  ): Typeable[M[K, V]] with {
     def castable(t: Any): Boolean =
       t match {
         case (m: Map[Any, Any] @unchecked) if MTag.runtimeClass.isAssignableFrom(t.getClass) =>
@@ -185,43 +207,42 @@ object Typeable extends Typeable0 {
       def describe = s"$name($value)"
     }
 
-  /**
-   * Typeable instance for singleton reference types
-   *
-   * @param value The singleton value
-   *
-   * @param name The name of the singleton
-   *
-   * @param serializable Whether the instance should be serializable. For
-   * singleton types of object definitions and symbols, this should be true,
-   * since they preserve their identity after serialization/deserialization.
-   * For other cases, it should be false, since the deserialized instance
-   * would lose its singleton property.
-   */
+  /** Typeable instance for singleton reference types
+    *
+    * @param value
+    *   The singleton value
+    *
+    * @param name
+    *   The name of the singleton
+    *
+    * @param serializable
+    *   Whether the instance should be serializable. For singleton types of object definitions and symbols, this should
+    *   be true, since they preserve their identity after serialization/deserialization. For other cases, it should be
+    *   false, since the deserialized instance would lose its singleton property.
+    */
   def referenceSingletonTypeable[T](value: T, name: String, serializable: Boolean): Typeable[T] =
     new Typeable[T] {
       def castable(t: Any): Boolean = t.asInstanceOf[AnyRef] eq value.asInstanceOf[AnyRef]
       def describe = s"$name.type"
 
       @throws(classOf[java.io.IOException])
-      private def writeObject(out: java.io.ObjectOutputStream): Unit = {
+      private def writeObject(out: java.io.ObjectOutputStream): Unit =
         if (serializable) out.defaultWriteObject()
         else throw new java.io.NotSerializableException("referenceSingletonTypeable")
-      }
     }
 
   /** Typeable instance for intersection types with typeable conjuncts */
   def intersectionTypeable[T](parents: Seq[Typeable[_]]): Typeable[T] =
     new Typeable[T] {
       def castable(t: Any): Boolean = t != null && parents.forall(_.castable(t))
-      def describe = parents.map(_.describe) mkString " & "
+      def describe = parents.map(_.describe).mkString(" & ")
     }
 
   /** Typeable instance for union types with typeable disjuncts */
   def unionTypeable[T](parents: Seq[Typeable[_]]): Typeable[T] =
     new Typeable[T] {
       def castable(t: Any): Boolean = t != null && parents.exists(_.castable(t))
-      def describe = parents.map(_.describe) mkString " | "
+      def describe = parents.map(_.describe).mkString(" | ")
     }
 
   /** Typeable instance for polymorphic case classes with typeable elements. */
@@ -298,10 +319,12 @@ object TypeableMacros {
 
     def summonAllTypeables(tps: Seq[TypeRepr]): Option[Expr[Seq[Typeable[_]]]] = {
       val ttps = tps.map(tp => TypeableType.appliedTo(tp))
-      val instances = ttps.flatMap(ttp => Implicits.search(ttp) match {
-        case iss: ImplicitSearchSuccess => List(iss.tree.asExprOf[Typeable[_]])
-        case _: ImplicitSearchFailure => Nil
-      })
+      val instances = ttps.flatMap(ttp =>
+        Implicits.search(ttp) match {
+          case iss: ImplicitSearchSuccess => List(iss.tree.asExprOf[Typeable[_]])
+          case _: ImplicitSearchFailure => Nil
+        }
+      )
 
       if (tps.length == instances.length) Some(Expr.ofSeq(instances))
       else None
@@ -418,13 +441,13 @@ object TypeableMacros {
   }
 }
 
-/**
- * Extractor for use of `Typeable` in pattern matching.
- *
- * Thanks to Stacy Curl for the idea.
- *
- * @author Miles Sabin
- */
+/** Extractor for use of `Typeable` in pattern matching.
+  *
+  * Thanks to Stacy Curl for the idea.
+  *
+  * @author
+  *   Miles Sabin
+  */
 trait TypeCase[T] extends Serializable {
   def unapply(t: Any): Option[T]
 }
