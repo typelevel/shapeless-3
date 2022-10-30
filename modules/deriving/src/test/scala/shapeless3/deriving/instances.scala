@@ -18,30 +18,27 @@ package shapeless3.deriving
 
 import org.junit.Test
 
-trait TypeClass[A] {
+trait TypeClass[A]:
   def method(a: A): Int
   def another: AnotherTypeClass[A] = method(_).toString
-}
 
-trait AnotherTypeClass[A] {
+trait AnotherTypeClass[A]:
   def method(a: A): String
-}
 
-object TypeClass {
+object TypeClass:
   given TypeClass[Int] = identity(_)
   given [A](using tc: TypeClass[A]): TypeClass[Single[A]] =
     s => tc.method(s.a) * 2
   given [A](using tc: TypeClass[A]): TypeClass[Pair[A]] =
     p => tc.method(p.a1) + tc.method(p.a2)
-}
 
 sealed trait Few[A]
 case class Single[A](a: A) extends Few[A]
 case class Pair[A](a1: A, a2: A) extends Few[A]
 
-class InstancesTests {
+class InstancesTests:
   @Test
-  def foldLeft: Unit = {
+  def foldLeft: Unit =
     val inst = summon[K0.ProductInstances[TypeClass, Pair[Int]]]
     val p = Pair(1, 2)
 
@@ -51,10 +48,9 @@ class InstancesTests {
     }
 
     assert(actual == expected)
-  }
 
   @Test
-  def foldRight: Unit = {
+  def foldRight: Unit =
     val inst = summon[K0.ProductInstances[TypeClass, Pair[Int]]]
     val p = Pair(1, 2)
 
@@ -64,10 +60,9 @@ class InstancesTests {
     }
 
     assert(actual == expected)
-  }
 
   @Test
-  def mapKforSingle: Unit = {
+  def mapKforSingle: Unit =
     val inst = summon[K0.Instances[TypeClass, Single[Int]]]
     val otherInst = inst.mapK([t] => (tc: TypeClass[t]) => tc.another)
     val s = Single(42)
@@ -78,10 +73,9 @@ class InstancesTests {
     }
 
     assert(actual == expected)
-  }
 
   @Test
-  def mapKforPair: Unit = {
+  def mapKforPair: Unit =
     val inst = summon[K0.ProductInstances[TypeClass, Pair[Int]]]
     val otherInst = inst.mapK([t] => (tc: TypeClass[t]) => tc.another)
     val p = Pair(5, 6)
@@ -92,10 +86,9 @@ class InstancesTests {
     }
 
     assert(actual == expected)
-  }
 
   @Test
-  def mapKforFew: Unit = {
+  def mapKforFew: Unit =
     val inst = summon[K0.CoproductInstances[TypeClass, Few[Int]]]
     val otherInst = inst.mapK([t] => (tc: TypeClass[t]) => tc.another)
     val f = Pair(13, 313)
@@ -106,5 +99,3 @@ class InstancesTests {
     }
 
     assert(actual == expected)
-  }
-}

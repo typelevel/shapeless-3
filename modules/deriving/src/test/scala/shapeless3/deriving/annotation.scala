@@ -16,11 +16,11 @@
 
 package shapeless3.deriving
 
-import scala.annotation.{Annotation => saAnnotation}
+import scala.annotation.Annotation as saAnnotation
 import org.junit.Test
 import shapeless3.test.illTyped
 
-object AnnotationTests {
+object AnnotationTests:
 
   case class First() extends saAnnotation
   case class Second(i: Int, s: String) extends saAnnotation
@@ -77,13 +77,12 @@ object AnnotationTests {
   @Other @Last(false) enum Control:
     @First @Third('!') case Automatic
     @Second(100, "@") case Manual(age: PosInt, email: Email)
-}
 
-class AnnotationTests {
-  import AnnotationTests._
+class AnnotationTests:
+  import AnnotationTests.*
 
   @Test
-  def simpleAnnotation(): Unit = {
+  def simpleAnnotation(): Unit =
     val otherCC = Annotation[Other, CC].apply()
     assert(otherCC == Other())
 
@@ -101,18 +100,16 @@ class AnnotationTests {
 
     val thirdEnum = Annotation[Third, Control.Automatic.type].apply()
     assert(thirdEnum == Third('!'))
-  }
 
   @Test
-  def invalidAnnotation(): Unit = {
+  def invalidAnnotation(): Unit =
     illTyped("Annotation[Other, Abstract1]", ".*no implicit argument.*")
     illTyped("Annotation[Abstract1, CC]", ".*no implicit argument.*")
     illTyped("Annotation[Abstract2, CC]", ".*no implicit argument.*")
     illTyped("Annotation[Unused, Control]", ".*no implicit argument.*")
-  }
 
   @Test
-  def simpleAnnotations(): Unit = {
+  def simpleAnnotations(): Unit =
     val first = Annotations[First, CC].apply()
     summon[first.type <:< (Some[First], None.type, None.type)]
     assert(first == (Some(First()), None, None))
@@ -140,19 +137,17 @@ class AnnotationTests {
     val secondEnum = Annotations[Second, Control].apply()
     summon[secondEnum.type <:< (None.type, Some[Second])]
     assert(secondEnum == (None, Some(Second(100, "@"))))
-  }
 
   @Test
-  def invalidAnnotations(): Unit = {
+  def invalidAnnotations(): Unit =
     illTyped("Annotations[Abstract1, CC]", ".*no implicit argument.*")
     illTyped("Annotations[Abstract1, Base]", ".*no implicit argument.*")
     illTyped("Annotations[Abstract2, CC]", ".*no implicit argument.*")
     illTyped("Annotations[Abstract2, Base]", ".*no implicit argument.*")
     illTyped("Annotations[Second, Abstract1]", ".*no implicit argument.*")
-  }
 
   @Test
-  def typeAnnotations(): Unit = {
+  def typeAnnotations(): Unit =
     val first = TypeAnnotations[First, CC4].apply()
     summon[first.type <:< (Some[First], None.type, None.type)]
     assert(first == (Some(First()), None, None))
@@ -172,17 +167,15 @@ class AnnotationTests {
     val secondSum = TypeAnnotations[Second, Base2].apply()
     summon[secondSum.type <:< (None.type, Some[Second])]
     assert(secondSum == (None, Some(Second(3, "e"))))
-  }
 
   @Test
-  def invalidTypeAnnotations(): Unit = {
+  def invalidTypeAnnotations(): Unit =
     illTyped("TypeAnnotations[Dummy, CC2]", "could not find implicit value for parameter annotations: .*")
     illTyped("TypeAnnotations[Dummy, Base]", "could not find implicit value for parameter annotations: .*")
     illTyped("TypeAnnotations[Second, Dummy]", "could not find implicit value for parameter annotations: .*")
-  }
 
   @Test
-  def allAnnotations(): Unit = {
+  def allAnnotations(): Unit =
     val cc = AllAnnotations[CC3].apply() // case class
     summon[cc.type <:< (First *: EmptyTuple, EmptyTuple, (Second, Third))]
     assert(cc == (Tuple(First()), Tuple(), (Second(2, "b"), Third('c'))))
@@ -194,10 +187,9 @@ class AnnotationTests {
     val en = AllAnnotations[Control].apply() // enum
     summon[en.type <:< ((First, Third), Second *: EmptyTuple)]
     assert(en == ((First(), Third('!')), Tuple(Second(100, "@"))))
-  }
 
   @Test
-  def allTypeAnnotations(): Unit = {
+  def allTypeAnnotations(): Unit =
     val st = AllTypeAnnotations[Base2].apply() // sealed trait
     summon[st.type <:< (First *: EmptyTuple, (Second, Third))]
     assert(st == (Tuple(First()), (Second(3, "e"), Third('c'))))
@@ -209,5 +201,3 @@ class AnnotationTests {
     val user = AllTypeAnnotations[User].apply() // type refs
     summon[user.type <:< (First *: EmptyTuple, Third *: EmptyTuple)]
     assert(user == (Tuple(First()), Tuple(Third('c'))))
-  }
-}
