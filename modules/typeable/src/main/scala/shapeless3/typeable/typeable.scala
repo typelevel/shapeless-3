@@ -19,11 +19,12 @@ package shapeless3.typeable
 import scala.compiletime._
 import scala.quoted._
 
-/** Type class supporting type safe cast.
-  *
-  * @author
-  *   Miles Sabin
-  */
+/**
+ * Type class supporting type safe cast.
+ *
+ * @author
+ *   Miles Sabin
+ */
 trait Typeable[T] extends Serializable {
   def cast(t: Any): Option[T] = if (castable(t)) Some(t.asInstanceOf[T]) else None
   def castable(t: Any): Boolean
@@ -35,26 +36,30 @@ object syntax {
   object typeable {
     extension [T](t: T) {
 
-      /** Cast the receiver to a value of type `U` if possible. This operation will be as precise wrt erasure as
-        * possible given the in-scope `Typeable` instances available.
-        */
+      /**
+       * Cast the receiver to a value of type `U` if possible. This operation will be as precise wrt erasure as possible
+       * given the in-scope `Typeable` instances available.
+       */
       inline def cast[U](using tu: Typeable[U]): Option[U] = tu.cast(t)
 
-      /** Test whether the receiver can be cast to a value of type `U`. This operation will be as precise wrt erasure as
-        * possible given the in-scope `Typeable` instances available.
-        */
+      /**
+       * Test whether the receiver can be cast to a value of type `U`. This operation will be as precise wrt erasure as
+       * possible given the in-scope `Typeable` instances available.
+       */
       inline def castable[U](using tu: Typeable[U]): Boolean = tu.castable(t)
 
-      /** Cast the receiver to a value of subtype `U` of the receiver's static type if possible. This operation will be
-        * as precise wrt erasure as possible given the in-scope `Typeable` instances available.
-        */
+      /**
+       * Cast the receiver to a value of subtype `U` of the receiver's static type if possible. This operation will be
+       * as precise wrt erasure as possible given the in-scope `Typeable` instances available.
+       */
       inline def narrowTo[U](using ev: U <:< T, tu: Typeable[U]): Option[U] = t.cast[U]
     }
   }
 }
 
-/** Provides instances of `Typeable`.
-  */
+/**
+ * Provides instances of `Typeable`.
+ */
 object Typeable extends Typeable0 {
   import java.{lang => jl}
   import scala.reflect.ClassTag
@@ -164,8 +169,9 @@ object Typeable extends Typeable0 {
     def describe = "AnyRef"
   }
 
-  /** Typeable instance for `Iterable`. Note that the contents be will tested for conformance to the element type.
-    */
+  /**
+   * Typeable instance for `Iterable`. Note that the contents be will tested for conformance to the element type.
+   */
   given iterableTypeable[CC[t] <: Iterable[t], T](using CCTag: ClassTag[CC[Any]], tt: Typeable[T]): Typeable[CC[T]]
     with {
     def castable(t: Any): Boolean =
@@ -177,8 +183,9 @@ object Typeable extends Typeable0 {
     def describe = s"${CCTag.runtimeClass.getSimpleName}[${tt.describe}]"
   }
 
-  /** Typeable instance for `Map`. Note that the contents will be tested for conformance to the key/value types.
-    */
+  /**
+   * Typeable instance for `Map`. Note that the contents will be tested for conformance to the key/value types.
+   */
   given mapTypeable[M[k, v] <: Map[k, v], K, V](using
       MTag: ClassTag[M[Any, Any]],
       tk: Typeable[K],
@@ -207,19 +214,20 @@ object Typeable extends Typeable0 {
       def describe = s"$name($value)"
     }
 
-  /** Typeable instance for singleton reference types
-    *
-    * @param value
-    *   The singleton value
-    *
-    * @param name
-    *   The name of the singleton
-    *
-    * @param serializable
-    *   Whether the instance should be serializable. For singleton types of object definitions and symbols, this should
-    *   be true, since they preserve their identity after serialization/deserialization. For other cases, it should be
-    *   false, since the deserialized instance would lose its singleton property.
-    */
+  /**
+   * Typeable instance for singleton reference types
+   *
+   * @param value
+   *   The singleton value
+   *
+   * @param name
+   *   The name of the singleton
+   *
+   * @param serializable
+   *   Whether the instance should be serializable. For singleton types of object definitions and symbols, this should
+   *   be true, since they preserve their identity after serialization/deserialization. For other cases, it should be
+   *   false, since the deserialized instance would lose its singleton property.
+   */
   def referenceSingletonTypeable[T](value: T, name: String, serializable: Boolean): Typeable[T] =
     new Typeable[T] {
       def castable(t: Any): Boolean = t.asInstanceOf[AnyRef] eq value.asInstanceOf[AnyRef]
@@ -441,13 +449,14 @@ object TypeableMacros {
   }
 }
 
-/** Extractor for use of `Typeable` in pattern matching.
-  *
-  * Thanks to Stacy Curl for the idea.
-  *
-  * @author
-  *   Miles Sabin
-  */
+/**
+ * Extractor for use of `Typeable` in pattern matching.
+ *
+ * Thanks to Stacy Curl for the idea.
+ *
+ * @author
+ *   Miles Sabin
+ */
 trait TypeCase[T] extends Serializable {
   def unapply(t: Any): Option[T]
 }
