@@ -16,7 +16,7 @@
 
 package shapeless3.deriving
 
-import scala.annotation.{ Annotation => saAnnotation }
+import scala.annotation.{Annotation => saAnnotation}
 import org.junit.Test
 import shapeless3.test.illTyped
 
@@ -32,9 +32,9 @@ object AnnotationTests {
   case class Unused() extends saAnnotation
 
   @Other case class CC(
-    @First i: Int,
-    s: String,
-    @Second(2, "b") ob: Option[Boolean]
+      @First i: Int,
+      s: String,
+      @Second(2, "b") ob: Option[Boolean]
   )
 
   @Last(true) trait Something
@@ -53,21 +53,21 @@ object AnnotationTests {
   trait Dummy
 
   case class CC2(
-    i: Int @First,
-    s: String,
-    ob: Option[Boolean] @Second(2, "b")
+      i: Int @First,
+      s: String,
+      ob: Option[Boolean] @Second(2, "b")
   )
 
   case class CC3(
-    @First i: Int,
-    s: String,
-    @Second(2, "b") @Third('c') ob: Option[Boolean]
+      @First i: Int,
+      s: String,
+      @Second(2, "b") @Third('c') ob: Option[Boolean]
   )
 
   case class CC4(
-    i: Int @First,
-    s: String,
-    ob: Option[Boolean] @Second(2, "b") @Third('c')
+      i: Int @First,
+      s: String,
+      ob: Option[Boolean] @Second(2, "b") @Third('c')
   )
 
   type PosInt = Int @First

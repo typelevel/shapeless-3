@@ -6,10 +6,11 @@ import scala.util.NotGiven
 object Kinds:
   transparent inline def summonFirst[T]: Any =
     inline erasedValue[T] match
-      case _: (a *: b) => summonFrom {
-        case instance: a => instance
-        case _ => summonFirst[b]
-      }
+      case _: (a *: b) =>
+        summonFrom {
+          case instance: a => instance
+          case _ => summonFirst[b]
+        }
 
   transparent inline def summonOnly[T]: Any =
     inline erasedValue[T] match

@@ -41,11 +41,11 @@ object Monoid {
 
   given Monoid[Int] with
     def empty: Int = 0
-    def combine(x: Int, y: Int): Int = x+y
+    def combine(x: Int, y: Int): Int = x + y
 
   given Monoid[String] with
     def empty: String = ""
-    def combine(x: String, y: String): String = x+y
+    def combine(x: String, y: String): String = x + y
 
   given [A](using M: Monoid[A]): Monoid[Option[A]] with
     def empty: Option[A] = None
@@ -97,7 +97,7 @@ object Eq {
 }
 
 trait Ord[A] extends Eq[A] {
-  def eqv(x: A, y: A): Boolean = compare(x,y) == 0
+  def eqv(x: A, y: A): Boolean = compare(x, y) == 0
 
   def compare(x: A, y: A): Int
 }
@@ -128,9 +128,10 @@ object Ord {
 
   given ordGen[A](using inst: K0.ProductInstances[Ord, A]): Ord[A] with
     def compare(x: A, y: A): Int = inst.foldLeft2(x, y)(0: Int)(
-      [t] => (acc: Int, ord: Ord[t], t0: t, t1: t) => {
-        val cmp = ord.compare(t0, t1)
-        Complete(cmp != 0)(cmp)(acc)
+      [t] =>
+        (acc: Int, ord: Ord[t], t0: t, t1: t) => {
+          val cmp = ord.compare(t0, t1)
+          Complete(cmp != 0)(cmp)(acc)
       }
     )
 
@@ -218,7 +219,7 @@ object Applicative {
 }
 
 trait Traverse[F[_]] extends Functor[F] {
-  def traverse[G[_] : Applicative, A, B](fa: F[A])(f: A => G[B]): G[F[B]]
+  def traverse[G[_]: Applicative, A, B](fa: F[A])(f: A => G[B]): G[F[B]]
 }
 
 object Traverse {
@@ -227,7 +228,7 @@ object Traverse {
   given Traverse[Id] with
     def map[A, B](fa: Id[A])(f: A => B): Id[B] = f(fa)
 
-    def traverse[G[_] : Applicative, A, B](fa: Id[A])(f: A => G[B]): G[Id[B]] = f(fa)
+    def traverse[G[_]: Applicative, A, B](fa: Id[A])(f: A => G[B]): G[Id[B]] = f(fa)
 
   given [X]: Traverse[Const[X]] with
     def map[A, B](fa: Const[X][A])(f: A => B): Const[X][B] = fa
@@ -241,11 +242,13 @@ object Traverse {
     def map[A, B](fa: F[A])(f: A => B): F[B] = delegate[F].map(fa)(f)
 
     def traverse[G[_], A, B](fa: F[A])(f: A => G[B])(using G: Applicative[G]): G[F[B]] =
-      inst.traverse[A, G, B](fa)([a,b] => (ga: G[a], f: a => b) => G.map(ga)(f))([a] => (x: a) => G.pure(x))([a,b] => (gf: G[a => b], ga: G[a]) => G.ap(gf)(ga))(
+      inst.traverse[A, G, B](fa)([a, b] => (ga: G[a], f: a => b) => G.map(ga)(f))([a] => (x: a) => G.pure(x))(
+        [a, b] => (gf: G[a => b], ga: G[a]) => G.ap(gf)(ga)
+      )(
         [t[_]] => (trav: Traverse[t], t0: t[A]) => trav.traverse[G, A, B](t0)(f)
       )
 
-   inline def derived[F[_]](using gen: K1.Generic[F]): Traverse[F] = traverseGen
+  inline def derived[F[_]](using gen: K1.Generic[F]): Traverse[F] = traverseGen
 }
 
 trait Optional[F[_]]:
@@ -260,7 +263,7 @@ object Optional:
     def headOption[A](fa: List[A]): Option[A] = fa.headOption
   given Optional[Option] with
     def headOption[A](fa: Option[A]): Option[A] = fa
-  given[T]: Optional[Const[T]] with
+  given [T]: Optional[Const[T]] with
     def headOption[A](fa: T): Option[A] = None
   given NonEmpty[::] with
     def head[A](fa: ::[A]): A = fa.head
@@ -276,9 +279,7 @@ object NonEmpty:
     new Product[F](summonInline)
 
   given coproduct[F[_]](using inst: => K1.CoproductInstances[NonEmpty, F]): NonEmpty[F] with
-    def head[A](fa: F[A]): A = inst.fold(fa) { [f[_]] =>
-      (ne: NonEmpty[f], fa: f[A]) => ne.head(fa)
-    }
+    def head[A](fa: F[A]): A = inst.fold(fa)([f[_]] => (ne: NonEmpty[f], fa: f[A]) => ne.head(fa))
 
   inline def derived[F[_]](using gen: K1.Generic[F]): NonEmpty[F] =
     inline gen match
@@ -288,9 +289,8 @@ object NonEmpty:
   class Product[F[_]](inst: K1.ProductInstances[Optional, F]) extends NonEmpty[F]:
     def head[A](fa: F[A]): A = headOption(fa).get
     override def headOption[A](fa: F[A]): Option[A] =
-      inst.foldLeft(fa)(Option.empty[A]) { [f[_]] =>
-        (acc: Option[A], opt: Optional[f], fa: f[A]) =>
-          Complete(acc.isDefined)(acc)(opt.headOption(fa))
+      inst.foldLeft(fa)(Option.empty[A]) {
+        [f[_]] => (acc: Option[A], opt: Optional[f], fa: f[A]) => Complete(acc.isDefined)(acc)(opt.headOption(fa))
       }
 
 end NonEmpty
@@ -323,8 +323,7 @@ object Foldable {
 
     def foldRight[A, B](fa: F[A])(lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
       inst.foldRight[A, Eval[B]](fa)(lb)(
-        [t[_]] => (fd: Foldable[t], t0: t[A], acc: Eval[B]) =>
-          Continue(Eval.defer(fd.foldRight(t0)(acc)(f)))
+        [t[_]] => (fd: Foldable[t], t0: t[A], acc: Eval[B]) => Continue(Eval.defer(fd.foldRight(t0)(acc)(f)))
       )
 
   given foldableCoproduct[F[_]](using inst: K1.CoproductInstances[Foldable, F]): Foldable[F] with
@@ -415,14 +414,20 @@ object Data extends Data0 {
   type DFR[F, R] = [t] =>> Data[F, t, R]
 
   given dataGen[F, T, R](using inst: K0.ProductInstances[DFR[F, R], T]): Data[F, T, R] =
-    mkData[F, T, R](t => inst.foldLeft[List[R]](t)(List.empty[R])(
-      [t] => (acc: List[R], dt: Data[F, t, R], t: t) => Continue(dt.gmapQ(t) reverse_::: acc)
-    ).reverse)
+    mkData[F, T, R](t =>
+      inst
+        .foldLeft[List[R]](t)(List.empty[R])(
+          [t] => (acc: List[R], dt: Data[F, t, R], t: t) => Continue(dt.gmapQ(t) reverse_::: acc)
+        )
+        .reverse
+    )
 
   given dataGenC[F, T, R](using inst: => K0.CoproductInstances[DFR[F, R], T]): Data[F, T, R] =
-    mkData[F, T, R](t => inst.fold[List[R]](t)(
-      [t] => (dt: Data[F, t, R], t: t) => dt.gmapQ(t)
-    ))
+    mkData[F, T, R](t =>
+      inst.fold[List[R]](t)(
+        [t] => (dt: Data[F, t, R], t: t) => dt.gmapQ(t)
+      )
+    )
 }
 
 trait Data0 {
@@ -456,9 +461,11 @@ object DataT {
     }
 
   given dataTGen[F, T](using inst: => K0.Instances[DF[F], T]): Aux[F, T, T] =
-    mkDataT[F, T, T](t => inst.map(t)(
-      [t] => (dt: Aux[F, t, t], t: t) => dt.gmapT(t)
-    ))
+    mkDataT[F, T, T](t =>
+      inst.map(t)(
+        [t] => (dt: Aux[F, t, t], t: t) => dt.gmapT(t)
+      )
+    )
 
   inline given [F, T, R]: Aux[F, T, R] = summonFrom {
     case fn: Case[F, T, R] => mkDataT[F, T, R](fn)
@@ -519,7 +526,7 @@ object EmptyK {
 
   inline def derived[A[_]](using gen: K1.Generic[A]): EmptyK[A] =
     inline gen match {
-      case given K1.ProductGeneric[A]   => emptyKGen
+      case given K1.ProductGeneric[A] => emptyKGen
       case given K1.CoproductGeneric[A] => emptyKGenC
     }
 }
@@ -560,14 +567,16 @@ object Pure {
   given Pure[Id] = mkPure([T] => (t: T) => t)
 
   given pureGen[A[_]](using inst: K1.ProductInstances[Alt1.Of[Pure, EmptyK], A]): Pure[A] =
-    mkPure[A]([t] => (a: t) => inst.construct([f[_]] => (af: Alt1.Of[Pure, EmptyK][f]) => af.fold[f[t]](_.pure(a))(_.empty[t])))
+    mkPure[A](
+      [t] => (a: t) => inst.construct([f[_]] => (af: Alt1.Of[Pure, EmptyK][f]) => af.fold[f[t]](_.pure(a))(_.empty[t]))
+    )
 
   inline given pureGenC[A[_]](using gen: K1.CoproductGeneric[A]): Pure[A] =
     mkPure[A]([t] => (a: t) => gen.withFirst[Pure, A[t]]([f[x] <: A[x]] => (_: Pure[f]).pure(a)))
 
   inline def derived[A[_]](using gen: K1.Generic[A]): Pure[A] =
     inline gen match {
-      case given K1.ProductGeneric[A]   => pureGen
+      case given K1.ProductGeneric[A] => pureGen
       case given K1.CoproductGeneric[A] => pureGenC
     }
 }
@@ -585,16 +594,16 @@ object Show {
     }
 
   given Show[Int] = (_: Int).toString
-  given Show[String] = (s: String) => "\""+s+"\""
+  given Show[String] = (s: String) => "\"" + s + "\""
   given Show[Boolean] = (_: Boolean).toString
 
   given showGen[T](using inst: K0.ProductInstances[Show, T], labelling: Labelling[T]): Show[T] with {
     def show(t: T): String =
-      if(labelling.elemLabels.isEmpty) labelling.label
+      if (labelling.elemLabels.isEmpty) labelling.label
       else
-        labelling.elemLabels.zipWithIndex.map(
-          (label, i) => s"$label: ${inst.project(t)(i)([t] => (st: Show[t], pt: t) => st.show(pt))}"
-        ).mkString(s"${labelling.label}(", ", ", ")")
+        labelling.elemLabels.zipWithIndex
+          .map((label, i) => s"$label: ${inst.project(t)(i)([t] => (st: Show[t], pt: t) => st.show(pt))}")
+          .mkString(s"${labelling.label}(", ", ", ")")
   }
 
   given showGenC[T](using inst: K0.CoproductInstances[Show, T]): Show[T] with {
@@ -629,9 +638,8 @@ object Read {
     (s: String) =>
       for {
         (hd, tl) <- head(s, r)
-        p        <- f(hd)
+        p <- f(hd)
       } yield (p, tl)
-
 
   given Read[Int] = readPrimitive("""(-?\d*)(.*)""".r, s => Try(s.toInt).toOption)
   given Read[String] = (s: String) => head(s, """\"(.*)\"(.*)""".r)
@@ -639,33 +647,36 @@ object Read {
 
   given readGen[T](using inst: K0.ProductInstances[Read, T], labelling: Labelling[T]): Read[T] with {
     def read(s: String): Option[(T, String)] = {
-      def readUnit(s: String): Option[(T, String)] = {
-        inst.unfold[Unit](())(
-          [t] => (u: Unit, rt: Read[t]) => ((), None)
-        )._2.map(t => (t, s))
-      }
+      def readUnit(s: String): Option[(T, String)] =
+        inst
+          .unfold[Unit](())(
+            [t] => (u: Unit, rt: Read[t]) => ((), None)
+          )
+          ._2
+          .map(t => (t, s))
 
       def readElems(s: String): Option[(T, String)] = {
         type Acc = (String, Seq[String], Boolean)
         inst.unfold[Acc]((s, labelling.elemLabels, true))(
-          [t] => (acc: Acc, rt: Read[t]) => {
-            val (s, labels, first) = acc
-            (for {
-              (_, tl0) <- if(first) Some(("", s)) else head(s, "(,)(.*)".r)
-              (_, tl1) <- head(tl0, s"(${labels.head}):(.*)".r)
-              (t, tl2) <- rt.read(tl1)
+          [t] =>
+            (acc: Acc, rt: Read[t]) => {
+              val (s, labels, first) = acc
+              (for {
+                (_, tl0) <- if (first) Some(("", s)) else head(s, "(,)(.*)".r)
+                (_, tl1) <- head(tl0, s"(${labels.head}):(.*)".r)
+                (t, tl2) <- rt.read(tl1)
               } yield (t, tl2)) match {
                 case Some(t, tl2) => ((tl2, labels.tail, false), Some(t))
                 case None => ((s, labels, first), None)
               }
           }
-          ) match {
-            case (s, None) => None
-            case (acc, Some(t)) => Some((t, acc._1))
-          }
+        ) match {
+          case (s, None) => None
+          case (acc, Some(t)) => Some((t, acc._1))
+        }
       }
 
-      if(labelling.elemLabels.isEmpty) {
+      if (labelling.elemLabels.isEmpty) {
         for {
           (_, tl0) <- head(s, s"(${labelling.label})(.*)".r)
           (t, tl1) <- readUnit(tl0)
@@ -681,17 +692,15 @@ object Read {
   }
 
   given readGenC[T](using inst: K0.CoproductInstances[Read, T], labelling: Labelling[T]): Read[T] with {
-    def read(s: String): Option[(T, String)] = {
-      labelling.elemLabels.zipWithIndex.iterator.map((p: (String, Int)) => {
+    def read(s: String): Option[(T, String)] =
+      labelling.elemLabels.zipWithIndex.iterator.map { (p: (String, Int)) =>
         val (label, i) = p
-        if(s.trim.nn.startsWith(label)) {
+        if (s.trim.nn.startsWith(label)) {
           inst.inject[Option[(T, String)]](i)(
             [t <: T] => (rt: Read[t]) => rt.read(s)
           )
-        }
-        else None
-      }).find(_.isDefined).flatten
-    }
+        } else None
+      }.find(_.isDefined).flatten
   }
 
   inline def derived[A](using gen: K0.Generic[A]): Read[A] =
@@ -737,11 +746,15 @@ object Transform {
     Tuple.fromArray(mkFieldArray[KU, RU, KT, RT](rt)).asInstanceOf
 
   inline given [T, U](using
-    gent: K0.ProductGeneric[T] { type MirroredElemTypes <: NonEmptyTuple },
-    genu: K0.ProductGeneric[U] { type MirroredElemTypes <: Tuple }
-  ) : Transform[T, U] = new Transform[T, U] {
+      gent: K0.ProductGeneric[T] { type MirroredElemTypes <: NonEmptyTuple },
+      genu: K0.ProductGeneric[U] { type MirroredElemTypes <: Tuple }
+  ): Transform[T, U] = new Transform[T, U] {
     def apply(t: T): U =
-      genu.fromRepr(mkRecord[genu.MirroredElemLabels, genu.MirroredElemTypes, gent.MirroredElemLabels, gent.MirroredElemTypes](gent.toRepr(t)))
+      genu.fromRepr(
+        mkRecord[genu.MirroredElemLabels, genu.MirroredElemTypes, gent.MirroredElemLabels, gent.MirroredElemTypes](
+          gent.toRepr(t)
+        )
+      )
   }
 }
 
@@ -755,28 +768,33 @@ object Parser:
 
   private val pure = [A] => (a: A) => Right(a)
   private val map = [A, B] => (fa: Either[String, A], f: A => B) => fa.map(f)
-  private val ap = [A, B] => (ff: Either[String, A => B], fa: Either[String, A]) => (ff, fa) match
-    case (Left(e1), Left(e2)) => Left(e1 + e2)
-    case (Left(err), _) => Left(err)
-    case (_, Left(err)) => Left(err)
-    case (Right(f), Right(a)) => Right(f(a))
+  private val ap = [A, B] =>
+    (ff: Either[String, A => B], fa: Either[String, A]) =>
+      (ff, fa) match
+        case (Left(e1), Left(e2)) => Left(e1 + e2)
+        case (Left(err), _) => Left(err)
+        case (_, Left(err)) => Left(err)
+        case (Right(f), Right(a)) => Right(f(a))
 
-  private val tailRecM = [A, B] => (a: A, f: A => Either[String, Either[A, B]]) =>
-    @tailrec def loop(a: A): Either[String, B] = f(a) match
-      case Left(err) => Left(err)
-      case Right(Left(a)) => loop(a)
-      case Right(Right(b)) => Right(b)
-    loop(a)
+  private val tailRecM = [A, B] =>
+    (a: A, f: A => Either[String, Either[A, B]]) =>
+      @tailrec def loop(a: A): Either[String, B] = f(a) match
+        case Left(err) => Left(err)
+        case Right(Left(a)) => loop(a)
+        case Right(Right(b)) => Right(b)
+      loop(a)
 
   given Parser[String] = (text, _) => Right(text)
   given Parser[Boolean] = (text, _) => text.toBooleanOption.toRight(s"Invalid Boolean '$text';")
   given Parser[Int] = (text, _) => text.toIntOption.toRight(s"Invalid Int '$text';")
 
   given [A](using inst: K0.ProductInstances[Parser, A], labelling: Labelling[A]): Parser[A] = (text, accum) =>
-    val (errors, fields) = text.split("\\s*,\\s*").partitionMap(_.split("\\s*=\\s*") match
-      case Array(name, value) => Right(name -> value)
-      case invalid => Left(s"Invalid field '${invalid.mkString}';")
-    )
+    val (errors, fields) = text
+      .split("\\s*,\\s*")
+      .partitionMap(_.split("\\s*=\\s*") match
+        case Array(name, value) => Right(name -> value)
+        case invalid => Left(s"Invalid field '${invalid.mkString}';")
+      )
 
     if errors.nonEmpty then
       if accum then Left(errors.mkString)
@@ -784,12 +802,13 @@ object Parser:
     else
       val fieldMap = fields.toMap
       val labels = labelling.elemLabels.iterator
-      val parseField = [t] => (parser: Parser[t]) =>
-        for
-          field <- Right(labels.next())
-          value <- fieldMap.get(field).toRight(s"Missing field '$field';")
-          parsed <- parser.parse(value, accum)
-        yield parsed
+      val parseField = [t] =>
+        (parser: Parser[t]) =>
+          for
+            field <- Right(labels.next())
+            value <- fieldMap.get(field).toRight(s"Missing field '$field';")
+            parsed <- parser.parse(value, accum)
+          yield parsed
       if accum then inst.constructA(parseField)(pure, map, ap)
       else inst.constructM(parseField)(pure, map, tailRecM)
 

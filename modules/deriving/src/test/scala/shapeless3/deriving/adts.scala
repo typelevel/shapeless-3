@@ -46,8 +46,8 @@ object adts {
   }
 
   case class Order[F[_]](
-    item: F[String],
-    quantity: F[Int]
+      item: F[String],
+      quantity: F[Int]
   ) derives FunctorK
 
   sealed trait OptionD[T] {
@@ -71,7 +71,7 @@ object adts {
   case object NilF extends ListF[Nothing, Nothing]
 
   case class BI(b: Boolean, i: Int)
-  
+
   case class Phantom[A]()
 
   enum LongList derives Empty:

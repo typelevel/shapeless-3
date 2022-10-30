@@ -19,7 +19,7 @@ package shapeless3
 import scala.quoted._
 
 package object test {
-  def typed[T](t : => T): Unit = {}
+  def typed[T](t: => T): Unit = {}
 
   def sameTyped[T](t1: => T)(t2: => T): Unit = {}
 
