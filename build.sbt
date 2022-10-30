@@ -10,6 +10,8 @@ ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 
 // GHA configuration
 ThisBuild / tlCiReleaseBranches := Seq("main")
+ThisBuild / mergifyStewardConfig :=
+  Some(MergifyStewardConfig(author = "typelevel-steward[bot]", mergeMinors = true))
 
 val jsSettings = Def.settings(
   tlVersionIntroduced := Map("3" -> "3.0.1")
