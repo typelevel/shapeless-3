@@ -65,7 +65,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jsEnablePlugins(ScalaJSJUnitPlugin)
   .nativeEnablePlugins(ScalaNativeJUnitPlugin)
   .settings(
-    libraryDependencies += "org.typelevel" %%% "cats-core" % "2.8.0" % "test",
+    libraryDependencies += "org.typelevel" %%% "cats-core" % "2.9.0" % "test",
     mimaBinaryIssueFilters ++= Seq(
       ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedInstances.erasedMapK"),
       ProblemFilters
