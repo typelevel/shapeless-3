@@ -34,24 +34,23 @@ trait Typeable[T] extends Serializable:
 object syntax:
   object typeable:
     extension [T](t: T)
-
       /**
        * Cast the receiver to a value of type `U` if possible. This operation will be as precise wrt erasure as possible
        * given the in-scope `Typeable` instances available.
        */
       inline def cast[U](using tu: Typeable[U]): Option[U] = tu.cast(t)
 
-      /**
-       * Test whether the receiver can be cast to a value of type `U`. This operation will be as precise wrt erasure as
-       * possible given the in-scope `Typeable` instances available.
-       */
-      inline def castable[U](using tu: Typeable[U]): Boolean = tu.castable(t)
+    /**
+     * Test whether the receiver can be cast to a value of type `U`. This operation will be as precise wrt erasure as
+     * possible given the in-scope `Typeable` instances available.
+     */
+    inline def castable[U](using tu: Typeable[U]): Boolean = tu.castable(t)
 
-      /**
-       * Cast the receiver to a value of subtype `U` of the receiver's static type if possible. This operation will be
-       * as precise wrt erasure as possible given the in-scope `Typeable` instances available.
-       */
-      inline def narrowTo[U](using ev: U <:< T, tu: Typeable[U]): Option[U] = t.cast[U]
+    /**
+     * Cast the receiver to a value of subtype `U` of the receiver's static type if possible. This operation will be as
+     * precise wrt erasure as possible given the in-scope `Typeable` instances available.
+     */
+    inline def narrowTo[U](using ev: U <:< T, tu: Typeable[U]): Option[U] = t.cast[U]
 
 /**
  * Provides instances of `Typeable`.
