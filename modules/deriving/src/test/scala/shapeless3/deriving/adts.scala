@@ -16,6 +16,8 @@
 
 package shapeless3.deriving
 
+import scala.deriving.Mirror
+
 // ADTs
 
 object adts:
@@ -78,3 +80,31 @@ object adts:
     case Top(head: A, tail: Zipper[A])
     case Bot(init: Zipper[A], last: A)
     case Focus(left: List[A], focus: ::[A], right: List[A])
+
+  type Large[A] =
+    A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *:
+      A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *:
+      A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *:
+      A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *:
+      A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *:
+      A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *: A *:
+      A *: A *: A *: A *: EmptyTuple
+
+  given Mirror.Product with
+    type Kind = K1.type
+    type MirroredType[A] = Large[A]
+    type MirroredElemTypes[A] = Large[A]
+    type MirroredElemLabels = Large["x"]
+    type MirroredMonoType =
+      ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *:
+        ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *:
+        ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *:
+        ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *:
+        ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *:
+        ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *:
+        ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: ? *: EmptyTuple
+
+    def fromProduct(p: Product): MirroredMonoType =
+      Tuple.fromProduct(p).asInstanceOf
+
+end adts
