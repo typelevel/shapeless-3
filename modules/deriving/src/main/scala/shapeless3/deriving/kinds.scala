@@ -44,6 +44,10 @@ object K0:
   type ProductInstances[F[_], T] = ErasedProductInstances[K0.type, F[T]]
   type CoproductInstances[F[_], T] = ErasedCoproductInstances[K0.type, F[T]]
 
+  type InstancesOf[F[_]] = [T] =>> Instances[F, T]
+  type ProductInstancesOf[F[_]] = [T] =>> ProductInstances[F, T]
+  type CoproductInstancesOf[F[_]] = [T] =>> CoproductInstances[F, T]
+
   def Instances[F[_], T](using inst: Instances[F, T]): inst.type = inst
   def ProductInstances[F[_], T](using inst: ProductInstances[F, T]): inst.type = inst
   def CoproductInstances[F[_], T](using inst: CoproductInstances[F, T]): inst.type = inst
@@ -193,6 +197,10 @@ object K1:
   type ProductInstances[F[_[_]], T[_]] = ErasedProductInstances[K1.type, F[T]]
   type CoproductInstances[F[_[_]], T[_]] = ErasedCoproductInstances[K1.type, F[T]]
 
+  type InstancesOf[F[_[_]]] = [T[_]] =>> Instances[F, T]
+  type ProductInstancesOf[F[_[_]]] = [T[_]] =>> ProductInstances[F, T]
+  type CoproductInstancesOf[F[_[_]]] = [T[_]] =>> CoproductInstances[F, T]
+
   def Instances[F[_[_]], T[_]](using inst: Instances[F, T]): inst.type = inst
   def ProductInstances[F[_[_]], T[_]](using inst: ProductInstances[F, T]): inst.type = inst
   def CoproductInstances[F[_[_]], T[_]](using inst: CoproductInstances[F, T]): inst.type = inst
@@ -337,6 +345,10 @@ object K11:
   type Instances[F[_[_[_]]], T[_[_]]] = ErasedInstances[K11.type, F[T]]
   type ProductInstances[F[_[_[_]]], T[_[_]]] = ErasedProductInstances[K11.type, F[T]]
   type CoproductInstances[F[_[_[_]]], T[_[_]]] = ErasedCoproductInstances[K11.type, F[T]]
+
+  type InstancesOf[F[_[_[_]]]] = [T[_[_]]] =>> Instances[F, T]
+  type ProductInstancesOf[F[_[_[_]]]] = [T[_[_]]] =>> ProductInstances[F, T]
+  type CoproductInstancesOf[F[_[_[_]]]] = [T[_[_]]] =>> CoproductInstances[F, T]
 
   def Instances[F[_[_[_]]], T[_[_]]](using inst: Instances[F, T]): inst.type = inst
   def ProductInstances[F[_[_[_]]], T[_[_]]](using inst: ProductInstances[F, T]): inst.type = inst
@@ -489,6 +501,10 @@ object K2:
   type Instances[F[_[_, _]], T[_, _]] = ErasedInstances[K2.type, F[T]]
   type ProductInstances[F[_[_, _]], T[_, _]] = ErasedProductInstances[K2.type, F[T]]
   type CoproductInstances[F[_[_, _]], T[_, _]] = ErasedCoproductInstances[K2.type, F[T]]
+
+  type InstancesOf[F[_[_, _]]] = [T[_, _]] =>> Instances[F, T]
+  type ProductInstancesOf[F[_[_, _]]] = [T[_, _]] =>> ProductInstances[F, T]
+  type CoproductInstancesOf[F[_[_, _]]] = [T[_, _]] =>> CoproductInstances[F, T]
 
   def Instances[F[_[_, _]], T[_, _]](using inst: Instances[F, T]): inst.type = inst
   def ProductInstances[F[_[_, _]], T[_, _]](using inst: ProductInstances[F, T]): inst.type = inst
