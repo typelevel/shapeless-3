@@ -41,7 +41,7 @@ object Inc:
 
 class DerivationTests:
   @Test
-  def monoid: Unit =
+  def monoid(): Unit =
     val v0 = Monoid[ISB]
     assert(v0.empty == ISB(0, "", false))
     assert(v0.combine(ISB(1, "foo", false), ISB(2, "bar", true)) == ISB(3, "foobar", true))
@@ -60,7 +60,7 @@ class DerivationTests:
     )
 
   @Test
-  def eq: Unit =
+  def eq(): Unit =
     val v0 = Eq[SomeInt]
     assert(v0.eqv(SomeInt(23), SomeInt(23)))
     assert(!v0.eqv(SomeInt(23), SomeInt(13)))
@@ -96,7 +96,7 @@ class DerivationTests:
     assert(!v9.eqv(SmE(23), NnE))
 
   @Test
-  def order: Unit =
+  def order(): Unit =
     val v0 = Ord[Unit]
     assert(v0.compare((), ()) == 0)
 
@@ -143,7 +143,7 @@ class DerivationTests:
     assert(v8.compare(SmE("foo"), NnE) == 1)
 
   @Test
-  def functor: Unit =
+  def functor(): Unit =
     val v0 = Functor[Box]
     assert(v0.map(Box("foo"))(_.length) == Box(3))
 
@@ -181,7 +181,7 @@ class DerivationTests:
     loop(n, CNil)
 
   @Test
-  def foldable: Unit =
+  def foldable(): Unit =
     val v0 = Foldable[Box]
     assert(v0.foldLeft(Box(1))(0)((acc: Int, x: Int) => acc + x) == 1)
     assert(v0.foldRight(Box(1))(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 1)
@@ -218,7 +218,7 @@ class DerivationTests:
     assert(v7.foldRight(NnE)(Eval.now(0))((x: Int, acc: Eval[Int]) => acc.map(_ + x)).value == 0)
 
   @Test
-  def traverse: Unit =
+  def traverse(): Unit =
     val v0 = Traverse[Box]
     assert(v0.traverse(Box(1))((x: Int) => List(x + 1)) == List(Box(2)))
 
@@ -231,12 +231,12 @@ class DerivationTests:
     assert(v3.traverse(Nn)((x: Int) => List(x + 1)) == List(Nn))
 
     val v4 = Traverse[Const[CNil.type]]
-    assert(v4.traverse(CNil)(Option.apply) == Some(CNil))
+    assert(v4.traverse(CNil)(Option.apply).contains(CNil))
     val v5 = Traverse[CCons]
-    assert(v5.traverse(CList("foo", "bar"))(Option.apply) == Some(CList("foo", "bar")))
+    assert(v5.traverse(CList("foo", "bar"))(Option.apply).contains(CList("foo", "bar")))
     val v6 = Traverse[CList]
-    assert(v6.traverse(CList("foo", "bar"))(Option.apply) == Some(CList("foo", "bar")))
-    assert(v6.traverse(CNil)(Option.apply) == Some(CNil))
+    assert(v6.traverse(CList("foo", "bar"))(Option.apply).contains(CList("foo", "bar")))
+    assert(v6.traverse(CNil)(Option.apply).contains(CNil))
     assert(v6.traverse(CList("foo", "bar"))(() => _).apply() == CList("foo", "bar"))
     assert(v6.traverse(CList(1, 2))(x => List(x, x + 1)) == List(CList(1, 2), CList(1, 3), CList(2, 2), CList(2, 3)))
 
@@ -245,15 +245,18 @@ class DerivationTests:
     assert(v7.traverse(NnE)((x: Int) => List(x + 1)) == List(NnE))
 
     val v8 = Traverse[Phantom]
-    assert(v8.traverse(Phantom())(Option.apply) == Some(Phantom()))
+    assert(v8.traverse(Phantom())(Option.apply).contains(Phantom()))
 
   @Test
-  def functork: Unit =
+  def functorK(): Unit =
     val v0 = FunctorK[Order]
     assert(v0.mapK(Order[OptionD](Given("Epoisse"), Default(10)))(OptionD.fold) == Order[Id]("Epoisse", 10))
+    val arg1 = HkCons(Given(42), HkCons(Default(0), HkOne(Given(313))))
+    val exp1 = HkCons(Some(42), HkCons(None, HkOne(Some(313))))
+    assert(FunctorK[HkNel].mapK(arg1)(OptionD.toOption) == exp1)
 
   @Test
-  def bifunctor: Unit =
+  def bifunctor(): Unit =
     val v0 = Bifunctor[ConsF]
     val v1 = Bifunctor[ListF]
     val v2: ListF.List[String] = Fix(ConsF("foo", Fix(ConsF("quux", Fix(ConsF("wibble", Fix(NilF)))))))
@@ -261,7 +264,7 @@ class DerivationTests:
     assert(Bifunctor.map((_: String).length)(v2) == v3)
 
   @Test
-  def data: Unit =
+  def data(): Unit =
     val v0 = Data[Size.type, ISB, Int]
     assert(v0.gmapQ(ISB(23, "foo", true)).sum == 27)
     val v1 = Data[Size.type, OptionInt, Int]
@@ -271,7 +274,7 @@ class DerivationTests:
     assert(v2.gmapQ(CCons("foo", CCons("quux", CCons("wibble", CNil)))).sum == 13)
 
   @Test
-  def datat: Unit =
+  def dataT(): Unit =
     val v0 = DataT[Inc.type, ISB]
     assert(v0.gmapT(ISB(23, "foo", true)) == ISB(24, "foo!", false))
     val v1 = DataT[Inc.type, OptionInt]
@@ -281,32 +284,32 @@ class DerivationTests:
     assert(v2.gmapT(CCons(1, CCons(2, CCons(3, CNil)))) == CCons(2, CCons(3, CCons(4, CNil))))
 
   @Test
-  def empty: Unit =
+  def empty(): Unit =
     val v0 = Empty[ISB]
     assert(v0.empty == ISB(0, "", false))
 
   @Test
-  def emptyk: Unit =
+  def emptyK(): Unit =
     val v0 = EmptyK[Opt]
     assert(v0.empty[Int] == Nn)
     val v1 = EmptyK[CList]
     assert(v1.empty[Int] == CNil)
 
   @Test
-  def pure: Unit =
-    val v0 = Pure[Box]
+  def pure(): Unit =
+    val v0 = Return[Box]
     assert(v0.pure(23) == Box(23))
-    val v1 = Pure[CList]
+    val v1 = Return[CList]
     assert(v1.pure(23) == CCons(23, CNil))
 
   @Test
-  def labels: Unit =
+  def labels(): Unit =
     val v0 = K0.Generic[ISB]
     val v1 = constValueTuple[v0.MirroredElemLabels]
     assert(v1 == ("i", "s", "b"))
 
   @Test
-  def show: Unit =
+  def show(): Unit =
     val v0 = Show[ISB]
     assert(v0.show(ISB(23, "foo", true)) == """ISB(i: 23, s: "foo", b: true)""")
 
@@ -323,7 +326,7 @@ class DerivationTests:
 
     val v4 = Show[CList[Int]]
     assert(
-      v4.show((CCons(1, CCons(2, CCons(3, CNil))))) == "CCons(hd: 1, tl: CCons(hd: 2, tl: CCons(hd: 3, tl: CNil)))"
+      v4.show(CCons(1, CCons(2, CCons(3, CNil)))) == "CCons(hd: 1, tl: CCons(hd: 2, tl: CCons(hd: 3, tl: CNil)))"
     )
 
     val v5 = Show[Order[Id]]
@@ -334,42 +337,41 @@ class DerivationTests:
     assert(v6.show(NnE) == "NnE")
 
   @Test
-  def read: Unit =
+  def read(): Unit =
     val v0 = Read[ISB]
-    assert(v0.read("""ISB(i: 23, s: "foo", b: true)""") == Some((ISB(23, "foo", true), "")))
+    assert(v0.read("""ISB(i: 23, s: "foo", b: true)""").contains((ISB(23, "foo", true), "")))
 
     val v1 = Read[OptionInt]
-    assert(v1.read("SomeInt(value: 23)") == Some((SomeInt(23), "")))
-    assert(v1.read("NoneInt") == Some((NoneInt, "")))
+    assert(v1.read("SomeInt(value: 23)").contains((SomeInt(23), "")))
+    assert(v1.read("NoneInt").contains((NoneInt, "")))
 
     val v2 = Read[Box[Int]]
-    assert(v2.read("Box(x: 23)") == Some((Box(23), "")))
+    assert(v2.read("Box(x: 23)").contains((Box(23), "")))
 
     val v3 = Read[Opt[Int]]
-    assert(v3.read("Sm(value: 23)") == Some((Sm(23), "")))
-    assert(v3.read("Nn") == Some((Nn, "")))
+    assert(v3.read("Sm(value: 23)").contains((Sm(23), "")))
+    assert(v3.read("Nn").contains((Nn, "")))
 
     val v4 = Read[CList[Int]]
     assert(
-      v4.read("CCons(hd: 1, tl: CCons(hd: 2, tl: CCons(hd: 3, tl: CNil)))") == Some(
-        (CCons(1, CCons(2, CCons(3, CNil))), "")
-      )
+      v4.read("CCons(hd: 1, tl: CCons(hd: 2, tl: CCons(hd: 3, tl: CNil)))")
+        .contains((CCons(1, CCons(2, CCons(3, CNil))), ""))
     )
 
     val v5 = Read[Order[Id]]
-    assert(v5.read("""Order(item: "Epoisse", quantity: 10)""") == Some((Order[Id]("Epoisse", 10), "")))
+    assert(v5.read("""Order(item: "Epoisse", quantity: 10)""").contains((Order[Id]("Epoisse", 10), "")))
 
     val v6 = Read[OptE[Int]]
-    assert(v6.read("SmE(value: 23)") == Some((SmE(23), "")))
-    assert(v6.read("NnE") == Some((NnE, "")))
+    assert(v6.read("SmE(value: 23)").contains((SmE(23), "")))
+    assert(v6.read("NnE").contains((NnE, "")))
 
   @Test
-  def transform: Unit =
+  def transform(): Unit =
     val v0 = Transform[BI, ISB]
     assert(v0(BI(true, 23)) == ISB(23, "", true))
 
   @Test
-  def repr: Unit =
+  def repr(): Unit =
     val v0 = K0.ProductGeneric[Box[Int]]
     val v1 = v0.toRepr(Box(23))
     val v1a: Tuple1[Int] = v1
@@ -381,7 +383,7 @@ class DerivationTests:
     assert(v3 == ("Epoisse", 10))
 
   @Test
-  def parsing: Unit =
+  def parsing(): Unit =
     val parser = Parser[ISB]
     // Applicative
     assertEquals(Right(ISB(42, "foo", true)), parser.parseAccum("s=foo,i=42,b=true,hidden=?"))
