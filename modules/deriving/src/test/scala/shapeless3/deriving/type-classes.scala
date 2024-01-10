@@ -250,7 +250,7 @@ object Optional:
     def headOption[A](fa: Option[A]): Option[A] = fa
   given [T]: Optional[Const[T]] with
     def headOption[A](fa: T): Option[A] = None
-  given NonEmpty[::] with
+  given cons: NonEmpty[::] with
     def head[A](fa: ::[A]): A = fa.head
   given NonEmpty[Some] with
     def head[A](fa: Some[A]): A = fa.get
@@ -333,7 +333,7 @@ object FunctorK:
   given [T]: FunctorK[K11.Id[T]] with
     def mapK[A[_], B[_]](at: A[T])(f: A ~> B): B[T] = f(at)
 
-  given functorKGen[H[_[_]]](using inst: K11.Instances[FunctorK, H]): FunctorK[H] with
+  given functorKGen[H[_[_]]](using inst: => K11.Instances[FunctorK, H]): FunctorK[H] with
     def mapK[A[_], B[_]](ha: H[A])(f: A ~> B): H[B] =
       inst.map(ha)([t[_[_]]] => (ft: FunctorK[t], ta: t[A]) => ft.mapK(ta)(f))
 
@@ -458,10 +458,10 @@ object Empty:
   given Empty[Boolean] = mkEmpty(false)
 
   given emptyGen[A](using inst: K0.ProductInstances[Empty, A]): Empty[A] =
-    mkEmpty(inst.construct([a] => (_: Empty[a]).empty))
+    mkEmpty(inst.construct([a] => (A: Empty[a]) => A.empty))
 
   inline given emptyGenC[A](using gen: K0.CoproductGeneric[A]): Empty[A] =
-    mkEmpty(gen.withOnly[Empty, A]([a <: A] => (_: Empty[a]).empty))
+    mkEmpty(gen.withOnly[Empty, A]([a <: A] => (A: Empty[a]) => A.empty))
 
   inline def derived[A](using gen: K0.Generic[A]): Empty[A] =
     inline gen match
@@ -481,11 +481,11 @@ object EmptyK:
     new EmptyK[F]:
       def empty[A] = f[A]()
 
-  given emptyKGen[A[_]](using inst: K1.ProductInstances[EmptyK, A]): EmptyK[A] =
-    mkEmptyK([t] => () => inst.construct([f[_]] => (_: EmptyK[f]).empty[t]))
+  given emptyKGen[F[_]](using inst: K1.ProductInstances[EmptyK, F]): EmptyK[F] =
+    mkEmptyK([t] => () => inst.construct([f[_]] => (F: EmptyK[f]) => F.empty[t]))
 
-  inline given emptyKGenC[A[_]](using gen: K1.CoproductGeneric[A]): EmptyK[A] =
-    mkEmptyK[A]([t] => () => gen.withOnly[EmptyK, A[t]]([a[x] <: A[x]] => (_: EmptyK[a]).empty[t]))
+  inline given emptyKGenC[F[_]](using gen: K1.CoproductGeneric[F]): EmptyK[F] =
+    mkEmptyK[F]([t] => () => gen.withOnly[EmptyK, F[t]]([f[x] <: F[x]] => (F: EmptyK[f]) => F.empty[t]))
 
   inline def derived[A[_]](using gen: K1.Generic[A]): EmptyK[A] =
     inline gen match
@@ -509,30 +509,27 @@ object Alt1:
     case gt: G[T] => new Alt1G(gt)
   }
 
-trait Pure[F[_]]:
+trait Return[F[_]]:
   def pure[A](a: A): F[A]
 
-object Pure:
-  def apply[F[_]](using ef: Pure[F]): Pure[F] = ef
+object Return:
+  def apply[F[_]](using F: Return[F]): Return[F] = F
 
-  def mkPure[F[_]](f: [a] => a => F[a]): Pure[F] =
-    new Pure[F]:
-      def pure[A](a: A) = f(a)
+  def from[F[_]](f: [a] => a => F[a]): Return[F] = new Return[F]:
+    def pure[A](a: A) = f(a)
 
-  given Pure[Id] = mkPure([T] => (t: T) => t)
+  given Return[Id] =
+    from([T] => (t: T) => t)
 
-  given pureGen[A[_]](using inst: K1.ProductInstances[Alt1.Of[Pure, EmptyK], A]): Pure[A] =
-    mkPure[A](
-      [t] => (a: t) => inst.construct([f[_]] => (af: Alt1.Of[Pure, EmptyK][f]) => af.fold[f[t]](_.pure(a))(_.empty[t]))
-    )
+  given pureGen[A[_]](using inst: K1.ProductInstances[Alt1.Of[Return, EmptyK], A]): Return[A] = from[A]:
+    [t] => (a: t) => inst.construct([f[_]] => (af: Alt1.Of[Return, EmptyK][f]) => af.fold[f[t]](_.pure(a))(_.empty[t]))
 
-  inline given pureGenC[A[_]](using gen: K1.CoproductGeneric[A]): Pure[A] =
-    mkPure[A]([t] => (a: t) => gen.withFirst[Pure, A[t]]([f[x] <: A[x]] => (_: Pure[f]).pure(a)))
+  inline given pureGenC[F[_]](using gen: K1.CoproductGeneric[F]): Return[F] = from[F]:
+    [t] => (a: t) => gen.withFirst[Return, F[t]]([f[x] <: F[x]] => (F: Return[f]) => F.pure(a))
 
-  inline def derived[A[_]](using gen: K1.Generic[A]): Pure[A] =
-    inline gen match
-      case given K1.ProductGeneric[A] => pureGen
-      case given K1.CoproductGeneric[A] => pureGenC
+  inline def derived[A[_]](using gen: K1.Generic[A]): Return[A] = inline gen match
+    case given K1.ProductGeneric[A] => pureGen
+    case given K1.CoproductGeneric[A] => pureGenC
 
 trait Show[T]:
   def show(t: T): String
@@ -587,7 +584,7 @@ object Read:
       yield (p, tl)
 
   given Read[Int] = readPrimitive("""(-?\d*)(.*)""".r, s => Try(s.toInt).toOption)
-  given Read[String] = (s: String) => head(s, """\"(.*)\"(.*)""".r)
+  given Read[String] = (s: String) => head(s, """"(.*)"(.*)""".r)
   given Read[Boolean] = readPrimitive("""(true|false)(.*)""".r, s => Try(s.toBoolean).toOption)
 
   given readGen[T](using inst: K0.ProductInstances[Read, T], labelling: Labelling[T]): Read[T] with

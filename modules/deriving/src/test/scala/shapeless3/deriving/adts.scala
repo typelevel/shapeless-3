@@ -21,7 +21,7 @@ package shapeless3.deriving
 object adts:
   case class ISB(i: Int, s: String, b: Boolean) derives Monoid, Eq, Empty, Show, Read
 
-  case class Box[A](x: A) derives Monoid, Eq, Show, Read, Functor, Pure, Ord, Traverse, Foldable
+  case class Box[A](x: A) derives Monoid, Eq, Show, Read, Functor, Return, Ord, Traverse, Foldable
 
   case class Recursive(h: Int, t: Option[Recursive]) derives Monoid
 
@@ -29,7 +29,7 @@ object adts:
   case object NoneInt extends OptionInt
   case class SomeInt(value: Int) extends OptionInt
 
-  sealed trait Opt[+A] derives Eq, Show, Read, Functor, EmptyK, Pure, Ord, Traverse, Foldable
+  sealed trait Opt[+A] derives Eq, Show, Read, Functor, EmptyK, Return, Ord, Traverse, Foldable
   case object Nn extends Opt[Nothing]
   case class Sm[+A](value: A) extends Opt[A]
 
@@ -53,8 +53,13 @@ object adts:
     def fold: T = this match
       case Given(t) => t
       case Default(t) => t
+    def toOption: Option[T] = this match
+      case Given(t) => Some(t)
+      case Default(_) => None
+
   object OptionD:
-    val fold: OptionD ~> Id = [t] => (ot: OptionD[t]) => ot.fold
+    val fold: OptionD ~> Id = [t] => (od: OptionD[t]) => od.fold
+    val toOption: OptionD ~> Option = [t] => (od: OptionD[t]) => od.toOption
 
   case class Given[T](value: T) extends OptionD[T]
   case class Default[T](value: T) extends OptionD[T]
@@ -78,3 +83,9 @@ object adts:
     case Top(head: A, tail: Zipper[A])
     case Bot(init: Zipper[A], last: A)
     case Focus(left: List[A], focus: ::[A], right: List[A])
+
+  sealed trait HkNel[F[_]]
+  case class HkCons[F[_]](head: F[Int], tail: HkNel[F]) extends HkNel[F]
+  case class HkOne[F[_]](head: F[Int]) extends HkNel[F]
+
+end adts
