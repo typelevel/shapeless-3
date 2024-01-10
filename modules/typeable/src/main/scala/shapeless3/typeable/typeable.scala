@@ -16,7 +16,6 @@
 
 package shapeless3.typeable
 
-import scala.compiletime.*
 import scala.quoted.*
 
 /**
@@ -135,7 +134,7 @@ object Typeable extends Typeable0:
       "scala.runtime.BoxedUnit"
     )
 
-  def isAnyValClass[T](clazz: Class[T]) =
+  def isAnyValClass[T](clazz: Class[T]): Boolean =
     clazz == classOf[jl.Byte] ||
       clazz == classOf[jl.Short] ||
       clazz == classOf[jl.Integer] ||
@@ -165,11 +164,10 @@ object Typeable extends Typeable0:
    * Typeable instance for `Iterable`. Note that the contents be will tested for conformance to the element type.
    */
   given iterableTypeable[CC[t] <: Iterable[t], T](using CCTag: ClassTag[CC[Any]], tt: Typeable[T]): Typeable[CC[T]] with
-    def castable(t: Any): Boolean =
-      t match
-        case (cc: CC[?] @unchecked) if CCTag.runtimeClass.isAssignableFrom(t.getClass) =>
-          cc.forall(_.castable[T])
-        case _ => false
+    def castable(t: Any): Boolean = t match
+      case cc: CC[?] @unchecked if CCTag.runtimeClass.isAssignableFrom(t.getClass) =>
+        cc.forall(_.castable[T])
+      case _ => false
     def describe = s"${CCTag.runtimeClass.getSimpleName}[${tt.describe}]"
 
   /**
@@ -180,11 +178,10 @@ object Typeable extends Typeable0:
       tk: Typeable[K],
       tv: Typeable[V]
   ): Typeable[M[K, V]] with
-    def castable(t: Any): Boolean =
-      t match
-        case (m: Map[Any, Any] @unchecked) if MTag.runtimeClass.isAssignableFrom(t.getClass) =>
-          m.forall { case (k, v) => k.castable[K] && v.castable[V] }
-        case _ => false
+    def castable(t: Any): Boolean = t match
+      case m: Map[Any, Any] @unchecked if MTag.runtimeClass.isAssignableFrom(t.getClass) =>
+        m.forall { case (k, v) => k.castable[K] && v.castable[V] }
+      case _ => false
     def describe = s"${MTag.runtimeClass.getSimpleName}[${tk.describe}, ${tv.describe}]"
 
   /** Typeable instance for simple monomorphic types */
@@ -251,17 +248,25 @@ object Typeable extends Typeable0:
       def castable(t: Any): Boolean = elems.exists(_.castable(t))
       def describe = name
 
-trait Typeable0:
-  inline def mkDefaultTypeable[T]: Typeable[T] = ${ TypeableMacros.impl[T] }
+  /** Allows constructing a Typeable instance for recursive types by tying the knot with a lazy val. */
+  def recursive[T](f: Typeable[T] => Typeable[T]): Typeable[T] = new Typeable[T]:
+    lazy val delegate = f(this)
+    export delegate.*
 
-  inline given [T]: Typeable[T] = mkDefaultTypeable[T]
+trait Typeable0:
+  inline def mkDefaultTypeable[T]: Typeable[T] =
+    ${ TypeableMacros.impl[T] }
+
+  inline given [T]: Typeable[T] =
+    Typeable.recursive: self =>
+      given Typeable[T] = self
+      mkDefaultTypeable[T]
 
 object TypeableMacros:
   import Typeable.*
 
   def impl[T: Type](using Quotes): Expr[Typeable[T]] =
     import quotes.reflect.*
-    import util.*
 
     val TypeableType = TypeRepr.of[Typeable[?]] match
       case tp: AppliedType => tp.tycon
