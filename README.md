@@ -1,7 +1,6 @@
 # shapeless: generic programming for Scala
 
 [![Discord](https://img.shields.io/discord/632277896739946517.svg?label=&logo=discord&logoColor=ffffff&color=404244&labelColor=6A7EC2)](https://discord.gg/bSQBZA3Ced)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/milessabin/shapeless)
 [![Maven Central](https://img.shields.io/maven-central/v/org.typelevel/shapeless3-deriving_3.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/shapeless3-deriving_3)
 [![Scala.js](https://www.scala-js.org/assets/badges/scalajs-1.5.0.svg)](https://www.scala-js.org)
 
@@ -123,7 +122,7 @@ shapeless 3 is available for Scala 3.0.0 for the JVM and for Scala.js 1.5.0+.
 To include the deriving module in your project add the following to your build,
 
 ```
-libraryDependencies ++= Seq("org.typelevel" %% "shapeless3-deriving" % "3.0.1")
+libraryDependencies ++= Seq("org.typelevel" %% "shapeless3-deriving" % "3.4.0")
 ```
 
 ## Finding out more about the project
