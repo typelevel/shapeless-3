@@ -17,16 +17,16 @@
 package shapeless3.typeable
 
 class TypeableTests:
+  import TypeableTests.*
+  import org.junit.Assert.*
+  import org.junit.Test
+  import shapeless3.test.*
+  import syntax.typeable.*
+
   import java.lang as jl
 
-  import org.junit.Test
-  import org.junit.Assert.*
-
-  import syntax.typeable.*
-  import shapeless3.test.*
-
   @Test
-  def testPrimitives: Unit =
+  def testPrimitives(): Unit =
     val b: Any = 23.toByte
     val cb = b.cast[Byte]
     assertTrue(cb.isDefined)
@@ -64,7 +64,7 @@ class TypeableTests:
     assertTrue(cu.isDefined)
 
   @Test
-  def testBoxedPrimitives: Unit =
+  def testBoxedPrimitives(): Unit =
     val b: Any = 23.toByte
     val cb = b.cast[jl.Byte]
     assertTrue(cb.isDefined)
@@ -98,7 +98,7 @@ class TypeableTests:
     assertTrue(cbl.isDefined)
 
   @Test
-  def testUnerased: Unit =
+  def testUnerased(): Unit =
     val li: Any = List(1, 2, 3, 4)
     val cli = li.cast[List[Int]]
     assertTrue(cli.isDefined)
@@ -140,17 +140,12 @@ class TypeableTests:
   trait Poly[T]
 
   @Test
-  def testErased: Unit =
-    illTyped("""
-      Typeable[Int => String]
-    """)
-
-    illTyped("""
-      Typeable[Poly[Int]]
-    """)
+  def testErased(): Unit =
+    illTyped("Typeable[Int => String]")
+    illTyped("Typeable[Poly[Int]]")
 
   @Test
-  def testAnys: Unit =
+  def testAnys(): Unit =
     val v: Any = 23
     val cv = v.cast[AnyVal]
     assertTrue(cv.isDefined)
@@ -166,28 +161,28 @@ class TypeableTests:
     assertTrue(cr2.isEmpty)
 
   @Test
-  def testNull: Unit =
+  def testNull(): Unit =
     val n: Any = null
     val cn = n.cast[AnyVal]
-    assertTrue(!cn.isDefined)
+    assertTrue(cn.isEmpty)
 
     val cn1 = n.cast[AnyRef]
-    assertTrue(!cn1.isDefined)
+    assertTrue(cn1.isEmpty)
 
     val cn2 = n.cast[Int]
-    assertTrue(!cn2.isDefined)
+    assertTrue(cn2.isEmpty)
 
     val cn3 = n.cast[String]
-    assertTrue(!cn3.isDefined)
+    assertTrue(cn3.isEmpty)
 
     val cn4 = n.cast[List[Int]]
-    assertTrue(!cn4.isDefined)
+    assertTrue(cn4.isEmpty)
 
     val cn7 = n.cast[(Int, String)]
-    assertTrue(!cn7.isDefined)
+    assertTrue(cn7.isEmpty)
 
   @Test
-  def testExistentials: Unit =
+  def testExistentials(): Unit =
     val l: Any = List(1, 2, 3, 4)
     val cl = l.cast[List[?]]
     assertTrue(cl.isDefined)
@@ -196,7 +191,7 @@ class TypeableTests:
     assertTrue(cl2.isEmpty)
 
   @Test
-  def testTraits: Unit =
+  def testTraits(): Unit =
     trait A
     trait B
     trait C
@@ -213,7 +208,7 @@ class TypeableTests:
     assertTrue(cd3.isEmpty)
 
   @Test
-  def testIntersections: Unit =
+  def testIntersections(): Unit =
     trait A
     trait B
     trait C
@@ -233,7 +228,7 @@ class TypeableTests:
     assertTrue(cd4.isEmpty)
 
   @Test
-  def testUnions: Unit =
+  def testUnions(): Unit =
     class A
     class B
     class C
@@ -252,7 +247,7 @@ class TypeableTests:
     assertTrue(cd3.isEmpty)
 
   @Test
-  def testNarrowTo: Unit =
+  def testNarrowTo(): Unit =
     trait A
     trait B
     class C extends A with B
@@ -267,16 +262,11 @@ class TypeableTests:
     val cc2 = b.narrowTo[C]
     assertTrue(cc2.isDefined)
 
-    illTyped("""
-    val ca = b.narrowTo[A]
-    """)
-
-    illTyped("""
-    val cb = a.narrowTo[B]
-    """)
+    illTyped("val ca = b.narrowTo[A]")
+    illTyped("val cb = a.narrowTo[B]")
 
   @Test
-  def testTuples: Unit =
+  def testTuples(): Unit =
     val p: Any = (23, "foo")
     val cp = p.cast[(Int, String)]
     assertTrue(cp.isDefined)
@@ -298,7 +288,7 @@ class TypeableTests:
     assertTrue(cm3.isEmpty)
 
   @Test
-  def testOption: Unit =
+  def testOption(): Unit =
     val o: Any = Option(23)
     val co = o.cast[Option[Int]]
     assertTrue(co.isDefined)
@@ -313,7 +303,7 @@ class TypeableTests:
     assertTrue(co4.isDefined)
 
   @Test
-  def testEither: Unit =
+  def testEither(): Unit =
     val ei: Any = Left[Int, String](23)
     val cei = ei.cast[Either[Int, String]]
     assertTrue(cei.isDefined)
@@ -345,7 +335,7 @@ class TypeableTests:
   case class Baz[A, B](a: A, b: B, i: Int)
 
   @Test
-  def testProducts: Unit =
+  def testProducts(): Unit =
     val foo: Any = Foo(23, "foo", true)
     val iBar: Any = Bar(23)
     val sBar: Any = Bar("bar")
@@ -390,14 +380,14 @@ class TypeableTests:
   case class Gen4[A](i: Int)(a: A) extends Abs[A](a)
 
   @Test
-  def testIllegalProducts: Unit =
-    illTyped("""Typeable[Gen1[Int]]""")
-    illTyped("""Typeable[Gen2[Int]]""")
-    illTyped("""Typeable[Gen3[Int]]""")
-    illTyped("""Typeable[Gen4[Int]]""")
+  def testIllegalProducts(): Unit =
+    illTyped("Typeable[Gen1[Int]]")
+    illTyped("Typeable[Gen2[Int]]")
+    illTyped("Typeable[Gen3[Int]]")
+    illTyped("Typeable[Gen4[Int]]")
 
   @Test
-  def testTypeCase: Unit =
+  def testTypeCase(): Unit =
 
     def typeCase[T: Typeable](t: Any): Option[T] =
       val T = TypeCase[T]
@@ -423,7 +413,7 @@ class TypeableTests:
     assertEquals(None, typeCase[String](List(("foo", 23)): Any))
 
   @Test
-  def testSingletons: Unit =
+  def testSingletons(): Unit =
     object ObjA
     object ObjB
 
@@ -464,7 +454,7 @@ class TypeableTests:
   class C extends A with B
 
   @Test
-  def testToString: Unit =
+  def testToString(): Unit =
     def typeableString[T](t: T)(implicit tp: Typeable[T]) = tp.toString
 
     val i: Int = 7
@@ -516,7 +506,7 @@ class TypeableTests:
     assertEquals("TypeCase[List[Int]]", tc.toString)
 
   @Test
-  def testNested: Unit =
+  def testNested(): Unit =
 
     trait A1[T]:
       class C(val t: T)
@@ -583,7 +573,7 @@ class TypeableTests:
     assertEquals(None, ttD2I.cast(d2SF))
 
   @Test
-  def testValInNestedCaseClass: Unit =
+  def testValInNestedCaseClass(): Unit =
     // See https://github.com/milessabin/shapeless/issues/812
     object X:
       case class A()
@@ -591,3 +581,17 @@ class TypeableTests:
         private[this] val aa = a
     object Test:
       Typeable[X.B]
+
+  @Test
+  def testTree(): Unit =
+    val t = Typeable[Tree]
+    val v: Any = Tree(Vector(Tree(Vector.empty), Tree(Vector.empty)))
+    assert(t.castable(v))
+    assert(!t.castable("tree"))
+    assert(t.cast(v).contains(v))
+    assert(t.cast("tree").isEmpty)
+    assertEquals(t.describe, "Tree")
+    assertEquals(t.toString, "Typeable[Tree]")
+
+object TypeableTests:
+  final case class Tree(children: Vector[Tree])
