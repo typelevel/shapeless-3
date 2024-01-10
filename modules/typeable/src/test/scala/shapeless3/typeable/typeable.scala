@@ -584,14 +584,15 @@ class TypeableTests:
 
   @Test
   def testTree(): Unit =
-    val t = Typeable[Tree]
-    val v: Any = Tree(Vector(Tree(Vector.empty), Tree(Vector.empty)))
-    assert(t.castable(v))
-    assert(!t.castable("tree"))
-    assert(t.cast(v).contains(v))
-    assert(t.cast("tree").isEmpty)
-    assertEquals(t.describe, "Tree")
-    assertEquals(t.toString, "Typeable[Tree]")
+    val ti = Typeable[Tree[Int]]
+    val ts = Typeable[Tree[String]]
+    val tree: Any = Tree(1, Vector(Tree(2, Vector.empty), Tree(3, Vector.empty)))
+    assert(ti.castable(tree))
+    assert(!ts.castable(tree))
+    assert(ti.cast(tree).contains(tree))
+    assert(ts.cast(tree).isEmpty)
+    assertEquals(ti.describe, "Tree[Int]")
+    assertEquals(ti.toString, "Typeable[Tree[Int]]")
 
 object TypeableTests:
-  final case class Tree(children: Vector[Tree])
+  final case class Tree[+A](value: A, children: Vector[Tree[A]])
