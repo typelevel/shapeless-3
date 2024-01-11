@@ -281,6 +281,10 @@ object TypeableMacros:
           case _ => false
         )
 
+    def isWildcard(tp: TypeRepr): Boolean = tp match
+      case TypeBounds(lo, hi) => lo =:= TypeRepr.of[Nothing] && hi =:= TypeRepr.of[Any]
+      case _ => false
+
     def normalize(tp: TypeRepr): TypeRepr = tp match
       case tp: TypeBounds => tp.low
       case tp => tp
@@ -386,10 +390,12 @@ object TypeableMacros:
           case Some(_) if sym.flags.is(Flags.Sealed) => mkSumTypeable
           case _ => report.errorAndAbort(s"No Typeable for type ${target.show} with a dependent prefix")
 
-      case tp: AppliedType =>
-        if tp.typeSymbol.flags.is(Flags.Case) then mkCaseClassTypeable
-        else if tp.typeSymbol.flags.is(Flags.Sealed) then mkSumTypeable
-        else report.errorAndAbort(s"No Typeable for parametrized type ${target.show}")
+      case AppliedType(typeConstructor, args) =>
+        typeConstructor.classSymbol match
+          case Some(cls) if cls.flags.is(Flags.Case) => mkCaseClassTypeable
+          case Some(cls) if cls.flags.is(Flags.Sealed) => mkSumTypeable
+          case Some(_) if args.forall(isWildcard) => mkNamedSimpleTypeable
+          case _ => report.errorAndAbort(s"No Typeable for parametrized type ${target.show}")
 
       case tp: AndType =>
         summonAllTypeables(collectConjuncts(tp)) match
