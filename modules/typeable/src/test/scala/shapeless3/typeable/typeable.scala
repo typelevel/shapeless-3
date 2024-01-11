@@ -191,6 +191,21 @@ class TypeableTests:
     assertTrue(cl2.isEmpty)
 
   @Test
+  def testExistentialsClasses(): Unit =
+    trait T[A]
+    class C[A](value: A) extends T[A]
+    class CK[F[_]](value: F[Int]) extends T[F[Int]]
+
+    val c: Any = new C(42)
+    val ck: Any = new CK(Option(42))
+    assertTrue(c.cast[T[?]].contains(c))
+    assertTrue(c.cast[C[?]].contains(c))
+    assertTrue(ck.cast[T[?]].contains(ck))
+    assertTrue(ck.cast[C[?]].isEmpty)
+    // This wildcard is higher-kinded so we can't support it.
+    illTyped("Typeable[CK[?]]")
+
+  @Test
   def testTraits(): Unit =
     trait A
     trait B
