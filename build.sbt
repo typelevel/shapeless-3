@@ -1,5 +1,3 @@
-import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProblem}
-
 val scala3Version = "3.3.1"
 
 ThisBuild / organization := "org.typelevel"
@@ -64,16 +62,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .jsEnablePlugins(ScalaJSJUnitPlugin)
   .nativeEnablePlugins(ScalaNativeJUnitPlugin)
-  .settings(
-    libraryDependencies += "org.typelevel" %%% "cats-core" % "2.10.0" % "test",
-    mimaBinaryIssueFilters ++= Seq(
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedInstances.erasedMapK"),
-      ProblemFilters
-        .exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedProject"),
-      ProblemFilters
-        .exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.erasedMapK")
-    )
-  )
+  .settings(libraryDependencies += "org.typelevel" %%% "cats-core" % "2.10.0" % "test")
 
 lazy val derivingJVM = deriving.jvm
 lazy val derivingJS = deriving.js
