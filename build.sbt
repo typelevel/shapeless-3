@@ -1,4 +1,4 @@
-val scala3Version = "3.3.1"
+val scala3Version = "3.3.3"
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / tlBaseVersion := "3.4"
