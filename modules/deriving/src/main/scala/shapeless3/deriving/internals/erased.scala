@@ -305,8 +305,8 @@ object ErasedProductInstances:
       case 1 => ErasedProductInstances1[K, FT](mirror, summonOne[E])
       case _ => ErasedProductInstancesN[K, FT](mirror, summonAsArray[E])
 
-final class ErasedCoproductInstances[K, FT](mirror: Mirror.Sum, is0: => Array[Any]) extends ErasedInstances[K, FT]:
-  private lazy val is: Array[Any] = is0
+final class ErasedCoproductInstances[K, FT](val mirror: Mirror.Sum, is0: => Array[Any]) extends ErasedInstances[K, FT]:
+  lazy val is: Array[Any] = is0
 
   def erasedMapK(f: Any => Any): ErasedCoproductInstances[K, ?] =
     new ErasedCoproductInstances(mirror, is.map(f))

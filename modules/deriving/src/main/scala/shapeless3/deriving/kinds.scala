@@ -150,10 +150,18 @@ object K0:
       inst.asInstanceOf
 
   extension [F[_], T](inst: CoproductInstances[F, T])
+    inline def instanceIndex(t: T): Int =
+      inst.mirror.ordinal(t.asInstanceOf)
+    inline def instanceFromIndex(idx: Int): F[T] =
+      inst.is(idx).asInstanceOf[F[T]]
+    inline def instanceFor(t: T): F[T] =
+      instanceFromIndex(instanceIndex(t))
     inline def mapK[G[_]](f: [t <: T] => F[t] => G[t]): CoproductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
     inline def inject[R](p: Int)(f: [t <: T] => F[t] => R): R =
       inst.erasedInject(p)(f.asInstanceOf).asInstanceOf
+    inline def injectFor[R](t: T)(f: [t] => (F[t], t) => R): R =
+      inst.inject[R](instanceIndex(t))([t] => (i: F[t]) => f[t](i, t.asInstanceOf[t]))
     @deprecated("use inject", "3.0.2")
     inline def project[Acc](p: Int)(i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
       inst.erasedProject(p)(i)(f.asInstanceOf).asInstanceOf
