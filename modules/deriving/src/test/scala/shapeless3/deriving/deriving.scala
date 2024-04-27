@@ -21,11 +21,11 @@ import org.junit.Test
 
 import scala.annotation.tailrec
 import scala.compiletime.constValueTuple
-
 import cats.Eval
-
 import adts.*
-import OptE.{SmE, NnE}
+import OptE.{NnE, SmE}
+
+import scala.deriving.Mirror
 
 // Tests
 
@@ -393,3 +393,40 @@ class DerivationTests:
     assertEquals(Right(ISB(42, "foo", true)), parser.parseShort("s=foo,i=42,b=true,hidden=?"))
     assertEquals(Left("Missing field 's';"), parser.parseShort("i=42,b=kinda"))
     assertEquals(Left("Invalid field 'broken';"), parser.parseShort("i=42,broken,?"))
+
+  @Test
+  def userDefinedMirrors(): Unit =
+    def show[A](using
+        m: Mirror.ProductOf[A] {
+          type MirroredLabel = "ISB"
+          type MirroredElemLabels = ("i", "s", "b")
+          type MirroredElemTypes = (Int, String, Boolean)
+        }
+    ): Unit =
+      assertEquals(m, K0.Generic[A])
+      assertNotNull(Show[A])
+
+    def bifunctor[F[_, _]](using
+        m: Mirror.Sum {
+          type MirroredType[A, B] = F[A, B]
+          type MirroredMonoType = F[Any, Any]
+          type MirroredElemTypes[A, B] = ((A, B), Unit)
+        }
+    ): Unit =
+      assertEquals(m, K2.CoproductGeneric[F])
+      assertNotNull(Bifunctor[F])
+
+    def functorK[Alg[_[_]]](using
+        m: Mirror.Product {
+          type MirroredType[F[_]] = Alg[F]
+          type MirroredMonoType = Alg[[_] =>> Any]
+          type MirroredElemTypes[F[_]] = (F[String], F[Int])
+        }
+    ): Unit =
+      assertEquals(m, K11.Generic[Alg])
+      assertNotNull(FunctorK[Alg])
+
+    show[ISB]
+    bifunctor[ListF]
+    functorK[Order]
+  end userDefinedMirrors

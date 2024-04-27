@@ -22,19 +22,20 @@ import scala.Tuple.Union
 import scala.compiletime.*
 import scala.compiletime.ops.int.S
 import scala.deriving.*
-import scala.util.NotGiven
 
 object K0:
-  type Kind[C, O] = C {
-    type Kind = K0.type
+  infix type of[M <: Mirror, O] = M {
     type MirroredType = O
     type MirroredMonoType = O
     type MirroredElemTypes <: Tuple
   }
 
+  type Kind[M <: Mirror, O] = (M of O) { type Kind = K0.type }
   type Generic[O] = Kind[Mirror, O]
   type ProductGeneric[O] = Kind[Mirror.Product, O]
   type CoproductGeneric[O] = Kind[Mirror.Sum, O]
+
+  given fromMirror[M <: Mirror, O](using m: M of O): Kind[m.type, O] = m.asInstanceOf
 
   def Generic[O](using gen: Generic[O]): gen.type = gen
   def ProductGeneric[O](using gen: ProductGeneric[O]): gen.type = gen
@@ -178,16 +179,18 @@ object K0:
     ErasedCoproductInstances[K0.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen): CoproductInstances[F, T]
 
 object K1:
-  type Kind[C, O[_]] = C {
-    type Kind = K1.type
+  infix type of[M <: Mirror, O[_]] = M {
     type MirroredType[X] = O[X]
     type MirroredMonoType = O[Any]
     type MirroredElemTypes[_] <: Tuple
   }
 
+  type Kind[M <: Mirror, O[_]] = (M of O) { type Kind = K1.type }
   type Generic[O[_]] = Kind[Mirror, O]
   type ProductGeneric[O[_]] = Kind[Mirror.Product, O]
   type CoproductGeneric[O[_]] = Kind[Mirror.Sum, O]
+
+  given fromMirror[M <: Mirror, O[_]](using m: M of O): Kind[m.type, O] = m.asInstanceOf
 
   def Generic[O[_]](using gen: Generic[O]): gen.type = gen
   def ProductGeneric[O[_]](using gen: ProductGeneric[O]): gen.type = gen
@@ -327,16 +330,18 @@ object K1:
     ErasedCoproductInstances[K1.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
 object K11:
-  type Kind[C, O[_[_]]] = C {
-    type Kind = K11.type
+  infix type of[M <: Mirror, O[_[_]]] = M {
     type MirroredType[X[_]] = O[X]
     type MirroredMonoType = O[[_] =>> Any]
     type MirroredElemTypes[_[_]] <: Tuple
   }
 
+  type Kind[M <: Mirror, O[_[_]]] = (M of O) { type Kind = K11.type }
   type Generic[O[_[_]]] = Kind[Mirror, O]
   type ProductGeneric[O[_[_]]] = Kind[Mirror.Product, O]
   type CoproductGeneric[O[_[_]]] = Kind[Mirror.Sum, O]
+
+  given fromMirror[M <: Mirror, O[_[_]]](using m: M of O): Kind[m.type, O] = m.asInstanceOf
 
   def Generic[O[_[_]]](using gen: Generic[O]): gen.type = gen
   def ProductGeneric[O[_[_]]](using gen: ProductGeneric[O]): gen.type = gen
@@ -483,16 +488,18 @@ object K11:
     ErasedCoproductInstances[K11.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
 object K2:
-  type Kind[C, O[_, _]] = C {
-    type Kind = K2.type
+  infix type of[M <: Mirror, O[_, _]] = M {
     type MirroredType[X, Y] = O[X, Y]
     type MirroredMonoType = O[Any, Any]
     type MirroredElemTypes[_, _] <: Tuple
   }
 
+  type Kind[M <: Mirror, O[_, _]] = (M of O) { type Kind = K2.type }
   type Generic[O[_, _]] = Kind[Mirror, O]
   type ProductGeneric[O[_, _]] = Kind[Mirror.Product, O]
   type CoproductGeneric[O[_, _]] = Kind[Mirror.Sum, O]
+
+  given fromMirror[M <: Mirror, O[_, _]](using m: M of O): Kind[m.type, O] = m.asInstanceOf
 
   def Generic[O[_, _]](using gen: Generic[O]): gen.type = gen
   def ProductGeneric[O[_, _]](using gen: ProductGeneric[O]): gen.type = gen
