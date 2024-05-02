@@ -16,15 +16,15 @@
 
 package shapeless3.deriving
 
+import cats.Eval
 import org.junit.Assert.*
 import org.junit.Test
+import shapeless3.deriving.adts.*
+import shapeless3.deriving.adts.OptE.{NnE, SmE}
 
 import scala.annotation.tailrec
-import scala.compiletime.constValueTuple
-import cats.Eval
-import adts.*
-import OptE.{NnE, SmE}
-
+import scala.compiletime.{constValueTuple, testing}
+import scala.compiletime.testing.typeCheckErrors
 import scala.deriving.Mirror
 
 // Tests
@@ -396,6 +396,12 @@ class DerivationTests:
 
   @Test
   def userDefinedMirrors(): Unit =
+    def assertImportSuggested(errors: List[testing.Error]): Unit =
+      assertEquals(1, errors.size)
+      val message = errors.head.message.trim
+      assert(message.startsWith("No given instance of type"))
+      assert(message.endsWith("Generic.fromMirror"))
+
     def show[A](using
         m: Mirror.ProductOf[A] {
           type MirroredLabel = "ISB"
@@ -403,6 +409,8 @@ class DerivationTests:
           type MirroredElemTypes = (Int, String, Boolean)
         }
     ): Unit =
+      assertImportSuggested(typeCheckErrors("K0.Generic[A]"))
+      import K0.Generic.fromMirror
       assertEquals(m, K0.Generic[A])
       assertNotNull(Show[A])
 
@@ -413,6 +421,8 @@ class DerivationTests:
           type MirroredElemTypes[A, B] = ((A, B), Unit)
         }
     ): Unit =
+      assertImportSuggested(typeCheckErrors("K2.Generic[F]"))
+      import K2.Generic.fromMirror
       assertEquals(m, K2.CoproductGeneric[F])
       assertNotNull(Bifunctor[F])
 
@@ -423,6 +433,8 @@ class DerivationTests:
           type MirroredElemTypes[F[_]] = (F[String], F[Int])
         }
     ): Unit =
+      assertImportSuggested(typeCheckErrors("K11.Generic[Alg]"))
+      import K11.Generic.fromMirror
       assertEquals(m, K11.Generic[Alg])
       assertNotNull(FunctorK[Alg])
 
