@@ -1,3 +1,5 @@
+import com.typesafe.tools.mima.core.{DirectMissingMethodProblem, ProblemFilters}
+
 val scala3Version = "3.3.3"
 
 ThisBuild / organization := "org.typelevel"
@@ -63,6 +65,15 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jsEnablePlugins(ScalaJSJUnitPlugin)
   .nativeEnablePlugins(ScalaNativeJUnitPlugin)
   .settings(libraryDependencies += "org.typelevel" %%% "cats-core" % "2.10.0" % "test")
+  .settings(
+    mimaBinaryIssueFilters ++= Seq(
+      // Those are objects:
+      ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.deriving.K0.<clinit>"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.deriving.K1.<clinit>"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.deriving.K11.<clinit>"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.deriving.K2.<clinit>")
+    )
+  )
 
 lazy val derivingJVM = deriving.jvm
 lazy val derivingJS = deriving.js

@@ -4,6 +4,14 @@ import scala.compiletime.*
 import scala.util.NotGiven
 
 object Kinds:
+  /** Like [[Tuple.Head]] but without a bounds restriction. */
+  type Head[T] = T match
+    case h *: _ => h
+
+  /** Like [[Tuple.Tail]] but without a bounds restriction. */
+  type Tail[T] <: Tuple = T match
+    case _ *: t => t
+
   transparent inline def summonFirst[T]: Any =
     inline erasedValue[T] match
       case _: (a *: b) =>
