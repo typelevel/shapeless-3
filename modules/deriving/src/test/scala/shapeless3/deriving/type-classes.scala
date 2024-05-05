@@ -342,6 +342,9 @@ object FunctorK:
 
   inline def derived[F[_[_]]](using gen: K11.Generic[F]): FunctorK[F] = functorKGen
 
+trait BifunctorK[F[_[_], _[_]]]:
+  def mapK[A[_], B[_], C[_], D[_]](fab: F[A, B])(f: A ~> C, g: B ~> D): F[C, D]  
+
 case class Fix[S[_, _], A](unfix: S[A, Fix[S, A]])
 
 trait Bifunctor[F[_, _]]:
