@@ -400,6 +400,10 @@ object K21
       [t[_[_], _[_]]] =>> [a[_], b[_]] =>> Kinds.Tail[t[a, b]]
     ]:
 
+  type Id1[t] = [f[_], g[_]] =>> f[t]
+  type Id2[t] = [f[_], g[_]] =>> g[t]
+  type Const[c] = [t[_], u[_]] =>> c
+
   extension [T[_[_], _[_]], A[_], B[_]](gen: ProductGeneric[T])
     inline def toRepr(o: T[A, B]): gen.MirroredElemTypes[A, B] =
       Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A, B]]

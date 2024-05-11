@@ -18,8 +18,8 @@ package shapeless3.deriving
 
 import scala.annotation.tailrec
 import scala.compiletime.*
-
 import cats.Eval
+import cats.data.{EitherK, Tuple2K}
 
 // Type classes
 
@@ -343,7 +343,36 @@ object FunctorK:
   inline def derived[F[_[_]]](using gen: K11.Generic[F]): FunctorK[F] = functorKGen
 
 trait BifunctorK[F[_[_], _[_]]]:
-  def mapK[A[_], B[_], C[_], D[_]](fab: F[A, B])(f: A ~> C, g: B ~> D): F[C, D]  
+  def bimapK[A[_], B[_], C[_], D[_]](fab: F[A, B])(f: A ~> C, g: B ~> D): F[C, D]
+
+object BifunctorK:
+  inline def apply[F[_[_], _[_]]](using bf: BifunctorK[F]): BifunctorK[F] = bf
+
+  given [T]: BifunctorK[K21.Id1[T]] with
+    def bimapK[A[_], B[_], C[_], D[_]](at: A[T])(f: A ~> C, g: B ~> D): C[T] = f(at)
+
+  given [T]: BifunctorK[K21.Id2[T]] with
+    def bimapK[A[_], B[_], C[_], D[_]](at: B[T])(f: A ~> C, g: B ~> D): D[T] = g(at)
+
+  given [T]: BifunctorK[K21.Const[T]] with
+    def bimapK[A[_], B[_], C[_], D[_]](t: T)(f: A ~> C, g: B ~> D): T = t
+
+  given [T]: BifunctorK[[f[_], g[_]] =>> Tuple2K[f, g, T]] with
+    def bimapK[A[_], B[_], C[_], D[_]](fab: Tuple2K[A, B, T])(f: A ~> C, g: B ~> D): Tuple2K[C, D, T] =
+      Tuple2K(f(fab.first), g(fab.second))
+
+  given [T]: BifunctorK[[f[_], g[_]] =>> EitherK[f, g, T]] with
+    def bimapK[A[_], B[_], C[_], D[_]](fab: EitherK[A, B, T])(f: A ~> C, g: B ~> D): EitherK[C, D, T] =
+      EitherK(fab.run match
+        case Left(a) => Left(f(a))
+        case Right(b) => Right(g(b))
+      )
+
+  given bifunctorKGen[F[_[_], _[_]]](using inst: => K21.Instances[BifunctorK, F]): BifunctorK[F] with
+    def bimapK[A[_], B[_], C[_], D[_]](fab: F[A, B])(f: A ~> C, g: B ~> D): F[C, D] =
+      inst.map(fab)([f[_[_], _[_]]] => (bf: BifunctorK[f], fab: f[A, B]) => bf.bimapK(fab)(f, g))
+
+  inline def derived[F[_[_], _[_]]: K21.Generic]: BifunctorK[F] = bifunctorKGen
 
 case class Fix[S[_, _], A](unfix: S[A, Fix[S, A]])
 
