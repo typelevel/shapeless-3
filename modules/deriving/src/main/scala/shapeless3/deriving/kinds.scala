@@ -23,72 +23,142 @@ import scala.compiletime.*
 import scala.compiletime.ops.int.S
 import scala.deriving.*
 
+/**
+ * A helper trait for specifying kinds supported by Shapeless.
+ *
+ * @see
+ *   [[K0]], [[K1]], [[K11]], [[K2]] for examples how to use this trait.
+ *
+ * @tparam Up
+ *   The upper bound of this kind. Use a type lambda to specify higher-kinds.
+ * @tparam Tup
+ *   The upper bound of tuples with this kind. Should have the same kind as `Up` but result in a `Tuple`.
+ * @tparam Mono
+ *   A type lambda that monomorphizes a type with kind `Up` - it applies it to the upper bounds of its type parameters.
+ * @tparam Head
+ *   A type lambda that returns the head type of a tuple with kind `Tup`.
+ * @tparam Tail
+ *   A type lambda that returns the tail type of a tuple with kind `Tup`.
+ *
+ * @define productToRepr
+ *   Convert a product value to its equivalent representation as a typed tuple.
+ *
+ * @define coproductToRepr
+ *   Convert a sum value to its equivalent representation as a union type. Noop at runtime.
+ *
+ * @define productFromRepr
+ *   Construct a product value from its equivalent representation of a typed tuple.
+ *
+ * @define coproductFromRepr
+ *   Construct a sum value from its equivalent representation of a union type. Noop at runtime.
+ */
 trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, Tail[_ <: Tup] <: Up]:
   self =>
 
-  type of[M <: Mirror, O <: Up] = M {
+  /** Similar to [[Mirror.Of]] but generalized to this kind. */
+  infix type of[M <: Mirror, O <: Up] = M {
     type MirroredType = O
     type MirroredMonoType = Mono[O]
     type MirroredElemTypes <: Tup
   }
 
+  /** A [[Mirror]] for types of this kind, including the given scope of the enclosing object. */
   type Kind[M <: Mirror, O <: Up] = (M of O) { type Kind = self.type }
+
+  /** A [[Mirror]] for types of this kind. */
   type Generic[O <: Up] = Kind[Mirror, O]
+
+  /** A [[Mirror.Product]] for types of this kind. */
   type ProductGeneric[O <: Up] = Kind[Mirror.Product, O]
+
+  /** A [[Mirror.Sum]] for types of this kind. */
   type CoproductGeneric[O <: Up] = Kind[Mirror.Sum, O]
 
   object Generic:
+
+    /**
+     * Attaches the given scope of the enclosing object to a given [[Mirror]] as a type refinement.
+     *
+     * The Scala compiler can automatically add type refinements to synthesized mirrors, but not to given mirrors in the
+     * current scope or to user-defined mirrors. The scope of the enclosing object is necessary to resolve extension
+     * methods defined on mirrors by Shapeless without an import.
+     */
     given fromMirror[M <: Mirror, O <: Up](using m: M of O): Kind[m.type, O] = m.asInstanceOf
 
+  /** Summon or synthesize [[Generic]]. */
   def Generic[O <: Up](using gen: Generic[O]): gen.type = gen
+
+  /** Summon or synthesize [[ProductGeneric]]. */
   def ProductGeneric[O <: Up](using gen: ProductGeneric[O]): gen.type = gen
+
+  /** Summon or synthesize [[CoproductGeneric]]. */
   def CoproductGeneric[O <: Up](using gen: CoproductGeneric[O]): gen.type = gen
 
+  /** Resolved instances of the type class `F` for all fields or variants of the type `T`. */
   type Instances[F[_ <: Up], T <: Up] = ErasedInstances[self.type, F[T]]
+
+  /** Resolved instances of the type class `F` for all fields of the product type `T`. */
   type ProductInstances[F[_ <: Up], T <: Up] = ErasedProductInstances[self.type, F[T]]
+
+  /** Resolved instances of the type class `F` for all variants of the sum type `T`. */
   type CoproductInstances[F[_ <: Up], T <: Up] = ErasedCoproductInstances[self.type, F[T]]
 
+  /** A curried version of [[Instances]] that can be used as a context bound. */
   type InstancesOf[F[_ <: Up]] = [T <: Up] =>> Instances[F, T]
+
+  /** A curried version of [[ProductInstances]] that can be used as a context bound. */
   type ProductInstancesOf[F[_ <: Up]] = [T <: Up] =>> ProductInstances[F, T]
+
+  /** A curried version of [[CoproductInstances]] that can be used as a context bound. */
   type CoproductInstancesOf[F[_ <: Up]] = [T <: Up] =>> CoproductInstances[F, T]
 
+  /** Summon instances of the type class `F` for all fields or variants of the type `T`. */
   def Instances[F[_ <: Up], T <: Up](using inst: Instances[F, T]): inst.type = inst
+
+  /** Summon instances of the type class `F` for all fields of the product type `T`. */
   def ProductInstances[F[_ <: Up], T <: Up](using inst: ProductInstances[F, T]): inst.type = inst
+
+  /** Summon instances of the type class `F` for all variants of the sum type `T`. */
   def CoproductInstances[F[_ <: Up], T <: Up](using inst: CoproductInstances[F, T]): inst.type = inst
 
+  /** Applies `F` to all elements of the tuple type `T`. Similar to [[Tuple.Map]] but generalized to this kind. */
   type LiftP[F[_ <: Up], T <: Tup] <: Tuple = Mono[T] match
     case _ *: _ => F[Head[T]] *: LiftP[F, Tail[T]]
     case _ => EmptyTuple
 
+  /** Given a [[Mirror]], provides instances of the type class `F` for all fields or variants of `T`. */
   inline given mkInstances[F[_ <: Up], T <: Up](using gen: Mirror of T): Instances[F, T] = inline gen match
     case given (Mirror.Product of T) => mkProductInstances[F, T]
     case given (Mirror.Sum of T) => mkCoproductInstances[F, T]
 
+  /** Given a [[Mirror.Product]], provides instances of the type class `F` for all fields of `T`. */
   inline given mkProductInstances[F[_ <: Up], T <: Up](using gen: Mirror.Product of T): ProductInstances[F, T] =
     ErasedProductInstances[self.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
+  /** Given a [[Mirror.Sum]], provides instances of the type class `F` for all variants of `T`. */
   inline given mkCoproductInstances[F[_ <: Up], T <: Up](using gen: Mirror.Sum of T): CoproductInstances[F, T] =
     ErasedCoproductInstances[self.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
   /**
-   * Summon the first given instance `F[U]` from the tuple `T`. Remaining elements of `T` may or may not have an
+   * Summon the first given instance of `F` from the tuple type `T`. Remaining elements of `T` may or may not have an
    * instance of `F`.
    */
   inline def summonFirst[F[_ <: Up], T <: Tup]: F[Up] =
     Kinds.summonFirst[LiftP[F, T]].asInstanceOf
 
   /**
-   * Summon the only given instance `F[U]` from the tuple `T`. Remaining elements of `T` are guaranteed to not have an
-   * instance of `F`.
+   * Summon the only given instance of `F` from the tuple type `T`. Remaining elements of `T` are guaranteed to not have
+   * an instance of `F` in scope.
    */
   inline def summonOnly[F[_ <: Up], T <: Tup]: F[Up] =
     Kinds.summonOnly[LiftP[F, T]].asInstanceOf
 
-  /** Ensure that no element of the tuple `T` has an instance of `F`. */
+  /** Ensure that no element of the tuple type `T` has an instance of `F`. */
   inline def summonNone[F[_ <: Up], T <: Tup]: Unit =
     Kinds.summonNone[LiftP[F, T]]
 
   extension [F[_ <: Up], T <: Up](gen: Generic[T])
+    /** Derive an instance of `F[T]` depending on whether `T` is a product or sum type. */
     inline def derive(
         f: => (ProductGeneric[T] & gen.type) ?=> F[T],
         g: => (CoproductGeneric[T] & gen.type) ?=> F[T]
@@ -97,32 +167,42 @@ trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, T
       case c: CoproductGeneric[T] => g(using c.asInstanceOf)
 
   extension [T <: Up](gen: CoproductGeneric[T])
+    /** Use the first given instance of `F` among the variants of the sum type `T` to produce a result. */
     inline def withFirst[F[_ <: Up], R](f: [t <: T] => F[t] => R): R =
       f(summonFirst[F, gen.MirroredElemTypes].asInstanceOf)
+
+    /** Use the only given instance of `F` among the variants of the sum type `T` to produce a result. */
     inline def withOnly[F[_ <: Up], R](f: [t <: T] => F[t] => R): R =
       f(summonOnly[F, gen.MirroredElemTypes].asInstanceOf)
 
   extension [F[_ <: Up], T <: Up](inst: Instances[F, T])
+    /** Transform the type class `F` in these instances to `G` by applying a polymorphic function. */
     inline def mapK[G[_ <: Up]](f: [t <: Up] => F[t] => G[t]): Instances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
-    inline def widen[G[t <: Up] >: F[t]]: Instances[G, T] =
-      inst.asInstanceOf
+
+    /** Widen the type class `F` in these instances to a super type `G`. Noop at runtime. */
+    inline def widen[G[t <: Up] >: F[t]]: Instances[G, T] = inst.asInstanceOf
 
   extension [F[_ <: Up], T <: Up](inst: ProductInstances[F, T])
+    /** Transform the type class `F` in these product instances to `G` by applying a polymorphic function. */
     inline def mapK[G[_ <: Up]](f: [t <: Up] => F[t] => G[t]): ProductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
-    inline def widen[G[t <: Up] >: F[t]]: ProductInstances[G, T] =
-      inst.asInstanceOf
+
+    /** Widen the type class `F` in these product instances to a super type `G`. Noop at runtime. */
+    inline def widen[G[t <: Up] >: F[t]]: ProductInstances[G, T] = inst.asInstanceOf
 
   extension [F[_ <: Up], T <: Up](inst: CoproductInstances[F, T])
+    /** Transform the type class `F` in these coproduct instances to `G` by applying a polymorphic function. */
     inline def mapK[G[_ <: Up]](f: [t <: Up] => F[t] => G[t]): CoproductInstances[G, T] =
       inst.erasedMapK(f.asInstanceOf).asInstanceOf
-    inline def widen[G[t <: Up] >: F[t]]: CoproductInstances[G, T] =
-      inst.asInstanceOf
+
+    /** Widen the type class `F` in these coproduct instances to a super type `G`. Noop at runtime. */
+    inline def widen[G[t <: Up] >: F[t]]: CoproductInstances[G, T] = inst.asInstanceOf
 
 object K0 extends Kind[Any, Tuple, Id, Kinds.Head, Kinds.Tail]:
-  type IndexOf[E, X] = IndexOf0[E, X, 0]
-  type IndexOf0[E, X, I <: Int] <: Int = X match
+  /** Returns the index of element type `E` in the tuple type `T` as a literal type, `-1` if `E` is not in `T`. */
+  type IndexOf[E, T] = IndexOf0[E, T, 0]
+  type IndexOf0[E, T, I <: Int] <: Int = T match
     case EmptyTuple => -1
     case x *: xs =>
       x match
@@ -130,16 +210,22 @@ object K0 extends Kind[Any, Tuple, Id, Kinds.Head, Kinds.Tail]:
         case _ => IndexOf0[E, xs, S[I]]
 
   @deprecated("Use summonFirst instead", "3.2.0")
-  transparent inline def summonFirst0[T]: Any = Kinds.summonFirst[T]
+  transparent inline def summonFirst0[T <: Tuple]: Any = Kinds.summonFirst[T]
 
   extension [T](gen: ProductGeneric[T])
+    /** $productToRepr */
     inline def toRepr(o: T): gen.MirroredElemTypes =
       Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes]
+
+    /** $productFromRepr */
     inline def fromRepr(r: gen.MirroredElemTypes): T =
-      gen.fromProduct(r.asInstanceOf)
+      gen.fromProduct(r)
 
   extension [T](gen: CoproductGeneric[T])
+    /** $coproductToRepr */
     inline def toRepr(o: T): Union[gen.MirroredElemTypes] = o.asInstanceOf
+
+    /** $coproductFromRepr */
     inline def fromRepr(r: Union[gen.MirroredElemTypes]): T = r.asInstanceOf
 
   extension [F[_], T](inst: Instances[F, T])
@@ -193,16 +279,22 @@ object K1
     ]:
 
   @deprecated("Use summonFirst instead", "3.2.0")
-  transparent inline def summonFirst0[T]: Any = Kinds.summonFirst[T]
+  transparent inline def summonFirst0[T <: Tuple]: Any = Kinds.summonFirst[T]
 
   extension [T[_], A](gen: ProductGeneric[T])
+    /** $productToRepr */
     inline def toRepr(o: T[A]): gen.MirroredElemTypes[A] =
       Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A]]
+
+    /** $productFromRepr */
     inline def fromRepr(r: gen.MirroredElemTypes[A]): T[A] =
-      gen.fromProduct(r.asInstanceOf).asInstanceOf[T[A]]
+      gen.fromProduct(r).asInstanceOf[T[A]]
 
   extension [T[_], A](gen: CoproductGeneric[T])
+    /** $coproductToRepr */
     inline def toRepr(o: T[A]): Union[gen.MirroredElemTypes[A]] = o.asInstanceOf
+
+    /** $coproductFromRepr */
     inline def fromRepr(r: Union[gen.MirroredElemTypes[A]]): T[A] = r.asInstanceOf
 
   extension [F[_[_]], T[_]](inst: Instances[F, T])
@@ -260,13 +352,19 @@ object K11
   type Const[c] = [f[_]] =>> c
 
   extension [T[_[_]], A[_]](gen: ProductGeneric[T])
+    /** $productToRepr */
     inline def toRepr(o: T[A]): gen.MirroredElemTypes[A] =
       Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A]]
+
+    /** $productFromRepr */
     inline def fromRepr(r: gen.MirroredElemTypes[A]): T[A] =
-      gen.fromProduct(r.asInstanceOf).asInstanceOf[T[A]]
+      gen.fromProduct(r).asInstanceOf[T[A]]
 
   extension [T[_[_]], A[_]](gen: CoproductGeneric[T])
+    /** $coproductToRepr */
     inline def toRepr(o: T[A]): Union[gen.MirroredElemTypes[A]] = o.asInstanceOf
+
+    /** $coproductFromRepr */
     inline def fromRepr(r: Union[gen.MirroredElemTypes[A]]): T[A] = r.asInstanceOf
 
   extension [F[_[_[_]]], T[_[_]]](inst: Instances[F, T])
@@ -329,16 +427,22 @@ object K2
   type Const[c] = [t, u] =>> c
 
   @deprecated("Use summonFirst instead", "3.2.0")
-  transparent inline def summonFirst0[T]: Any = Kinds.summonFirst[T]
+  transparent inline def summonFirst0[T <: Tuple]: Any = Kinds.summonFirst[T]
 
   extension [T[_, _], A, B](gen: ProductGeneric[T])
+    /** $productToRepr */
     inline def toRepr(o: T[A, B]): gen.MirroredElemTypes[A, B] =
       Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A, B]]
+
+    /** $productFromRepr */
     inline def fromRepr(r: gen.MirroredElemTypes[A, B]): T[A, B] =
-      gen.fromProduct(r.asInstanceOf).asInstanceOf[T[A, B]]
+      gen.fromProduct(r).asInstanceOf[T[A, B]]
 
   extension [T[_, _], A, B](gen: CoproductGeneric[T])
+    /** $coproductToRepr */
     inline def toRepr(o: T[A, B]): Union[gen.MirroredElemTypes[A, B]] = o.asInstanceOf
+
+    /** $coproductFromRepr */
     inline def fromRepr(r: Union[gen.MirroredElemTypes[A, B]]): T[A, B] = r.asInstanceOf
 
   extension [F[_[_, _]], T[_, _]](inst: Instances[F, T])

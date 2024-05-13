@@ -23,7 +23,7 @@ import scala.reflect.ClassTag
 
 type Id[t] = t
 type Const[c] = [t] =>> c
-type ~>[A[_], B[_]] = [t] => A[t] => B[t]
+infix type ~>[A[_], B[_]] = [t] => A[t] => B[t]
 
 /** Corresponds to `Applicative.pure` in Cats. */
 type Pure[F[_]] = [a] => a => F[a]
