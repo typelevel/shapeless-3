@@ -137,11 +137,11 @@ shapeless channel of the [Typelevel Discord][discord].
 
 ## Participation
 
-The shapeless project supports the [Scala Code of Conduct][codeofconduct] and
+The shapeless project supports the [Typelevel Code of Conduct][codeofconduct] and
 wants all of its channels (Gitter, github, etc.) to be welcoming environments
 for everyone.
 
-[codeofconduct]: https://www.scala-lang.org/conduct/
+[codeofconduct]: https://typelevel.org/code-of-conduct.html
 [typelevel]: http://typelevel.org/
 [source]: https://github.com/typelevel/shapeless-3
 [sonatype]: https://oss.sonatype.org/index.html#nexus-search;quick~shapeless
