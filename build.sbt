@@ -1,4 +1,4 @@
-import com.typesafe.tools.mima.core.{DirectMissingMethodProblem, ProblemFilters}
+import com.typesafe.tools.mima.core.*
 
 val scala3Version = "3.3.3"
 
@@ -99,10 +99,17 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(test % "test")
   .settings(moduleName := "shapeless3-typeable")
   .settings(commonSettings)
-  .settings(mimaPreviousArtifacts := Set.empty) // Not yet
+  .jsSettings(jsSettings)
   .nativeSettings(nativeSettings)
   .jsEnablePlugins(ScalaJSJUnitPlugin)
   .nativeEnablePlugins(ScalaNativeJUnitPlugin)
+  .settings(
+    mimaBinaryIssueFilters ++= Seq(
+      // Ops was replaced by extension methods in https://github.com/typelevel/shapeless-3/pull/1
+      ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.typeable.syntax#typeable.Ops"),
+      ProblemFilters.exclude[MissingClassProblem]("shapeless3.typeable.syntax$typeable$Ops")
+    )
+  )
 
 lazy val typeableJVM = typeable.jvm
 lazy val typeableJS = typeable.js
