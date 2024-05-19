@@ -51,17 +51,17 @@ class ReflectionUtils[Q <: Quotes & Singleton](val q: Q):
         case _: ImplicitSearchFailure => None
       instance.flatMap(Mirror(_))
 
-  private def tupleTypeElements(tp: TypeRepr): List[TypeRepr] =
+  def tupleTypeElements(tp: TypeRepr): List[TypeRepr] =
     @tailrec def loop(tp: TypeRepr, acc: List[TypeRepr]): List[TypeRepr] = tp match
       case AppliedType(_, List(hd: TypeRepr, tl: TypeRepr)) => loop(tl, hd :: acc)
       case _ => acc
     loop(tp, Nil).reverse
 
-  private def low(tp: TypeRepr): TypeRepr = tp match
+  def low(tp: TypeRepr): TypeRepr = tp match
     case tp: TypeBounds => tp.low
     case tp => tp
 
-  private def findMemberType(tp: TypeRepr, name: String): Option[TypeRepr] = tp match
+  def findMemberType(tp: TypeRepr, name: String): Option[TypeRepr] = tp match
     case Refinement(_, `name`, tp) => Some(low(tp))
     case Refinement(parent, _, _) => findMemberType(parent, name)
     case AndType(left, right) => findMemberType(left, name).orElse(findMemberType(right, name))
