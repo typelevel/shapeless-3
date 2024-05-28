@@ -12,26 +12,27 @@ object Kinds:
   type Tail[T] <: Tuple = T match
     case _ *: t => t
 
-  transparent inline def summonFirst[T]: Any =
+  /** For a tuple type `T`, summons the first given element type. */
+  transparent inline def summonFirst[T <: Tuple]: Any =
     inline erasedValue[T] match
       case _: (a *: b) =>
-        summonFrom {
+        summonFrom:
           case instance: a => instance
           case _ => summonFirst[b]
-        }
 
-  transparent inline def summonOnly[T]: Any =
+  /** For a tuple type `T`, summons exactly one given element type. Otherwise fails to compile. */
+  transparent inline def summonOnly[T <: Tuple]: Any =
     inline erasedValue[T] match
       case _: (a *: b) =>
-        summonFrom {
+        summonFrom:
           case instance: a =>
             summonNone[b]
             instance
           case _ =>
             summonOnly[b]
-        }
 
-  transparent inline def summonNone[T]: Unit =
+  /** For a tuple type `T`, proves that none of its element types are given in this scope. */
+  transparent inline def summonNone[T <: Tuple]: Unit =
     inline erasedValue[T] match
       case _: EmptyTuple => ()
       case _: (a *: b) =>
