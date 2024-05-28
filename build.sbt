@@ -64,7 +64,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .jsEnablePlugins(ScalaJSJUnitPlugin)
   .nativeEnablePlugins(ScalaNativeJUnitPlugin)
-  .settings(libraryDependencies += "org.typelevel" %%% "cats-core" % "2.10.0" % "test")
+  .settings(libraryDependencies += "org.typelevel" %%% "cats-core" % "2.11.0" % "test")
   .settings(
     mimaBinaryIssueFilters ++= Seq(
       // Those are objects:
