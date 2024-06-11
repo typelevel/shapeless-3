@@ -16,6 +16,8 @@
 
 package shapeless3.deriving
 
+import cats.data.{EitherK, Tuple2K}
+
 // ADTs
 
 object adts:
@@ -48,6 +50,12 @@ object adts:
       item: F[String],
       quantity: F[Int]
   ) derives FunctorK
+
+  enum Lattice[F[_], G[_]] derives BifunctorK:
+    case Top(value: F[Int])
+    case Bot(value: G[Int])
+    case Meet(value: Tuple2K[F, G, Int])
+    case Join(value: EitherK[F, G, Int])
 
   sealed trait OptionD[T]:
     def fold: T = this match
