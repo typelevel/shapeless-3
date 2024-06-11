@@ -609,5 +609,18 @@ class TypeableTests:
     assertEquals(ti.describe, "Tree[Int]")
     assertEquals(ti.toString, "Typeable[Tree[Int]]")
 
+  @Test
+  def testEnumeration(): Unit =
+    val tc = Typeable[CaseClassWithEnumeration]
+    val cc = CaseClassWithEnumeration()
+    assert(tc.castable(cc))
+    assert(tc.cast(cc).contains(cc))
+
 object TypeableTests:
   final case class Tree[+A](value: A, children: Vector[Tree[A]])
+
+  object E extends scala.Enumeration:
+    val A = Value("a")
+    val B = Value("b")
+
+  case class CaseClassWithEnumeration(name: String = "", e: E.Value = E.A)
