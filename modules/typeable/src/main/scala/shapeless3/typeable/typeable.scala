@@ -383,10 +383,10 @@ object TypeableMacros:
         val owner = normalizeModuleClass(sym.owner)
 
         qual match
-          case Some(_) if sym.flags.is(Flags.Case) => mkCaseClassTypeable
           case None => mkNamedSimpleTypeable
           case Some(tp: TypeRef) if normalizeModuleClass(tp.typeSymbol) == owner => mkNamedSimpleTypeable
           case Some(tp: TermRef) if normalizeModuleClass(tp.termSymbol) == owner => mkNamedSimpleTypeable
+          case Some(_) if sym.flags.is(Flags.Case) => mkCaseClassTypeable
           case Some(_) if sym.flags.is(Flags.Sealed) => mkSumTypeable
           case _ => report.errorAndAbort(s"No Typeable for type ${target.show} with a dependent prefix")
 
