@@ -19,6 +19,7 @@ val jsSettings = Def.settings(
 )
 
 val nativeSettings = Def.settings(
+  mimaPreviousArtifacts := Set.empty, // TODO re-enable
   tlVersionIntroduced := Map("3" -> "3.1.0")
 )
 
@@ -64,7 +65,7 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .jsEnablePlugins(ScalaJSJUnitPlugin)
   .nativeEnablePlugins(ScalaNativeJUnitPlugin)
-  .settings(libraryDependencies += "org.typelevel" %%% "cats-core" % "2.11.0" % "test")
+  .settings(libraryDependencies += "org.typelevel" %%% "cats-core" % "2.12.0" % "test")
   .settings(
     mimaBinaryIssueFilters ++= Seq(
       // Those are objects:
