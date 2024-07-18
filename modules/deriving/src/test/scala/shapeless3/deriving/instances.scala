@@ -63,7 +63,7 @@ class InstancesTests:
 
   @Test
   def mapKforSingle: Unit =
-    val inst = summon[K0.Instances[TypeClass, Single[Int]]]
+    val inst = summon[K0.ProductInstances[TypeClass, Single[Int]]]
     val otherInst = inst.mapK([t] => (tc: TypeClass[t]) => tc.another)
     val s = Single(42)
 
