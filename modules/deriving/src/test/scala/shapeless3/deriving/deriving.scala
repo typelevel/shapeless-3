@@ -17,6 +17,7 @@
 package shapeless3.deriving
 
 import cats.Eval
+import cats.data.{EitherK, Tuple2K}
 import org.junit.Assert.*
 import org.junit.Test
 import shapeless3.deriving.adts.*
@@ -254,6 +255,18 @@ class DerivationTests:
     val arg1 = HkCons(Given(42), HkCons(Default(0), HkOne(Given(313))))
     val exp1 = HkCons(Some(42), HkCons(None, HkOne(Some(313))))
     assert(FunctorK[HkNel].mapK(arg1)(OptionD.toOption) == exp1)
+
+  @Test
+  def bifunctorK(): Unit =
+    val bf = BifunctorK[Lattice]
+    val top = Lattice.Top[OptionD, OptionD](Given(100))
+    val bot = Lattice.Bot[OptionD, OptionD](Default(0))
+    val meet = Lattice.Meet[OptionD, OptionD](Tuple2K(Given(100), Default(0)))
+    val join = Lattice.Join[OptionD, OptionD](EitherK.left(Given(100)))
+    assert(bf.bimapK(top)(OptionD.fold, OptionD.toOption) == Lattice.Top[Id, Option](100))
+    assert(bf.bimapK(bot)(OptionD.fold, OptionD.toOption) == Lattice.Bot[Id, Option](None))
+    assert(bf.bimapK(meet)(OptionD.fold, OptionD.toOption) == Lattice.Meet[Id, Option](Tuple2K(100, None)))
+    assert(bf.bimapK(join)(OptionD.fold, OptionD.toOption) == Lattice.Join[Id, Option](EitherK.left(100)))
 
   @Test
   def bifunctor(): Unit =
