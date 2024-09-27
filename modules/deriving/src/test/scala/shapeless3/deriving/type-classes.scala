@@ -16,7 +16,7 @@
 
 package shapeless3.deriving
 
-import scala.annotation.tailrec
+import scala.annotation.{nowarn, tailrec}
 import scala.compiletime.*
 import cats.Eval
 import cats.data.{EitherK, Tuple2K}
@@ -492,6 +492,7 @@ object Empty:
   given emptyGen[A](using inst: K0.ProductInstances[Empty, A]): Empty[A] =
     mkEmpty(inst.construct([a] => (A: Empty[a]) => A.empty))
 
+  @nowarn("id=E197")
   inline given emptyGenC[A](using gen: K0.CoproductGeneric[A]): Empty[A] =
     mkEmpty(gen.withOnly[Empty, A]([a <: A] => (A: Empty[a]) => A.empty))
 
@@ -516,6 +517,7 @@ object EmptyK:
   given emptyKGen[F[_]](using inst: K1.ProductInstances[EmptyK, F]): EmptyK[F] =
     mkEmptyK([t] => () => inst.construct([f[_]] => (F: EmptyK[f]) => F.empty[t]))
 
+  @nowarn("id=E197")
   inline given emptyKGenC[F[_]](using gen: K1.CoproductGeneric[F]): EmptyK[F] =
     mkEmptyK[F]([t] => () => gen.withOnly[EmptyK, F[t]]([f[x] <: F[x]] => (F: EmptyK[f]) => F.empty[t]))
 
@@ -556,6 +558,7 @@ object Return:
   given pureGen[A[_]](using inst: K1.ProductInstances[Alt1.Of[Return, EmptyK], A]): Return[A] = from[A]:
     [t] => (a: t) => inst.construct([f[_]] => (af: Alt1.Of[Return, EmptyK][f]) => af.fold[f[t]](_.pure(a))(_.empty[t]))
 
+  @nowarn("id=E197")
   inline given pureGenC[F[_]](using gen: K1.CoproductGeneric[F]): Return[F] = from[F]:
     [t] => (a: t) => gen.withFirst[Return, F[t]]([f[x] <: F[x]] => (F: Return[f]) => F.pure(a))
 
@@ -708,16 +711,17 @@ object Transform:
   inline def mkRecord[KU, RU <: Tuple, KT, RT <: NonEmptyTuple](rt: RT): RU =
     Tuple.fromArray(mkFieldArray[KU, RU, KT, RT](rt)).asInstanceOf
 
+  @nowarn("id=E174")
+  @nowarn("id=E197")
   inline given [T, U](using
       gent: K0.ProductGeneric[T] { type MirroredElemTypes <: NonEmptyTuple },
       genu: K0.ProductGeneric[U] { type MirroredElemTypes <: Tuple }
-  ): Transform[T, U] = new Transform[T, U]:
-    def apply(t: T): U =
-      genu.fromRepr(
-        mkRecord[genu.MirroredElemLabels, genu.MirroredElemTypes, gent.MirroredElemLabels, gent.MirroredElemTypes](
-          gent.toRepr(t)
-        )
+  ): Transform[T, U] = t =>
+    genu.fromRepr(
+      mkRecord[genu.MirroredElemLabels, genu.MirroredElemTypes, gent.MirroredElemLabels, gent.MirroredElemTypes](
+        gent.toRepr(t)
       )
+    )
 
 trait Parser[T]:
   protected def parse(text: String, accum: Boolean): Either[String, T]
