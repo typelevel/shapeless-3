@@ -778,3 +778,37 @@ object Parser:
       else inst.constructM(parseField)(pure, map, tailRecM)
 
 end Parser
+
+trait ShowType[T]:
+  def show: String
+
+object ShowType:
+  inline def apply[T](using st: ShowType[T]): ShowType[T] = st
+
+  private def mkShow[T](s: String): ShowType[T] =
+    new ShowType[T]:
+      def show: String = s
+
+  given ShowType[Int] = mkShow("Int")
+  given ShowType[String] = mkShow("String")
+  given ShowType[Boolean] = mkShow("Boolean")
+
+  given showGen[T](using inst: K0.ProductInstances[ShowType, T], labelling: Labelling[T]): ShowType[T] =
+    val typeName = labelling.label
+    val fields = labelling.elemLabels
+      .zip(
+        inst
+          .foldLeft0(List.empty[String])([t] => (acc: List[String], s: ShowType[t]) => Continue(s.show :: acc))
+          .reverse
+      )
+      .map((label, typ) => s"$label: $typ")
+    val repr =
+      if fields.isEmpty then typeName
+      else s"$typeName(${fields.mkString(", ")})"
+    mkShow(repr)
+
+  given showGenC[T](using inst: K0.CoproductInstances[ShowType, T]): ShowType[T] =
+    mkShow((0 until inst.arity).map(i => inst.inject(i)([t <: T] => (s: ShowType[t]) => s.show)).mkString(" | "))
+
+  inline def derived[A](using gen: K0.Generic[A]): ShowType[A] =
+    gen.derive(showGen, showGenC)

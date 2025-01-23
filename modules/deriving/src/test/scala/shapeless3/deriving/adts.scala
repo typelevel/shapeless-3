@@ -21,21 +21,21 @@ import cats.data.{EitherK, Tuple2K}
 // ADTs
 
 object adts:
-  case class ISB(i: Int, s: String, b: Boolean) derives Monoid, Eq, Empty, Show, Read
+  case class ISB(i: Int, s: String, b: Boolean) derives Monoid, Eq, Empty, Show, ShowType, Read
 
-  case class Box[A](x: A) derives Monoid, Eq, Show, Read, Functor, Return, Ord, Traverse, Foldable
+  case class Box[A](x: A) derives Monoid, Eq, Show, ShowType, Read, Functor, Return, Ord, Traverse, Foldable
 
   case class Recursive(h: Int, t: Option[Recursive]) derives Monoid
 
-  sealed trait OptionInt derives Eq, Show, Read, Ord
+  sealed trait OptionInt derives Eq, Show, ShowType, Read, Ord
   case object NoneInt extends OptionInt
   case class SomeInt(value: Int) extends OptionInt
 
-  sealed trait Opt[+A] derives Eq, Show, Read, Functor, EmptyK, Return, Ord, Traverse, Foldable
+  sealed trait Opt[+A] derives Eq, Show, ShowType, Read, Functor, EmptyK, Return, Ord, Traverse, Foldable
   case object Nn extends Opt[Nothing]
   case class Sm[+A](value: A) extends Opt[A]
 
-  enum OptE[+T] derives Eq, Show, Read, Functor, Ord, Traverse, Foldable:
+  enum OptE[+T] derives Eq, Show, ShowType, Read, Functor, Ord, Traverse, Foldable:
     case NnE
     case SmE(value: T)
 
