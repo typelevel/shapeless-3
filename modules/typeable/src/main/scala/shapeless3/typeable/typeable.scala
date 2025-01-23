@@ -161,7 +161,7 @@ object Typeable extends Typeable0:
     def describe = "AnyRef"
 
   /**
-   * Typeable instance for `Iterable`. Note that the contents be will tested for conformance to the element type.
+   * Typeable instance for `Iterable`. Note that the contents will be tested for conformance to the element type.
    */
   given iterableTypeable[CC[t] <: Iterable[t], T](using CCTag: ClassTag[CC[Any]], tt: Typeable[T]): Typeable[CC[T]] with
     def castable(t: Any): Boolean = t match
@@ -274,12 +274,11 @@ object TypeableMacros:
     val target = TypeRepr.of[T]
 
     def isAbstract(tp: TypeRepr): Boolean =
-      tp.typeSymbol.isAbstractType ||
-        (tp match
-          case tp: AppliedType =>
-            isAbstract(tp.tycon) || tp.args.exists(isAbstract)
-          case _ => false
-        )
+      tp.typeSymbol.isAbstractType || (tp match
+        case tp: AppliedType =>
+          isAbstract(tp.tycon) || tp.args.exists(isAbstract)
+        case _ =>
+          false)
 
     def isWildcard(tp: TypeRepr): Boolean = tp match
       case TypeBounds(lo, hi) => lo =:= TypeRepr.of[Nothing] && hi =:= TypeRepr.of[Any]
@@ -360,13 +359,13 @@ object TypeableMacros:
       case tp: TermRef =>
         val ident = Ident(tp).asExprOf[T]
         val sym = tp.termSymbol
-        val name = Expr(sym.name.toString)
+        val name = Expr(sym.name)
         val serializable = Expr(sym.flags.is(Flags.Module))
         '{ referenceSingletonTypeable[T]($ident, $name, $serializable) }
 
       case ConstantType(c) =>
         val value = Literal(c).asExprOf[T]
-        val name = Expr(target.widen.typeSymbol.name.toString)
+        val name = Expr(target.widen.typeSymbol.name)
         '{ valueSingletonTypeable[T]($value, $name) }
 
       case tp: TypeRef =>
