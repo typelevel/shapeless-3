@@ -245,6 +245,8 @@ object K0 extends Kind[Any, Tuple, Id, Kinds.Head, Kinds.Tail]:
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def unfold[Acc](i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
       inst.erasedUnfold(i)(f.asInstanceOf).asInstanceOf
+    inline def foldLeft0[Acc](i: Acc)(f: [t] => (Acc, F[t]) => CompleteOr[Acc]): Acc =
+      inst.erasedFoldLeft0(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[Acc](x: T)(i: Acc)(f: [t] => (Acc, F[t], t) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft2[Acc](x: T, y: T)(i: Acc)(f: [t] => (Acc, F[t], t, t) => CompleteOr[Acc]): Acc =
