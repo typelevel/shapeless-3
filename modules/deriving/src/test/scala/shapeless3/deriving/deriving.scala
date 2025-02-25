@@ -20,12 +20,13 @@ import cats.Eval
 import cats.data.{EitherK, Tuple2K}
 import org.junit.Assert.*
 import org.junit.Test
-import shapeless3.deriving.adts.*
 import shapeless3.deriving.adts.OptE.{NnE, SmE}
+import shapeless3.deriving.adts.*
+import shapeless3.deriving.adts.given
 
 import scala.annotation.tailrec
-import scala.compiletime.{constValueTuple, testing}
 import scala.compiletime.testing.typeCheckErrors
+import scala.compiletime.{constValueTuple, testing}
 import scala.deriving.Mirror
 
 // Tests
@@ -221,32 +222,43 @@ class DerivationTests:
   @Test
   def traverse(): Unit =
     val v0 = Traverse[Box]
-    assert(v0.traverse(Box(1))((x: Int) => List(x + 1)) == List(Box(2)))
+    assert(v0.traverse(Box(1))(x => List(x + 1)) == List(Box(2)))
 
     val v1 = Traverse[Sm]
-    assert(v1.traverse(Sm(1))((x: Int) => List(x + 1)) == List(Sm(2)))
+    assert(v1.traverse(Sm(1))(x => List(x + 1)) == List(Sm(2)))
     val v2 = Traverse[Const[Nn.type]]
     assert(v2.traverse(Nn)((x: Int) => List(x + 1)) == List(Nn))
     val v3 = Traverse[Opt]
-    assert(v3.traverse(Sm(1))((x: Int) => List(x + 1)) == List(Sm(2)))
+    assert(v3.traverse(Sm(1))(x => List(x + 1)) == List(Sm(2)))
     assert(v3.traverse(Nn)((x: Int) => List(x + 1)) == List(Nn))
 
+    val fooBar = CList("foo", "bar")
     val v4 = Traverse[Const[CNil.type]]
     assert(v4.traverse(CNil)(Option.apply).contains(CNil))
     val v5 = Traverse[CCons]
-    assert(v5.traverse(CList("foo", "bar"))(Option.apply).contains(CList("foo", "bar")))
+    assert(v5.traverse(fooBar)(Option.apply).contains(fooBar))
     val v6 = Traverse[CList]
-    assert(v6.traverse(CList("foo", "bar"))(Option.apply).contains(CList("foo", "bar")))
+    assert(v6.traverse(fooBar)(Option.apply).contains(fooBar))
     assert(v6.traverse(CNil)(Option.apply).contains(CNil))
-    assert(v6.traverse(CList("foo", "bar"))(() => _).apply() == CList("foo", "bar"))
+    assert(v6.traverse(fooBar)(() => _).apply() == fooBar)
     assert(v6.traverse(CList(1, 2))(x => List(x, x + 1)) == List(CList(1, 2), CList(1, 3), CList(2, 2), CList(2, 3)))
 
     val v7 = Traverse[OptE]
-    assert(v7.traverse(SmE(1))((x: Int) => List(x + 1)) == List(SmE(2)))
+    assert(v7.traverse(SmE(1))(x => List(x + 1)) == List(SmE(2)))
     assert(v7.traverse(NnE)((x: Int) => List(x + 1)) == List(NnE))
 
     val v8 = Traverse[Phantom]
     assert(v8.traverse(Phantom())(Option.apply).contains(Phantom()))
+
+    val n = valueOf[Tuple.Size[Large[Int]]]
+    assert(n > 128) // 4x the branching factor
+    val v9 = Traverse[Large]
+    val large = Tuple.fromArray(Array.range(0, n)).asInstanceOf[Large[Int]]
+    val large2 = Tuple.fromArray(Array.tabulate(n)(i => i * i)).asInstanceOf[Large[Int]]
+    assert(v9.traverse(large)(x => Option(x * x)).contains(large2))
+    assert(v9.traverse(large)(x => Option.when(x % 2 == 0)(x)).isEmpty)
+    assert(v9.traverse(large)(x => if x % 25 == 0 then List(x, x) else List(x)).lengthIs == 2 << 5)
+  end traverse
 
   @Test
   def functorK(): Unit =

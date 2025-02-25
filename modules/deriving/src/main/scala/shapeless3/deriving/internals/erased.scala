@@ -120,19 +120,44 @@ DO NOT USE as it will lead to stack overflows when deriving instances for recurs
   private def fromIndexedSeq(xs: IndexedSeq[Any]) = mirror.fromProduct(new IndexedSeqProduct(xs))
   private def fromEmptyProduct = mirror.fromProduct(None)
 
+  /**
+   * Implements a stack-safe traversal with a balanced tree of calls to [[f]] at the leaves and calls to [[ap]] at the
+   * branches. The branching factor is 32, the same as [[Vector]].
+   */
   private def traverseProduct[F[_]](
       x: Product,
       f: (Any, Any) => F[Any]
   )(pure: Pure[F], map: MapF[F], ap: Ap[F]): F[Any] =
-    val n = is.length
-    if n == 0 then pure(fromEmptyProduct)
-    else
+    val factor = 32
+
+    // Note: acc needs to be immutable to handle applicatives like List.
+    def leaf(from: Int, until: Int): F[Vector[Any]] =
       var acc = pure(Vector.empty[Any])
-      var i = 0
-      while i < n do
+      var i = from
+      while i < until do
         acc = ap(map(acc, _.appended), f(is(i), x.productElement(i)))
         i += 1
-      map(acc, fromIndexedSeq)
+      acc
+
+    def go(from: Int, until: Int): F[Vector[Any]] =
+      val n = until - from
+      if n <= factor then leaf(from, until)
+      else
+        var acc = pure(Vector.empty[Any])
+        val size = factor.min(n / factor + 1)
+        val step = n / size
+        var i, j = from
+        while j < size do
+          val i1 = i + step
+          val j1 = j + 1
+          val hi = if j1 == size then until else i1
+          acc = ap(map(acc, _.appendedAll[Any]), go(i, hi))
+          i = i1
+          j = j1
+        acc
+
+    if is.isEmpty then pure(fromEmptyProduct)
+    else map(go(0, is.length), fromIndexedSeq)
   end traverseProduct
 
   def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
