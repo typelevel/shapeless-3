@@ -26,6 +26,7 @@ sealed abstract class ErasedInstances[K, FT] extends Serializable:
   def erasedMapK(f: Any => Any): ErasedInstances[K, ?]
   def erasedMap(x: Any)(f: (Any, Any) => Any): Any
   def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any]
+  def arity: Int
 
 sealed abstract class ErasedProductInstances[K, FT] extends ErasedInstances[K, FT]:
   def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?]
@@ -35,6 +36,7 @@ sealed abstract class ErasedProductInstances[K, FT] extends ErasedInstances[K, F
   def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any])
   def erasedMap(x0: Any)(f: (Any, Any) => Any): Any
   def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any
+  def erasedFoldLeft0(a: Any)(f: (Any, Any) => CompleteOr[Any]): Any
   def erasedFoldLeft(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any
   def erasedFoldLeft2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any
   def erasedFoldRight(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any
@@ -75,6 +77,14 @@ DO NOT USE as it will lead to stack overflows when deriving instances for recurs
 
   def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any] =
     map(f(i, toElement(x)), fromElement)
+
+  def arity: Int =
+    1
+
+  def erasedFoldLeft0(a: Any)(f: (Any, Any) => CompleteOr[Any]): Any =
+    f(a, i) match
+      case Complete(r) => r
+      case acc => acc
 
   def erasedMap2(x: Any, y: Any)(f: (Any, Any, Any) => Any): Any =
     fromElement(f(i, toElement(x), toElement(y)))
@@ -220,6 +230,24 @@ DO NOT USE as it will lead to stack overflows when deriving instances for recurs
   def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any] =
     traverseProduct(toProduct(x), f)(pure, map, ap)
 
+  def arity: Int =
+    is.size
+
+  def erasedFoldLeft0(i: Any)(f: (Any, Any) => CompleteOr[Any]): Any =
+    val n = is.length
+    if n == 0 then i
+    else
+      @tailrec
+      def loop(i: Int, acc: Any): Any =
+        if i >= n then acc
+        else
+          f(acc, is(i)) match
+            case Complete(r) => r
+            case acc =>
+              loop(i + 1, acc)
+
+      loop(0, i)
+
   def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any =
     val n = is.length
     if n == 0 then x0
@@ -355,6 +383,9 @@ final class ErasedCoproductInstances[K, FT](mirror: Mirror.Sum, is0: => Array[An
 
   def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any] =
     f(ordinal(x), x)
+
+  def arity: Int =
+    is.size
 
   def erasedFold2(x: Any, y: Any)(a: => Any)(f: (Any, Any, Any) => Any): Any =
     val i = mirror.ordinal(x.asInstanceOf)

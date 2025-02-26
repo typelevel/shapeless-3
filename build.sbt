@@ -72,7 +72,10 @@ lazy val deriving = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.deriving.K0.<clinit>"),
       ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.deriving.K1.<clinit>"),
       ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.deriving.K11.<clinit>"),
-      ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.deriving.K2.<clinit>")
+      ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.deriving.K2.<clinit>"),
+      // Those are sealed traits:
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedInstances.*"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("shapeless3.deriving.internals.ErasedProductInstances.*")
     )
   )
 

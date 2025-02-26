@@ -245,6 +245,8 @@ object K0 extends Kind[Any, Tuple, Id, Kinds.Head, Kinds.Tail]:
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def unfold[Acc](i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
       inst.erasedUnfold(i)(f.asInstanceOf).asInstanceOf
+    inline def foldLeft0[Acc](i: Acc)(f: [t] => (Acc, F[t]) => CompleteOr[Acc]): Acc =
+      inst.erasedFoldLeft0(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[Acc](x: T)(i: Acc)(f: [t] => (Acc, F[t], t) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft2[Acc](x: T, y: T)(i: Acc)(f: [t] => (Acc, F[t], t, t) => CompleteOr[Acc]): Acc =
@@ -318,6 +320,8 @@ object K1
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[A, Acc](x: T[A])(i: Acc)(f: [t[_]] => (Acc, F[t], t[A]) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
+    inline def foldLeft0[Acc](i: Acc)(f: [t[_]] => (Acc, F[t]) => CompleteOr[Acc]): Acc =
+      inst.erasedFoldLeft0(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft2[A, B, Acc](x: T[A], y: T[B])(i: Acc)(
         f: [t[_]] => (Acc, F[t], t[A], t[B]) => CompleteOr[Acc]
     ): Acc =
@@ -390,6 +394,8 @@ object K11
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[A[_], Acc](x: T[A])(i: Acc)(f: [t[_[_]]] => (Acc, F[t], t[A]) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
+    inline def foldLeft0[Acc](i: Acc)(f: [t[_[_]]] => (Acc, F[t]) => CompleteOr[Acc]): Acc =
+      inst.erasedFoldLeft0(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft2[A[_], B[_], Acc](x: T[A], y: T[B])(i: Acc)(
         f: [t[_[_]]] => (Acc, F[t], t[A], t[B]) => CompleteOr[Acc]
     ): Acc =
@@ -470,6 +476,8 @@ object K2
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[A, B, Acc](x: T[A, B])(i: Acc)(f: [t[_, _]] => (Acc, F[t], t[A, B]) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
+    inline def foldLeft0[Acc](i: Acc)(f: [t[_, _]] => (Acc, F[t]) => CompleteOr[Acc]): Acc =
+      inst.erasedFoldLeft0(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft2[A, B, C, D, Acc](x: T[A, B], y: T[C, D])(i: Acc)(
         f: [t[_, _]] => (Acc, F[t], t[A, B], t[C, D]) => CompleteOr[Acc]
     ): Acc =

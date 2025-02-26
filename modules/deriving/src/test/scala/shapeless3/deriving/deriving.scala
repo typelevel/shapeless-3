@@ -362,6 +362,29 @@ class DerivationTests:
     assert(v6.show(NnE) == "NnE")
 
   @Test
+  def showType(): Unit =
+    val v0 = ShowType[ISB]
+    assert(v0.show == """ISB(i: Int, s: String, b: Boolean)""")
+
+    val v1 = ShowType[OptionInt]
+    assert(v1.show == "NoneInt | SomeInt(value: Int)")
+
+    val v2 = ShowType[Box[Int]]
+    assert(v2.show == "Box(x: Int)")
+
+    val v3 = ShowType[Opt[Int]]
+    assert(v3.show == "Nn | Sm(value: Int)")
+
+    val v4 = ShowType[OptE[Int]]
+    assert(v4.show == "NnE | SmE(value: Int)")
+
+    val v5 = ShowType[Order[Id]]
+    assert(v5.show == "Order(item: String, quantity: Int)")
+
+    val v6 = ShowType[Order[Option]]
+    assert(v6.show == "Order(item: None | Some(value: String), quantity: None | Some(value: Int))")
+
+  @Test
   def read(): Unit =
     val v0 = Read[ISB]
     assert(v0.read("""ISB(i: 23, s: "foo", b: true)""").contains((ISB(23, "foo", true), "")))
