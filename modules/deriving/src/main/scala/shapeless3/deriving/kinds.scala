@@ -52,7 +52,7 @@ import scala.deriving.*
  * @define coproductFromRepr
  *   Construct a sum value from its equivalent representation of a union type. Noop at runtime.
  */
-trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, Tail[_ <: Tup] <: Up]:
+trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, Tail[_ <: Tup] <: Tup]:
   self =>
 
   /** Similar to [[Mirror.Of]] but generalized to this kind. */

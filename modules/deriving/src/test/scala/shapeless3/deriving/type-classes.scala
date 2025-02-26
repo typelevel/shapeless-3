@@ -812,3 +812,22 @@ object ShowType:
 
   inline def derived[A](using gen: K0.Generic[A]): ShowType[A] =
     gen.derive(showGen, showGenC)
+
+trait Eql[A <: AnyRef]:
+  def eql(x: A, y: A): Boolean
+
+object Eql:
+  inline def apply[A <: AnyRef: Eql]: Eql[A] = summon
+
+  given product[A <: AnyRef](using inst: K1Ref.ProductInstances[Eql, A]): Eql[A] with
+    def eql(x: A, y: A): Boolean = inst.foldLeft2(x, y)(true: Boolean)(
+      [t <: AnyRef] => (acc: Boolean, eqt: Eql[t], t0: t, t1: t) => Complete(!eqt.eql(t0, t1))(false)(true)
+    )
+
+  given coproduct[A <: AnyRef](using inst: K1Ref.CoproductInstances[Eql, A]): Eql[A] with
+    def eql(x: A, y: A): Boolean = inst.fold2(x, y)(false)(
+      [t <: A] => (eqt: Eql[t], t0: t, t1: t) => eqt.eql(t0, t1)
+    )
+
+  inline def derived[A <: AnyRef](using gen: K1Ref.Generic[A]): Eql[A] =
+    gen.derive(product, coproduct)
