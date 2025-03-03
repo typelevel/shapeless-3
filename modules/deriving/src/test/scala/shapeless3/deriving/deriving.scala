@@ -490,3 +490,25 @@ class DerivationTests:
     bifunctor[ListF]
     functorK[Order]
   end userDefinedMirrors
+
+  @Test
+  def orElsePrimary(): Unit =
+    given Int = 42
+    given String = "Shapeless"
+    val result = summon[OrElse[Int, String]].unify
+    assertEquals(result, 42)
+
+  @Test
+  def orElseSecondary(): Unit =
+    given String = "Shapeless"
+    val result = summon[OrElse[Int, String]].unify
+    assertEquals(result, "Shapeless")
+
+  @Test
+  def unifyDerived(): Unit =
+    import K0.*
+    given Derived[Show[Long]] = Derived(_.toString)
+    val show = summon[(Show |: Derived)[Long]].unify
+    val inst = ProductInstances[Show |: Derived, (String, Long)].unify
+    assertEquals(show.show(42), "42")
+    assertEquals(inst.arity, 2)
