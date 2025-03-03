@@ -139,11 +139,6 @@ trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, T
   inline given mkCoproductInstances[F[_ <: Up], T <: Up](using gen: Mirror.Sum of T): CoproductInstances[F, T] =
     ErasedCoproductInstances[self.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
-  /** Given instances of [[Derived.OrElse]], implicitly unifies them to the underlying type class. */
-  given unifiedInstances[I[k, t] <: ErasedInstances[k, t], T](using
-      inst: I[self.type, OrElse[T, Derived[T]]]
-  ): I[self.type, T] = inst.asInstanceOf
-
   /**
    * Summon the first given instance of `F` from the tuple type `T`. Remaining elements of `T` may or may not have an
    * instance of `F`.

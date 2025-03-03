@@ -16,6 +16,8 @@
 
 package shapeless3.deriving
 
+import shapeless3.deriving.internals.ErasedInstances
+
 import scala.annotation.implicitNotFound
 import scala.collection.immutable.ArraySeq
 import scala.compiletime.*
@@ -91,7 +93,7 @@ object Continue:
 opaque type Derived[A] = A
 object Derived:
   def apply[A](instance: A): Derived[A] = instance
-  given [A]: Conversion[A, Derived[A]] = identity
+  given conv[A]: Conversion[A, Derived[A]] = identity
   extension [A](derived: Derived[A]) def instance: A = derived
   extension [A](derived: OrElse[A, Derived[A]]) def unify: A = OrElse.unify(derived)
 
@@ -99,10 +101,11 @@ object Derived:
 opaque type OrElse[A, B] = A | B
 object OrElse extends OrInstances:
   def apply[A, B](instance: A | B): OrElse[A, B] = instance
-  given [A, B]: Conversion[OrElse[A, B], A | B] = identity
+  given conv[A, B]: Conversion[OrElse[A, B], A | B] = identity
   extension [A, B](orElse: OrElse[A, B]) def unify: A | B = orElse
+  extension [I[k, t] <: ErasedInstances[k, t], K, T](inst: I[K, OrElse[T, Derived[T]]]) def unify: I[K, T] = inst
 
 sealed abstract class OrInstances:
-  inline given [A, B]: OrElse[A, B] = summonFrom:
+  inline given orElse[A, B]: OrElse[A, B] = summonFrom:
     case instance: A => OrElse(instance)
     case instance: B => OrElse(instance)
