@@ -139,6 +139,11 @@ trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, T
   inline given mkCoproductInstances[F[_ <: Up], T <: Up](using gen: Mirror.Sum of T): CoproductInstances[F, T] =
     ErasedCoproductInstances[self.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
+  /** Given instances of [[Derived.OrElse]], implicitly unifies them to the underlying type class. */
+  given unifiedInstances[I[k, t] <: ErasedInstances[k, t], T](using
+      inst: I[self.type, OrElse[T, Derived[T]]]
+  ): I[self.type, T] = inst.asInstanceOf
+
   /**
    * Summon the first given instance of `F` from the tuple type `T`. Remaining elements of `T` may or may not have an
    * instance of `F`.
@@ -200,6 +205,9 @@ trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, T
     inline def widen[G[t <: Up] >: F[t]]: CoproductInstances[G, T] = inst.asInstanceOf
 
 object K0 extends Kind[Any, Tuple, Id, Kinds.Head, Kinds.Tail]:
+  infix type |:[F[_], G[_]] =
+    [x] =>> OrElse[F[x], G[F[x]]]
+
   /** Returns the index of element type `E` in the tuple type `T` as a literal type, `-1` if `E` is not in `T`. */
   type IndexOf[E, T] = IndexOf0[E, T, 0]
   type IndexOf0[E, T, I <: Int] <: Int = T match
@@ -280,6 +288,9 @@ object K1
       [t[_]] =>> [a] =>> Kinds.Tail[t[a]]
     ]:
 
+  infix type |:[F[_[_]], G[_]] =
+    [x[_]] =>> OrElse[F[x], G[F[x]]]
+
   @deprecated("Use summonFirst instead", "3.2.0")
   transparent inline def summonFirst0[T <: Tuple]: Any = Kinds.summonFirst[T]
 
@@ -354,6 +365,8 @@ object K11
 
   type Id[t] = [f[_]] =>> f[t]
   type Const[c] = [f[_]] =>> c
+  infix type |:[F[_[_[_]]], G[_]] =
+    [x[_[_]]] =>> OrElse[F[x], G[F[x]]]
 
   extension [T[_[_]], A[_]](gen: ProductGeneric[T])
     /** $productToRepr */
@@ -431,6 +444,8 @@ object K2
   type Id1[t, u] = t
   type Id2[t, u] = u
   type Const[c] = [t, u] =>> c
+  infix type |:[F[_[_, _]], G[_]] =
+    [x[_, _]] =>> OrElse[F[x], G[F[x]]]
 
   @deprecated("Use summonFirst instead", "3.2.0")
   transparent inline def summonFirst0[T <: Tuple]: Any = Kinds.summonFirst[T]
