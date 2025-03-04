@@ -3,7 +3,7 @@ import com.typesafe.tools.mima.core.*
 val scala3Version = "3.3.5"
 
 ThisBuild / organization := "org.typelevel"
-ThisBuild / tlBaseVersion := "3.4"
+ThisBuild / tlBaseVersion := "3.5"
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / crossScalaVersions := Seq(scala3Version)
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
