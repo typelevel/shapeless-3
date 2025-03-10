@@ -278,8 +278,7 @@ object TypeableMacros:
         (tp match
           case tp: AppliedType =>
             isAbstract(tp.tycon) || tp.args.exists(isAbstract)
-          case _ => false
-        )
+          case _ => false)
 
     def isWildcard(tp: TypeRepr): Boolean = tp match
       case TypeBounds(lo, hi) => lo =:= TypeRepr.of[Nothing] && hi =:= TypeRepr.of[Any]
