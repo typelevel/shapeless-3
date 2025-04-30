@@ -794,17 +794,21 @@ object ShowType:
   given ShowType[Boolean] = mkShow("Boolean")
 
   given showGen[T](using inst: K0.ProductInstances[ShowType, T], labelling: Labelling[T]): ShowType[T] =
+    val pure = [A] => (a: A) => Right(a)
+    val map = [A, B] => (fa: Either[String, A], f: A => B) => fa.map(f)
+    val ap = [A, B] =>
+      (ff: Either[String, A => B], fa: Either[String, A]) =>
+        (ff, fa) match
+          case (Left(e1), Left(e2)) => Left(s"$e1, $e2")
+          case (Left(err), _) => Left(err)
+          case (_, Left(err)) => Left(err)
+          case (Right(f), Right(a)) => Right(f(a))
+
     val typeName = labelling.label
-    val fields = labelling.elemLabels
-      .zip(
-        inst
-          .foldLeft0(List.empty[String])([t] => (acc: List[String], s: ShowType[t]) => Continue(s.show :: acc))
-          .reverse
-      )
-      .map((label, typ) => s"$label: $typ")
-    val repr =
-      if fields.isEmpty then typeName
-      else s"$typeName(${fields.mkString(", ")})"
+    val labels = labelling.elemLabels.iterator
+    val repr = inst.constructA([t] => (s: ShowType[t]) => Left(s"${labels.next()}: ${s.show}"))(pure, map, ap) match
+      case Left(fields) => s"$typeName($fields)"
+      case Right(_) => typeName // Only happends for arity 0
     mkShow(repr)
 
   given showGenC[T](using inst: K0.CoproductInstances[ShowType, T]): ShowType[T] =
