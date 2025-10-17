@@ -1,6 +1,6 @@
 import com.typesafe.tools.mima.core.*
 
-val scala3Version = "3.3.6"
+val scala3Version = "3.3.7"
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / tlBaseVersion := "3.5"
