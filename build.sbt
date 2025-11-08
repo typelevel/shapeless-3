@@ -130,15 +130,15 @@ lazy val local = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(
     moduleName := "shapeless3-local",
     scalacOptions ++= List("-Xmax-inlines", "1000"),
-    scalacOptions += "-Xprint:postInlining",
-    Compile / console / scalacOptions -= "-Xprint:postInlining",
+    scalacOptions += "-Vprint:postInlining",
+    Compile / console / scalacOptions -= "-Vprint:postInlining",
     console / initialCommands := """import shapeless3.deriving.* ; import scala.deriving.*"""
   )
 
 // Settings
 
 lazy val commonSettings = Seq(
-  scalacOptions ++= Seq("-Xfatal-warnings", "-Yexplicit-nulls", "-deprecation"),
+  scalacOptions ++= Seq("-Werror", "-Yexplicit-nulls", "-deprecation"),
   Test / scalacOptions += "-Xmax-inlines:256",
   Test / scalacOptions -= "-Yexplicit-nulls",
   Compile / doc / sources := Nil,
