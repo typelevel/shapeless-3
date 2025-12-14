@@ -55,29 +55,29 @@ import scala.deriving.*
 trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, Tail[_ <: Tup] <: Tup]:
   self =>
 
-  /** Similar to [[Mirror.Of]] but generalized to this kind. */
+  /** Similar to [[scala.deriving.Mirror.Of]] but generalized to this kind. */
   infix type of[M <: Mirror, O <: Up] = M {
     type MirroredType = O
     type MirroredMonoType = Mono[O]
     type MirroredElemTypes <: Tup
   }
 
-  /** A [[Mirror]] for types of this kind, including the given scope of the enclosing object. */
+  /** A [[scala.deriving.Mirror]] for types of this kind, including the given scope of the enclosing object. */
   type Kind[M <: Mirror, O <: Up] = (M of O) { type Kind = self.type }
 
-  /** A [[Mirror]] for types of this kind. */
+  /** A [[scala.deriving.Mirror]] for types of this kind. */
   type Generic[O <: Up] = Kind[Mirror, O]
 
-  /** A [[Mirror.Product]] for types of this kind. */
+  /** A [[scala.deriving.Mirror.Product]] for types of this kind. */
   type ProductGeneric[O <: Up] = Kind[Mirror.Product, O]
 
-  /** A [[Mirror.Sum]] for types of this kind. */
+  /** A [[scala.deriving.Mirror.Sum]] for types of this kind. */
   type CoproductGeneric[O <: Up] = Kind[Mirror.Sum, O]
 
   object Generic:
 
     /**
-     * Attaches the given scope of the enclosing object to a given [[Mirror]] as a type refinement.
+     * Attaches the given scope of the enclosing object to a given [[scala.deriving.Mirror]] as a type refinement.
      *
      * The Scala compiler can automatically add type refinements to synthesized mirrors, but not to given mirrors in the
      * current scope or to user-defined mirrors. The scope of the enclosing object is necessary to resolve extension
@@ -126,16 +126,16 @@ trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, T
     case _ *: _ => F[Head[T]] *: LiftP[F, Tail[T]]
     case _ => EmptyTuple
 
-  /** Given a [[Mirror]], provides instances of the type class `F` for all fields or variants of `T`. */
+  /** Given a [[scala.deriving.Mirror]], provides instances of the type class `F` for all fields or variants of `T`. */
   inline given mkInstances[F[_ <: Up], T <: Up](using gen: Mirror of T): Instances[F, T] = inline gen match
     case given (Mirror.Product of T) => mkProductInstances[F, T]
     case given (Mirror.Sum of T) => mkCoproductInstances[F, T]
 
-  /** Given a [[Mirror.Product]], provides instances of the type class `F` for all fields of `T`. */
+  /** Given a [[scala.deriving.Mirror.Product]], provides instances of the type class `F` for all fields of `T`. */
   inline given mkProductInstances[F[_ <: Up], T <: Up](using gen: Mirror.Product of T): ProductInstances[F, T] =
     ErasedProductInstances[self.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
-  /** Given a [[Mirror.Sum]], provides instances of the type class `F` for all variants of `T`. */
+  /** Given a [[scala.deriving.Mirror.Sum]], provides instances of the type class `F` for all variants of `T`. */
   inline given mkCoproductInstances[F[_ <: Up], T <: Up](using gen: Mirror.Sum of T): CoproductInstances[F, T] =
     ErasedCoproductInstances[self.type, F[T], LiftP[F, gen.MirroredElemTypes]](gen)
 
