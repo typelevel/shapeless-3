@@ -153,7 +153,7 @@ object Annotations:
  *
  * }}}
  *
- * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
+ * This implementation is based on `shapeless.Annotations` by Alexandre Archambault.
  *
  * @tparam A:
  *   type annotation type
@@ -211,7 +211,7 @@ object TypeAnnotations:
  *
  * }}}
  *
- * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
+ * This implementation is based on `shapeless.Annotations` by Alexandre Archambault.
  *
  * @tparam T:
  *   product or sum type, whose fields or constructors are annotated
@@ -267,7 +267,7 @@ object AllAnnotations:
  *
  * }}}
  *
- * This implementation is based on [[shapeless.Annotations]] by Alexandre Archambault.
+ * This implementation is based on `shapeless.Annotations` by Alexandre Archambault.
  *
  * @tparam T:
  *   product or sum type, whose fields or constructors are annotated
