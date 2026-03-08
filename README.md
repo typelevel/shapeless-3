@@ -1,7 +1,7 @@
 # shapeless: generic programming for Scala
 
 [![Discord](https://img.shields.io/discord/632277896739946517.svg?label=&logo=discord&logoColor=ffffff&color=404244&labelColor=6A7EC2)](https://discord.gg/bSQBZA3Ced)
-[![Maven Central](https://img.shields.io/maven-central/v/org.typelevel/shapeless3-deriving_3.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/shapeless3-deriving_3)
+[![Maven Central](https://img.shields.io/maven-central/v/org.typelevel/shapeless3-deriving_3.svg)](https://central.sonatype.com/artifact/org.typelevel/shapeless3-deriving_3)
 [![Scala.js](https://www.scala-js.org/assets/badges/scalajs-1.5.0.svg)](https://www.scala-js.org)
 
 **shapeless** is a type class and dependent type based generic programming
