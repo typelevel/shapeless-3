@@ -22,7 +22,9 @@ import scala.deriving.Mirror
 // ADTs
 
 object adts:
-  case class ISB(i: Int, s: String, b: Boolean) derives Monoid, Eq, Empty, Show, ShowType, Read
+  case class ISB(i: Int, s: String, b: Boolean) derives Monoid, Eq, Empty, Show, ShowType, Read, Merge
+
+  case class Config(name: String, count: Option[Int], label: Option[String]) derives Merge
 
   case class Box[A](x: A) derives Monoid, Eq, Show, ShowType, Read, Functor, Return, Ord, Traverse, Foldable
 

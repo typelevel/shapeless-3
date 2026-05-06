@@ -261,6 +261,10 @@ object K0 extends Kind[Any, Tuple, Id, Kinds.Head, Kinds.Tail]:
       inst.erasedConstructM(f.asInstanceOf)(pure, map, tailRecM).asInstanceOf
     inline def map2(x: T, y: T)(f: [t] => (F[t], t, t) => t): T =
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
+    inline def traverse2[G[_]](x: T, y: T)(map: MapF[G])(pure: Pure[G])(ap: Ap[G])(
+        f: [t] => (F[t], t, t) => G[t]
+    ): G[T] =
+      inst.erasedTraverse2(x, y)(map)(pure)(ap)(f.asInstanceOf).asInstanceOf
     inline def unfold[Acc](i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
       inst.erasedUnfold(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft0[Acc](i: Acc)(f: [t] => (Acc, F[t]) => CompleteOr[Acc]): Acc =
@@ -339,6 +343,10 @@ object K1
       inst.erasedConstructM(f.asInstanceOf)(pure, map, tailRecM).asInstanceOf
     inline def map2[A, B, R](x: T[A], y: T[B])(f: [t[_]] => (F[t], t[A], t[B]) => t[R]): T[R] =
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
+    inline def traverse2[A, B, G[_], R](x: T[A], y: T[B])(map: MapF[G])(pure: Pure[G])(ap: Ap[G])(
+        f: [t[_]] => (F[t], t[A], t[B]) => G[t[R]]
+    ): G[T[R]] =
+      inst.erasedTraverse2(x, y)(map)(pure)(ap)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[A, Acc](x: T[A])(i: Acc)(f: [t[_]] => (Acc, F[t], t[A]) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft0[Acc](i: Acc)(f: [t[_]] => (Acc, F[t]) => CompleteOr[Acc]): Acc =
@@ -415,6 +423,10 @@ object K11
       inst.erasedConstructM(f.asInstanceOf)(pure, map, tailRecM).asInstanceOf
     inline def map2[A[_], B[_], R[_]](x: T[A], y: T[B])(f: [t[_[_]]] => (F[t], t[A], t[B]) => t[R]): T[R] =
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
+    inline def traverse2[A[_], B[_], G[_], R[_]](x: T[A], y: T[B])(map: MapF[G])(pure: Pure[G])(ap: Ap[G])(
+        f: [t[_[_]]] => (F[t], t[A], t[B]) => G[t[R]]
+    ): G[T[R]] =
+      inst.erasedTraverse2(x, y)(map)(pure)(ap)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[A[_], Acc](x: T[A])(i: Acc)(f: [t[_[_]]] => (Acc, F[t], t[A]) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft0[Acc](i: Acc)(f: [t[_[_]]] => (Acc, F[t]) => CompleteOr[Acc]): Acc =
@@ -499,6 +511,10 @@ object K2
         f: [t[_, _]] => (F[t], t[A, B], t[C, D]) => t[R, S]
     ): T[R, S] =
       inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
+    inline def traverse2[A, B, C, D, G[_], R, S](x: T[A, B], y: T[C, D])(map: MapF[G])(pure: Pure[G])(ap: Ap[G])(
+        f: [t[_, _]] => (F[t], t[A, B], t[C, D]) => G[t[R, S]]
+    ): G[T[R, S]] =
+      inst.erasedTraverse2(x, y)(map)(pure)(ap)(f.asInstanceOf).asInstanceOf
     inline def foldLeft[A, B, Acc](x: T[A, B])(i: Acc)(f: [t[_, _]] => (Acc, F[t], t[A, B]) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
     inline def foldLeft0[Acc](i: Acc)(f: [t[_, _]] => (Acc, F[t]) => CompleteOr[Acc]): Acc =

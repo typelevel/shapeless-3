@@ -292,6 +292,18 @@ class DerivationTests:
     assert(diff(SomeInt(1), NoneInt) == "different variants")
 
   @Test
+  def merge(): Unit =
+    val v0 = Merge[ISB]
+    assert(v0.merge(ISB(1, "foo", true), ISB(1, "foo", true)) == Some(ISB(1, "foo", true)))
+    assert(v0.merge(ISB(1, "foo", true), ISB(2, "foo", true)) == None)
+    assert(v0.merge(ISB(1, "foo", true), ISB(1, "bar", true)) == None)
+
+    val v1 = Merge[Config]
+    assert(v1.merge(Config("a", Some(1), None), Config("a", None, Some("x"))) == Some(Config("a", Some(1), Some("x"))))
+    assert(v1.merge(Config("a", Some(1), None), Config("a", Some(2), None)) == None)
+    assert(v1.merge(Config("a", None, None), Config("a", None, Some("x"))) == Some(Config("a", None, Some("x"))))
+
+  @Test
   def functorK(): Unit =
     val v0 = FunctorK[Order]
     assert(v0.mapK(Order[OptionD](Given("Epoisse"), Default(10)))(OptionD.fold) == Order[Id]("Epoisse", 10))

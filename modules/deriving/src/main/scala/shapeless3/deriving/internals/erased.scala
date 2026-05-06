@@ -38,6 +38,9 @@ sealed abstract class ErasedProductInstances[K, FT] extends ErasedInstances[K, F
   def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any])
   def erasedMap(x0: Any)(f: (Any, Any) => Any): Any
   def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any
+  def erasedTraverse2[F[_]](x0: Any, y0: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(
+      f: (Any, Any, Any) => F[Any]
+  ): F[Any]
   def erasedFoldLeft0(a: Any)(f: (Any, Any) => CompleteOr[Any]): Any
   def erasedFoldLeft(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any
   def erasedFoldLeft2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any
@@ -82,6 +85,11 @@ DO NOT USE as it will lead to stack overflows when deriving instances for recurs
 
   def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any] =
     map(f(i, toElement(x)), fromElement)
+
+  def erasedTraverse2[F[_]](x: Any, y: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(
+      f: (Any, Any, Any) => F[Any]
+  ): F[Any] =
+    map(f(i, toElement(x), toElement(y)), fromElement)
 
   def arity: Int =
     1
@@ -239,6 +247,16 @@ DO NOT USE as it will lead to stack overflows when deriving instances for recurs
   def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any] =
     traverseProduct(toProduct(x), f)(pure, map, ap)
 
+  def erasedTraverse2[F[_]](x: Any, y: Any)(
+      map: MapF[F]
+  )(pure: Pure[F])(ap: Ap[F])(f: (Any, Any, Any) => F[Any]): F[Any] =
+    traverseProduct(
+      new ZippedProduct(toProduct(x), toProduct(y)),
+      (inst, pair) =>
+        val (x, y) = pair.asInstanceOf[(Any, Any)]
+        f(inst, x, y)
+    )(pure, map, ap)
+
   def arity: Int =
     is.size
 
@@ -355,6 +373,11 @@ object ErasedProductInstances:
     def productElement(n: Int): Any = elems(n)
     def productArity: Int = elems.length
     override def productIterator: Iterator[Any] = elems.iterator
+
+  final private[internals] class ZippedProduct(p1: Product, p2: Product) extends Product:
+    def canEqual(that: Any): Boolean = false
+    def productElement(n: Int): Any = (p1.productElement(n), p2.productElement(n))
+    def productArity: Int = p1.productArity
 
   private inline def summonOne[T] = inline erasedValue[T] match
     case _: Tuple1[a] => summonInline[a]
