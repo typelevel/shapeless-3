@@ -24,12 +24,14 @@ import shapeless3.deriving.*
 
 sealed abstract class ErasedInstances[K, FT] extends Serializable:
   def erasedMapK(f: Any => Any): ErasedInstances[K, ?]
+  def erasedZip(that: ErasedInstances[K, ?]): ErasedInstances[K, ?]
   def erasedMap(x: Any)(f: (Any, Any) => Any): Any
   def erasedTraverse[F[_]](x: Any)(map: MapF[F])(pure: Pure[F])(ap: Ap[F])(f: (Any, Any) => F[Any]): F[Any]
   def arity: Int
 
 sealed abstract class ErasedProductInstances[K, FT] extends ErasedInstances[K, FT]:
   def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?]
+  def erasedZip(that: ErasedInstances[K, ?]): ErasedProductInstances[K, ?]
   def erasedConstruct(f: Any => Any): Any
   def erasedConstructA[F[_]](f: Any => F[Any])(pure: Pure[F], map: MapF[F], ap: Ap[F]): F[Any]
   def erasedConstructM[F[_]](f: Any => F[Any])(pure: Pure[F], map: MapF[F], tailRecM: TailRecM[F]): F[Any]
@@ -56,6 +58,9 @@ DO NOT USE as it will lead to stack overflows when deriving instances for recurs
 
   def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
     new ErasedProductInstances1(mirror, () => f(i))
+
+  def erasedZip(that: ErasedInstances[K, ?]): ErasedProductInstances[K, ?] =
+    new ErasedProductInstances1(mirror, () => (i, that.asInstanceOf[ErasedProductInstances1[K, ?]].i))
 
   def erasedConstruct(f: Any => Any): Any =
     fromElement(f(i))
@@ -172,6 +177,10 @@ DO NOT USE as it will lead to stack overflows when deriving instances for recurs
 
   def erasedMapK(f: Any => Any): ErasedProductInstances[K, ?] =
     new ErasedProductInstancesN(mirror, () => is.map(f))
+
+  def erasedZip(that: ErasedInstances[K, ?]): ErasedProductInstances[K, ?] =
+    val thatIs = that.asInstanceOf[ErasedProductInstancesN[K, ?]].is
+    new ErasedProductInstancesN(mirror, () => is.zip(thatIs).asInstanceOf[Array[Any]])
 
   def erasedConstruct(f: Any => Any): Any =
     val n = is.length
@@ -363,6 +372,10 @@ final class ErasedCoproductInstances[K, FT](mirror: Mirror.Sum, is0: => Array[An
 
   def erasedMapK(f: Any => Any): ErasedCoproductInstances[K, ?] =
     new ErasedCoproductInstances(mirror, is.map(f))
+
+  def erasedZip(that: ErasedInstances[K, ?]): ErasedCoproductInstances[K, ?] =
+    val thatIs = that.asInstanceOf[ErasedCoproductInstances[K, ?]].is
+    new ErasedCoproductInstances(mirror, is.zip(thatIs).asInstanceOf[Array[Any]])
 
   private def ordinal(x: Any): Any =
     is(mirror.ordinal(x.asInstanceOf))

@@ -261,6 +261,37 @@ class DerivationTests:
   end traverse
 
   @Test
+  def zipProduct(): Unit =
+    val monoids = K0.ProductInstances[Monoid, ISB]
+    val eqs = K0.ProductInstances[Eq, ISB]
+    val zipped = monoids.zip(eqs)
+    val checkIsEmpty = [t] =>
+      (acc: Boolean, me: (Monoid[t], Eq[t]), x: t) =>
+        val (monoid, eqv) = me
+        Continue(acc && eqv.eqv(x, monoid.empty))
+    val isEmpty = zipped.foldLeft(ISB(0, "", true))(true)(checkIsEmpty)
+    assert(isEmpty == false)
+    val isEmpty2 = zipped.foldLeft(ISB(0, "", false))(true)(checkIsEmpty)
+    assert(isEmpty2 == true)
+
+  @Test
+  def zipCoproduct(): Unit =
+    val shows = K0.CoproductInstances[Show, OptionInt]
+    val eqsCoprod = K0.CoproductInstances[Eq, OptionInt]
+    val zippedCoprod = shows.zip(eqsCoprod)
+    def diff(x: OptionInt, y: OptionInt): String =
+      zippedCoprod.fold2(x, y)("different variants")(
+        [t <: OptionInt] =>
+          (se: (Show[t], Eq[t]), a: t, b: t) =>
+            val (show, eqv) = se
+            if eqv.eqv(a, b) then s"unchanged: ${show.show(a)}"
+            else s"${show.show(a)} -> ${show.show(b)}"
+      )
+    assert(diff(SomeInt(42), SomeInt(42)) == "unchanged: SomeInt(value: 42)")
+    assert(diff(SomeInt(1), SomeInt(2)) == "SomeInt(value: 1) -> SomeInt(value: 2)")
+    assert(diff(SomeInt(1), NoneInt) == "different variants")
+
+  @Test
   def functorK(): Unit =
     val v0 = FunctorK[Order]
     assert(v0.mapK(Order[OptionD](Given("Epoisse"), Default(10)))(OptionD.fold) == Order[Id]("Epoisse", 10))
