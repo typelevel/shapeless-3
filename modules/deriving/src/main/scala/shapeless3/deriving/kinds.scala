@@ -103,6 +103,9 @@ trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, T
   /** Resolved instances of the type class `F` for all variants of the sum type `T`. */
   type CoproductInstances[F[_ <: Up], T <: Up] = ErasedCoproductInstances[self.type, F[T]]
 
+  /** A type lambda combining two type constructors into a pair. */
+  type Pair[F[_ <: Up], G[_ <: Up]] = [t <: Up] =>> (F[t], G[t])
+
   /** A curried version of [[Instances]] that can be used as a context bound. */
   type InstancesOf[F[_ <: Up]] = [T <: Up] =>> Instances[F, T]
 
@@ -183,6 +186,10 @@ trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, T
     /** Widen the type class `F` in these instances to a super type `G`. Noop at runtime. */
     inline def widen[G[t <: Up] >: F[t]]: Instances[G, T] = inst.asInstanceOf
 
+    /** Zip these instances with another set of instances, pairing them element-wise. */
+    inline def zip[G[_ <: Up]](that: Instances[G, T]): Instances[Pair[F, G], T] =
+      inst.erasedZip(that).asInstanceOf
+
   extension [F[_ <: Up], T <: Up](inst: ProductInstances[F, T])
     /** Transform the type class `F` in these product instances to `G` by applying a polymorphic function. */
     inline def mapK[G[_ <: Up]](f: [t <: Up] => F[t] => G[t]): ProductInstances[G, T] =
@@ -191,6 +198,10 @@ trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, T
     /** Widen the type class `F` in these product instances to a super type `G`. Noop at runtime. */
     inline def widen[G[t <: Up] >: F[t]]: ProductInstances[G, T] = inst.asInstanceOf
 
+    /** Zip these product instances with another set of instances, pairing them element-wise. */
+    inline def zip[G[_ <: Up]](that: ProductInstances[G, T]): ProductInstances[Pair[F, G], T] =
+      inst.erasedZip(that).asInstanceOf
+
   extension [F[_ <: Up], T <: Up](inst: CoproductInstances[F, T])
     /** Transform the type class `F` in these coproduct instances to `G` by applying a polymorphic function. */
     inline def mapK[G[_ <: Up]](f: [t <: Up] => F[t] => G[t]): CoproductInstances[G, T] =
@@ -198,6 +209,10 @@ trait Kind[Up <: AnyKind, Tup <: AnyKind, Mono[_ <: Up], Head[_ <: Tup] <: Up, T
 
     /** Widen the type class `F` in these coproduct instances to a super type `G`. Noop at runtime. */
     inline def widen[G[t <: Up] >: F[t]]: CoproductInstances[G, T] = inst.asInstanceOf
+
+    /** Zip these coproduct instances with another set of instances, pairing them element-wise. */
+    inline def zip[G[_ <: Up]](that: CoproductInstances[G, T]): CoproductInstances[Pair[F, G], T] =
+      inst.erasedZip(that).asInstanceOf
 
 object K0 extends Kind[Any, Tuple, Id, Kinds.Head, Kinds.Tail]:
   infix type |:[F[_], G[_]] =
