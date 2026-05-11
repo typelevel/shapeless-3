@@ -236,6 +236,43 @@ object Traverse:
 
   inline def derived[F[_]](using gen: K1.Generic[F]): Traverse[F] = traverseGen
 
+trait Merge[A]:
+  def merge(x: A, y: A): Option[A]
+
+object Merge:
+  inline def apply[A](using ma: Merge[A]): ma.type = ma
+
+  given Merge[Int] with
+    def merge(x: Int, y: Int): Option[Int] =
+      if x == y then Some(x) else None
+
+  given Merge[String] with
+    def merge(x: String, y: String): Option[String] =
+      if x == y then Some(x) else None
+
+  given Merge[Boolean] with
+    def merge(x: Boolean, y: Boolean): Option[Boolean] =
+      if x == y then Some(x) else None
+
+  given [A](using ma: Merge[A]): Merge[Option[A]] with
+    def merge(x: Option[A], y: Option[A]): Option[Option[A]] = (x, y) match
+      case (Some(a), Some(b)) => ma.merge(a, b).map(Some(_))
+      case (Some(_), None) => Some(x)
+      case (None, Some(_)) => Some(y)
+      case (None, None) => Some(None)
+
+  given product[T](using inst: K0.ProductInstances[Merge, T]): Merge[T] with
+    private val map: MapF[Option] = [a, b] => (oa: Option[a], f: a => b) => oa.map(f)
+    private val pure: Pure[Option] = [a] => (x: a) => Some(x)
+    private val ap: Ap[Option] = [a, b] => (of: Option[a => b], oa: Option[a]) => of.flatMap(f => oa.map(f))
+
+    def merge(x: T, y: T): Option[T] =
+      inst.traverse2[Option](x, y)(map)(pure)(ap)(
+        [t] => (m: Merge[t], tx: t, ty: t) => m.merge(tx, ty)
+      )
+
+  inline def derived[T](using gen: K0.ProductGeneric[T]): Merge[T] = product
+
 trait Optional[F[_]]:
   def headOption[A](fa: F[A]): Option[A]
 
