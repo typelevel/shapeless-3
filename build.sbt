@@ -3,7 +3,7 @@ import com.typesafe.tools.mima.core.*
 val scala3Version = "3.3.7"
 
 ThisBuild / organization := "org.typelevel"
-ThisBuild / tlBaseVersion := "3.5"
+ThisBuild / tlBaseVersion := "3.6"
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / crossScalaVersions := Seq(scala3Version)
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
@@ -19,8 +19,7 @@ val jsSettings = Def.settings(
 )
 
 val nativeSettings = Def.settings(
-  mimaPreviousArtifacts := Set.empty, // TODO re-enable
-  tlVersionIntroduced := Map("3" -> "3.1.0")
+  tlVersionIntroduced := Map("3" -> "3.5.0")
 )
 
 // Aliases
