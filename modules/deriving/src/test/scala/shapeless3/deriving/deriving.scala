@@ -280,13 +280,12 @@ class DerivationTests:
     val eqsCoprod = K0.CoproductInstances[Eq, OptionInt]
     val zippedCoprod = shows.zip(eqsCoprod)
     def diff(x: OptionInt, y: OptionInt): String =
-      zippedCoprod.fold2(x, y)("different variants")(
-        [t <: OptionInt] =>
-          (se: (Show[t], Eq[t]), a: t, b: t) =>
-            val (show, eqv) = se
-            if eqv.eqv(a, b) then s"unchanged: ${show.show(a)}"
-            else s"${show.show(a)} -> ${show.show(b)}"
-      )
+      zippedCoprod.fold2(x, y)("different variants"): [t <: OptionInt] =>
+        (se: (Show[t], Eq[t]), a: t, b: t) =>
+          val (show, eqv) = se
+          if eqv.eqv(a, b) then s"unchanged: ${show.show(a)}"
+          else s"${show.show(a)} -> ${show.show(b)}"
+
     assert(diff(SomeInt(42), SomeInt(42)) == "unchanged: SomeInt(value: 42)")
     assert(diff(SomeInt(1), SomeInt(2)) == "SomeInt(value: 1) -> SomeInt(value: 2)")
     assert(diff(SomeInt(1), NoneInt) == "different variants")
@@ -294,14 +293,14 @@ class DerivationTests:
   @Test
   def merge(): Unit =
     val v0 = Merge[ISB]
-    assert(v0.merge(ISB(1, "foo", true), ISB(1, "foo", true)) == Some(ISB(1, "foo", true)))
-    assert(v0.merge(ISB(1, "foo", true), ISB(2, "foo", true)) == None)
-    assert(v0.merge(ISB(1, "foo", true), ISB(1, "bar", true)) == None)
+    assert(v0.merge(ISB(1, "foo", true), ISB(1, "foo", true)).contains(ISB(1, "foo", true)))
+    assert(v0.merge(ISB(1, "foo", true), ISB(2, "foo", true)).isEmpty)
+    assert(v0.merge(ISB(1, "foo", true), ISB(1, "bar", true)).isEmpty)
 
     val v1 = Merge[Config]
-    assert(v1.merge(Config("a", Some(1), None), Config("a", None, Some("x"))) == Some(Config("a", Some(1), Some("x"))))
-    assert(v1.merge(Config("a", Some(1), None), Config("a", Some(2), None)) == None)
-    assert(v1.merge(Config("a", None, None), Config("a", None, Some("x"))) == Some(Config("a", None, Some("x"))))
+    assert(v1.merge(Config("a", Some(1), None), Config("a", None, Some("x"))).contains(Config("a", Some(1), Some("x"))))
+    assert(v1.merge(Config("a", Some(1), None), Config("a", Some(2), None)).isEmpty)
+    assert(v1.merge(Config("a", None, None), Config("a", None, Some("x"))).contains(Config("a", None, Some("x"))))
 
   @Test
   def functorK(): Unit =
