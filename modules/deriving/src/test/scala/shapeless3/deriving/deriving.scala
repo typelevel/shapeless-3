@@ -281,7 +281,7 @@ class DerivationTests:
     val zippedCoprod = shows.zip(eqsCoprod)
     def diff(x: OptionInt, y: OptionInt): String =
       zippedCoprod.fold2(x, y)("different variants"): [t <: OptionInt] =>
-        (se: (Show[t], Eq[t]), a: t, b: t) =>
+        (se, a, b) =>
           val (show, eqv) = se
           if eqv.eqv(a, b) then s"unchanged: ${show.show(a)}"
           else s"${show.show(a)} -> ${show.show(b)}"
@@ -424,7 +424,7 @@ class DerivationTests:
     assert(v5.show == "Order(item: String, quantity: Int)")
 
     val v6 = ShowType[Order[Option]]
-    assert(v6.show == "Order(item: None | Some(value: String), quantity: None | Some(value: Int))")
+    assert(v6.show == "Order(item: Some(value: String) | None, quantity: Some(value: Int) | None)")
 
   @Test
   def read(): Unit =

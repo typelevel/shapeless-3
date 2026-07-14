@@ -42,9 +42,8 @@ class InstancesTests:
     val inst = summon[K0.ProductInstances[TypeClass, Pair[Int]]]
     val p = Pair(1, 2)
     val expected = "a 1 2"
-    val actual = inst.foldLeft[String](p)("a"): [t] =>
-      (acc: String, f: TypeClass[t], t: t) => acc + " " + f.method(t)
-
+    val actual = inst.foldLeft(p)("a"): [t] =>
+      (acc, f, t) => s"$acc ${f.method(t)}"
     assert(actual == expected)
 
   @Test
@@ -52,20 +51,18 @@ class InstancesTests:
     val inst = summon[K0.ProductInstances[TypeClass, Pair[Int]]]
     val p = Pair(1, 2)
     val expected = "a 2 1"
-    val actual = inst.foldRight[String](p)("a"): [t] =>
-      (f: TypeClass[t], t: t, acc: String) => acc + " " + f.method(t)
-
+    val actual = inst.foldRight(p)("a"): [t] =>
+      (f, t, acc) => s"$acc ${f.method(t)}"
     assert(actual == expected)
 
   @Test
   def mapKforSingle: Unit =
     val inst = summon[K0.ProductInstances[TypeClass, Single[Int]]]
-    val otherInst = inst.mapK([t] => (tc: TypeClass[t]) => tc.another)
+    val otherInst = inst.mapK([t] => tc => tc.another)
     val s = Single(42)
     val expected = "s 4242"
-    val actual = otherInst.foldLeft[String](s)("s"): [t] =>
-      (acc: String, f: AnotherTypeClass[t], t: t) => acc + " " + f.method(t) * 2
-
+    val actual = otherInst.foldLeft(s)("s"): [t] =>
+      (acc, f, t) => s"$acc ${f.method(t) * 2}"
     assert(actual == expected)
 
   @Test
@@ -74,9 +71,8 @@ class InstancesTests:
     val otherInst = inst.mapK([t] => (tc: TypeClass[t]) => tc.another)
     val p = Pair(5, 6)
     val expected = "p 66 55"
-    val actual = otherInst.foldRight[String](p)("p"): [t] =>
-      (f: AnotherTypeClass[t], t: t, acc: String) => acc + " " + f.method(t) * 2
-
+    val actual = otherInst.foldRight(p)("p"): [t] =>
+      (f, t, acc) => s"$acc ${f.method(t) * 2}"
     assert(actual == expected)
 
   @Test
@@ -85,7 +81,6 @@ class InstancesTests:
     val otherInst = inst.mapK([t] => (tc: TypeClass[t]) => tc.another)
     val f = Pair(13, 313)
     val expected = "f 326"
-    val actual = otherInst.fold[String](f): [t <: Few[Int]] =>
-      (f: AnotherTypeClass[t], t: t) => "f " + f.method(t)
-
+    val actual = otherInst.fold(f): [t <: Few[Int]] =>
+      (f, t) => s"f ${f.method(t)}"
     assert(actual == expected)
