@@ -81,11 +81,10 @@ object K21
     ): R =
       inst.erasedFold2f(x, y)(g.asInstanceOf)(f.asInstanceOf).asInstanceOf
 
-type IdRef[T <: AnyRef] = T
 type HeadRef[T] <: AnyRef = T match
-  case IdRef[h] *: _ => h
+  case AnyRef *: _ => Tuple.Head[T] & AnyRef
 
-object K1Ref extends Kind[AnyRef, Tuple, IdRef, HeadRef, Kinds.Tail]:
+object K1Ref extends Kind[AnyRef, Tuple, Id, HeadRef, Kinds.Tail]:
   extension [F[_ <: AnyRef], T <: AnyRef](inst: ProductInstances[F, T])
     inline def foldLeft2[Acc](x: T, y: T)(i: Acc)(f: [t <: AnyRef] => (Acc, F[t], t, t) => CompleteOr[Acc]): Acc =
       inst.erasedFoldLeft2(x, y)(i)(f.asInstanceOf).asInstanceOf
