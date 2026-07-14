@@ -424,7 +424,7 @@ class DerivationTests:
     assert(v5.show == "Order(item: String, quantity: Int)")
 
     val v6 = ShowType[Order[Option]]
-    assert(v6.show == "Order(item: None | Some(value: String), quantity: None | Some(value: Int))")
+    assert(v6.show == "Order(item: Some(value: String) | None, quantity: Some(value: Int) | None)")
 
   @Test
   def read(): Unit =
