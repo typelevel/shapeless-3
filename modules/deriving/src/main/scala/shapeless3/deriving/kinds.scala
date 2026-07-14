@@ -36,9 +36,9 @@ import scala.deriving.*
  * @tparam Mono
  *   A type lambda that monomorphizes a type with kind `Up` - it applies it to the upper bounds of its type parameters.
  * @tparam Head
- *   A type lambda that returns the head type of a tuple with kind `Tup`.
+ *   A type lambda that returns the head type of tuple with kind `Tup`.
  * @tparam Tail
- *   A type lambda that returns the tail type of a tuple with kind `Tup`.
+ *   A type lambda that returns the tail type of tuple with kind `Tup`.
  *
  * @define productToRepr
  *   Convert a product value to its equivalent representation as a typed tuple.

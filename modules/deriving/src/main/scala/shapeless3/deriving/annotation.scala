@@ -39,9 +39,9 @@ import scala.annotation.tailrec
  *   assert(somethingFirst == First(3))
  * }}}
  *
- * @tparam A:
+ * @tparam A
  *   annotation type
- * @tparam T:
+ * @tparam T
  *   annotated type
  *
  * @author
@@ -54,12 +54,13 @@ object Annotation:
   def apply[A, T](implicit annotation: Annotation[A, T]): Annotation[A, T] = annotation
 
   def mkAnnotation[A, T](annotation: A): Annotation[A, T] =
-    new Annotation[A, T]:
-      def apply() = annotation
+    () => annotation
 
-  inline def mkAnnotation[A, T]: Annotation[A, T] = ${ AnnotationMacros.mkAnnotation }
+  inline def mkAnnotation[A, T]: Annotation[A, T] =
+    ${ AnnotationMacros.mkAnnotation }
 
-  inline given [A, T]: Annotation[A, T] = mkAnnotation[A, T]
+  inline given [A, T]: Annotation[A, T] =
+    mkAnnotation[A, T]
 
 /**
  * Provides the annotations of type `A` of the fields of product type or constructors of sum type `T`.
@@ -99,9 +100,9 @@ object Annotation:
  *   //   (Some(First("b")), None)
  * }}}
  *
- * @tparam A:
+ * @tparam A
  *   annotation type
- * @tparam T:
+ * @tparam T
  *   product or sum type, whose constructor parameters or constructors are annotated
  *
  * @author
@@ -155,9 +156,9 @@ object Annotations:
  *
  * This implementation is based on `shapeless.Annotations` by Alexandre Archambault.
  *
- * @tparam A:
+ * @tparam A
  *   type annotation type
- * @tparam T:
+ * @tparam T
  *   product or sum type, whose fields or constructors are annotated
  *
  * @author
@@ -213,7 +214,7 @@ object TypeAnnotations:
  *
  * This implementation is based on `shapeless.Annotations` by Alexandre Archambault.
  *
- * @tparam T:
+ * @tparam T
  *   product or sum type, whose fields or constructors are annotated
  *
  * @author
@@ -269,7 +270,7 @@ object AllAnnotations:
  *
  * This implementation is based on `shapeless.Annotations` by Alexandre Archambault.
  *
- * @tparam T:
+ * @tparam T
  *   product or sum type, whose fields or constructors are annotated
  *
  * @author

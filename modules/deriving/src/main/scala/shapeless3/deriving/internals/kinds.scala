@@ -20,7 +20,7 @@ object Kinds:
           case instance: a => instance
           case _ => summonFirst[b]
 
-  /** For a tuple type `T`, summons exactly one given element type. Otherwise fails to compile. */
+  /** For a tuple type `T`, summons exactly one given element type. Otherwise, fails to compile. */
   transparent inline def summonOnly[T <: Tuple]: Any =
     inline erasedValue[T] match
       case _: (a *: b) =>

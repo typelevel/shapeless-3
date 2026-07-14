@@ -1,9 +1,8 @@
 import com.typesafe.tools.mima.core.*
 
-val scala3Version = "3.3.8"
-
+val scala3Version = "3.9.0"
 ThisBuild / organization := "org.typelevel"
-ThisBuild / tlBaseVersion := "3.6"
+ThisBuild / tlBaseVersion := "3.7"
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / crossScalaVersions := Seq(scala3Version)
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
@@ -11,16 +10,12 @@ ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 // GHA configuration
 ThisBuild / tlCiReleaseBranches := Seq("main")
 ThisBuild / tlCiScalafmtCheck := true
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
 ThisBuild / mergifyStewardConfig :=
   Some(MergifyStewardConfig(author = "typelevel-steward[bot]", mergeMinors = true))
 
-val jsSettings = Def.settings(
-  tlVersionIntroduced := Map("3" -> "3.0.1")
-)
-
-val nativeSettings = Def.settings(
-  tlVersionIntroduced := Map("3" -> "3.5.0")
-)
+val jsSettings = Def.settings(tlVersionIntroduced := Map("3" -> "3.0.1"))
+val nativeSettings = Def.settings(tlVersionIntroduced := Map("3" -> "3.5.0"))
 
 // Aliases
 
@@ -110,7 +105,9 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     mimaBinaryIssueFilters ++= Seq(
       // Ops was replaced by extension methods in https://github.com/typelevel/shapeless-3/pull/1
       ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.typeable.syntax#typeable.Ops"),
-      ProblemFilters.exclude[MissingClassProblem]("shapeless3.typeable.syntax$typeable$Ops")
+      ProblemFilters.exclude[MissingClassProblem]("shapeless3.typeable.syntax$typeable$Ops"),
+      // Changed on upgrade to Scala 3.9
+      ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.typeable.Typeable.<clinit>")
     )
   )
 
