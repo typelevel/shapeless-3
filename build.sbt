@@ -1,6 +1,6 @@
 import com.typesafe.tools.mima.core.*
 
-val scala3Version = "3.3.8"
+val scala3Version = "3.9.0-RC3"
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / tlBaseVersion := "3.6"
@@ -110,7 +110,9 @@ lazy val typeable = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     mimaBinaryIssueFilters ++= Seq(
       // Ops was replaced by extension methods in https://github.com/typelevel/shapeless-3/pull/1
       ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.typeable.syntax#typeable.Ops"),
-      ProblemFilters.exclude[MissingClassProblem]("shapeless3.typeable.syntax$typeable$Ops")
+      ProblemFilters.exclude[MissingClassProblem]("shapeless3.typeable.syntax$typeable$Ops"),
+      // Changed on upgrade to Scala 3.9
+      ProblemFilters.exclude[DirectMissingMethodProblem]("shapeless3.typeable.Typeable.<clinit>")
     )
   )
 

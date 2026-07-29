@@ -16,6 +16,8 @@
 
 package shapeless3.typeable
 
+import scala.compiletime.uninitialized
+
 class TypeableTests:
   import TypeableTests.*
   import org.junit.Assert.*
@@ -389,7 +391,7 @@ class TypeableTests:
   trait Tc[A]
   case class Gen2[A: Tc](i: Int)
   case class Gen3[A](i: Int):
-    var a: A = _
+    var a: A = uninitialized
   abstract class Abs[A](a: A):
     val x: A = a
   case class Gen4[A](i: Int)(a: A) extends Abs[A](a)
@@ -493,7 +495,7 @@ class TypeableTests:
     val bi: Bar[Int] = Bar(23)
     assertEquals("Typeable[Bar[Int]]", typeableString(bi))
 
-    val i1: A with B = new C
+    val i1: A & B = new C
     assertEquals("Typeable[A & B]", typeableString(i1))
     assertEquals("Typeable[A]", typeableString(new A {}))
     assertEquals("Typeable[A]", Typeable[A].toString)
@@ -593,7 +595,7 @@ class TypeableTests:
     object X:
       case class A()
       case class B(a: A):
-        private[this] val aa = a
+        private val aa = a
     object Test:
       Typeable[X.B]
 
