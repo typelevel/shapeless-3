@@ -258,7 +258,7 @@ DO NOT USE as it will lead to stack overflows when deriving instances for recurs
     )(pure, map, ap)
 
   def arity: Int =
-    is.size
+    is.length
 
   def erasedFoldLeft0(i: Any)(f: (Any, Any) => CompleteOr[Any]): Any =
     val n = is.length
@@ -421,7 +421,7 @@ final class ErasedCoproductInstances[K, FT](mirror: Mirror.Sum, is0: => Array[An
     f(ordinal(x), x)
 
   def arity: Int =
-    is.size
+    is.length
 
   def erasedFold2(x: Any, y: Any)(a: => Any)(f: (Any, Any, Any) => Any): Any =
     val i = mirror.ordinal(x.asInstanceOf)
